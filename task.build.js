@@ -48,6 +48,7 @@ class BuildTask extends Task {
         if (!site) {return}
         site.room.visual.text(task.local_limit + "🔨",site.pos);
     }
+
 }
 
 module.exports = BuildTask;

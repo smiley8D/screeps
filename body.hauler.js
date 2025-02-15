@@ -9,6 +9,7 @@ class Hauler extends Body {
     
         this.name = "Hauler";
     }
+
 }
 
 module.exports = Hauler;

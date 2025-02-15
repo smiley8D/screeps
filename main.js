@@ -1,16 +1,19 @@
 utils = require("utils");
 
 StockSpawn = require("task.stock_spawn");
+Mine = require("task.mine");
+Upgrade = require("task.upgrade");
 
 TASKS = {
     "StockSpawn": StockSpawn,
+    "Mine": Mine,
+    "Upgrade": Upgrade,
 }
 
-Memory.room_energies = {};
-Memory.room_energy_changes = {};
-
 module.exports.loop = function() {
-    // Cleanup dead creeps
+    // Gather metrics
+
+    // Cleanup
     if (Game.time % 50 == 0) {
         for (let creep in Memory.creeps) {
             if (!Game.creeps[creep]) {
@@ -19,73 +22,99 @@ module.exports.loop = function() {
         }
     }
 
-    // Update tasks
-    if (Game.time % 10 == 0) {
+    // Assign tasks
+    if (Game.time % 1 == 0) {
+        console.log();
+        let room_tasks = new Map();
+        let room_creeps = new Map();
+
+        // Intra-room
         for (let room_name in Game.rooms) {
             // Get room info
             let room = Game.rooms[room_name];
             let spawners = room.find(FIND_MY_SPAWNS, {filter: (spawner) => !spawner.spawning });
 
-            // Get current assignments
-            let total_avail = 0;
-            let total_busy = 0;
+            // Get current tasks
+            let tasks = new Map();
             let avail_creeps = new Map();
-            let busy_creeps = new Map();
-            for (let creep of room.find(FIND_MY_CREEPS)) {
-                if (creep.memory.task) {
-                    if (!busy_creeps.get(creep.memory.task.id)) { busy_creeps.set(creep.memory.task.id, []) }
-                    busy_creeps.get(creep.memory.task.id).push(creep);
-                    total_busy++;
-                } else if (creep.memory.body && avail_creeps.get(creep.memory.body)) {
-                    if (!avail_creeps.get(creep.memory.body)) { avail_creeps.set(creep.memory.body, []) }
-                    avail_creeps.get(creep.memory.body).push(creep);
-                    total_avail++;
+            let sorted_tasks = [];
+            for (let task_name in TASKS) {
+                for (let task of TASKS[task_name].getTasks(room)) {
+                    if (!avail_creeps.get(task.body.name)) { avail_creeps.set(task.body.name, []) }
+                    tasks.set(task.id, task)
+                    task.i = sorted_tasks.length;
+                    sorted_tasks.push(task);
                 }
             }
 
-            // Get unfilled tasks
-            let tasks = [];
-            let lowest;
-            for (let task_name in TASKS) {
-                for (let task of TASKS[task_name].getTasks(room)) {
-                    if (!avail_creeps.has(task.body.name)) { avail_creeps.set(task.body.name, []) }
-                    if (!busy_creeps.has(task.id)) { busy_creeps.set(task.id, []) }
-                    task.wanted = task.workers - busy_creeps.get(task.id).length;
-                    if (task.wanted > 0) { tasks.push(task); console.log(task.id + ": " + busy_creeps.get(task.id).length + " / " + task.workers) }
-                    if (!lowest || task.wanted < lowest) { lowest = task.wanted }
+            // Get current assignments
+            for (let creep of room.find(FIND_MY_CREEPS)) {
+                if (creep.memory.task && tasks.has(creep.memory.task.id)) {
+                    // Mark assigned
+                    let task = tasks.get(creep.memory.task.id);
+                    task.workers++;
+
+                    // Update task fulfillment
+                    let i = 0
+                    while (task.i < sorted_tasks.length - 1) {
+                        // Compare to next task
+                        let next_task = sorted_tasks[task.i+1];
+                        if ((task.weight * task.workers / task.wanted) <= (next_task.weight * next_task.workers / next_task.wanted)) { break; }
+
+                        // Swap with next task
+                        sorted_tasks[task.i] = next_task;
+                        sorted_tasks[next_task.i] = task;
+                        task.i++;
+                        next_task.i--;
+                    }
+                } else if (creep.memory.body) {
+                    // Mark available
+                    if (!avail_creeps.get(creep.memory.body)) { avail_creeps.set(creep.memory.body, []) }
+                    creep.memory.task = null;
+                    avail_creeps.get(creep.memory.body).push(creep);
                 }
+            }
+
+            // testing sorting feature
+            for (let task of sorted_tasks) {
+                console.log(task.id, (task.weight * task.workers / task.wanted), task.workers, task.wanted);
             }
 
             // Assign creeps
-            tasks_loop:
-            while (tasks.length > 0) {
-                // Dequeue
-                let task = tasks.shift();
-                for (let i = 0; i < Math.ceil(task.wanted / lowest); i++) {
-                    // Find available creep
-                    let creep = avail_creeps.get(task.body.name).pop()
+            while (sorted_tasks.length > 0 && sorted_tasks[0].workers < sorted_tasks[0].wanted) {
+                let task = sorted_tasks[0];
 
-                    // Spawn creep
-                    if (!creep) {
-                        let spawner = spawners.pop()
-                        if (spawner) {
-                            creep = task.body.spawn(spawner, task);
-                        }
+                // Try available creep
+                creep = avail_creeps.get(task.body.name).pop()
+                if (creep) { creep.memory.task = task.compress() }
+
+                // Try spawning
+                if (!creep) {
+                    let spawner = spawners.pop()
+                    if (spawner) {
+                        creep = task.body.spawn(spawner, task);
                     }
-
-                    // Update busy_creeps
-                    if (creep) { 
-                        console.log(creep + " to " + task.id);
-                        busy_creeps.get(task.id).push(creep); }
-
-                    // Check if done assigning
-                    if (!creep || busy_creeps.get(task.id).length >= task.wanted) { continue tasks_loop ;}
                 }
 
-                // Re-queue if needed
-                tasks.push(task);
+                // Update task fullfillment
+                if (creep) {
+                    task.workers++;
+                    for (let i = 0; i < sorted_tasks.length - 1; i++) {
+                        // Compare to next task
+                        let next_task = sorted_tasks[i+1];
+                        if ((task.weight * task.workers / task.wanted) <= (next_task.weight * next_task.workers / next_task.wanted)) { break; }
+
+                        // Swap with next task
+                        sorted_tasks[task.i] = next_task;
+                        sorted_tasks[next_task.i] = task;
+                    }
+                } else {
+                    sorted_tasks.shift();
+                }
             }
         }
+
+        // Inter-room
     }
 
     // Do tasks

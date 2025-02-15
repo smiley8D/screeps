@@ -4,15 +4,9 @@ Body = require("body");
 
 class StockSpawn extends Task {
 
-    constructor(id, workers) {
-        super(workers);
-
-        // Overwrite defaults
-        this.name = "StockSpawn";
-        this.body = Hauler;
-
-        this.id = "StockSpawn:" + id;
-        this.room = id;
+    constructor(room, wanted) {
+        super("StockSpawn", room, wanted);
+        this.body = new Hauler();
     }
 
     static getTasks(room) {
@@ -20,8 +14,6 @@ class StockSpawn extends Task {
             let task = new StockSpawn(room.name, Math.ceil(Math.log(room.energyCapacityAvailable - room.energyAvailable) / Math.log(10)))
             if (room.energyAvailable <= 300) {
                 task.body = new Body();
-            } else {
-                task.body = new Hauler();
             }
             return [task];
         }
@@ -32,14 +24,14 @@ class StockSpawn extends Task {
         creep.say("📦");
 
         // Move to room first
-        let room = Game.rooms[creep.memory.task.room];
+        let room = Game.rooms[creep.memory.task.tgt];
         if (room != creep.room) {
             creep.moveTo(room);
             return;
         }
 
         // Collect
-        utils.fill(creep, false, false);
+        utils.fill(creep, creep.memory.body == "Worker");
 
         // Store
         if (!creep.memory.curFill) {
@@ -66,6 +58,7 @@ class StockSpawn extends Task {
             }
         }
     }
+
 }
 
 module.exports = StockSpawn;

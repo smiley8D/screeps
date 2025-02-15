@@ -34,6 +34,7 @@ class RenewTask extends Task {
             }
         }
     }
+
 }
 
 module.exports = RenewTask;

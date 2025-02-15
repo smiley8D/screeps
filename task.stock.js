@@ -50,6 +50,7 @@ class StockTask extends Task {
         let container = Game.getObjectById(task.container);
         container.room.visual.text(task.local_limit + "📦",container.pos);
     }
+
 }
 
 module.exports = StockTask;

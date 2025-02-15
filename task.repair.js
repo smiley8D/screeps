@@ -52,6 +52,7 @@ class RepairTask extends Task {
         let structure = Game.getObjectById(task.structure);
         structure.room.visual.text(task.local_limit + "🔧",structure.pos);
     }
+
 }
 
 module.exports = RepairTask;

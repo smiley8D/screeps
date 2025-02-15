@@ -1,6 +1,6 @@
 utils = {
     // Fill a creep's inventory from available fills.
-    fill: function(creep, mine=false, restock=false) {
+    fill: function(creep, mine=false, full=false) {
         // Check creep needs filling
         if (!creep.store.getFreeCapacity(RESOURCE_ENERGY) || (creep.store.getUsedCapacity(RESOURCE_ENERGY) && !creep.memory.curFill)) {
             creep.memory.curFill = null;
@@ -23,8 +23,7 @@ utils = {
 
         // Try storage/containers (if restocking, can only take from yellow-flagged containers)
         else if (fill = creep.pos.findClosestByPath(FIND_STRUCTURES,
-            {filter: function(o) {return ((o.structureType == STRUCTURE_STORAGE || o.structureType == STRUCTURE_CONTAINER) && o.store.getUsedCapacity(RESOURCE_ENERGY))
-            && (!restock || o.pos.lookFor(LOOK_FLAGS).filter((flag) => flag.color == COLOR_YELLOW).length > 0)}})) {}
+            {filter: function(o) { return ((o.structureType == STRUCTURE_STORAGE || o.structureType == STRUCTURE_CONTAINER) && o.store.getUsedCapacity(RESOURCE_ENERGY)) }})) {}
 
         // Try mining if allowed
         else if (fill = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE)) {
@@ -76,7 +75,7 @@ utils = {
     },
 
     // Empty a creep's inventory to available dsts.
-    depo: function(creep) {
+    depo: function(creep, empty=false) {
         // Check creep needs filling
         if (!creep.store.getUsedCapacity(RESOURCE_ENERGY) || (creep.store.getFreeCapacity(RESOURCE_ENERGY) && !creep.memory.curDepo)) {
             creep.memory.curDepo = null;

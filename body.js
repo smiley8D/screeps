@@ -1,7 +1,7 @@
 class Body {
 
     constructor() {
-        this.base = [WORK,CARRY,CARRY,MOVE];
+        this.base = [WORK,CARRY,CARRY,MOVE,MOVE];
         this.add = [WORK,CARRY,MOVE];
         this.limit = 5;
 
@@ -22,12 +22,13 @@ class Body {
             }
         }
 
-        let result = spawner.spawnCreep(body, name, {memory: {task: task, body: this.name}});
+        let result = spawner.spawnCreep(body, name, {memory: {task: task.compress(), body: this.name}});
         if (result == OK) {
             console.log("Spawning " + name + " size " + i + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name);
             return name;
         }
     }
+
 }
 
 module.exports = Body;

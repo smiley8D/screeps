@@ -1,52 +1,38 @@
 Task = require("task");
 utils = require("utils");
 
-class UpgradeTask extends Task {
+class Upgrade extends Task {
 
-    constructor(room) {
-        super();
-        this.name = "upgrade";
-        this.emoji = "⬆️";
-        this.local_limit = 10;
-
-        this.id = "upgrade:" + room;
-        this.room = room;
+    constructor(room, wanted) {
+        super("Upgrade", room, wanted);
     }
 
-    static getTasks(tasks, room_limit) {
-        room_limit["upgrade"] = 10;
-        for (let room in Game.rooms) {
-            let controller = Game.rooms[room].controller;
-            if (controller) {
-                let task = new UpgradeTask(room);
-                if (!tasks.has(task.id)) {
-                    tasks.set(task.id, task);
+    static getTasks(room) {
+        // Hardcode 5 for now, eventually base on change in energy over time?
+        let task = new Upgrade(room.name, 5)
+        return [task];
+    }
+
+    static doTask(creep) {
+        creep.say("⬆️");
+        let controller = Game.rooms[creep.memory.task.tgt].controller;
+
+        // Fill inventory
+        if (creep.memory.filling) {
+            
+        } else {
+            // Upgrade
+            if (!creep.memory.curFill) {
+                let result = creep.upgradeController(controller)
+                if (result == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(controller, {visualizePathStyle: {}});
+                } else if (result != OK && result != ERR_NOT_ENOUGH_ENERGY) {
+                    creep.memory.task = null;
                 }
             }
         }
     }
 
-    static doTask(creep) {
-        let controller = Game.rooms[creep.memory.task.room].controller;
-
-        // Collect
-        utils.fill(creep);
-
-        // Upgrade
-        if (!creep.memory.curFill) {
-            let result = creep.upgradeController(controller)
-            if (result == ERR_NOT_IN_RANGE) {
-                creep.moveTo(controller, {visualizePathStyle: {}});
-            } else if (result != OK) {
-                creep.memory.task = null;
-            }
-        }
-    }
-
-    static alert(task) {
-        let controller = Game.rooms[task.room].controller;
-        controller.room.visual.text(task.local_limit + "⬆️",controller.pos);
-    }
 }
 
-module.exports = UpgradeTask;
+module.exports = Upgrade;

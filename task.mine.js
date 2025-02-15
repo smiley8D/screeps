@@ -1,45 +1,25 @@
 Task = require("task");
+Miner = require("body.miner");
 utils = require("utils");
 
-class MineTask extends Task {
+class Mine extends Task {
 
-    constructor(source, count) {
-        super();
-        this.body_add = [WORK];
-        this.body_base = [WORK,WORK,CARRY,MOVE];
-        this.name = "mine"
-        this.emoji = "⛏️";
-        this.permissive = false;
-        this.task_lock = "mine";
-
-        this.source = source
-        this.id = "mine:" + source;
-        this.local_limit = count;
-        this.body_limit = Math.floor(6 / count) - 2;
+    constructor(pos, wanted) {
+        super("Mine", pos, wanted);
+        this.body = new Miner();
     }
 
-    static getTasks(tasks, room_limit) {
-        room_limit["mine"] = 0;
-        for (let room in Game.rooms) {
-            let terrain = Game.rooms[room].getTerrain();
-            for (let source of Game.rooms[room].find(FIND_SOURCES)) {
-                let count = 0;
-                for (let x = source.pos.x-1; x <= source.pos.x+1; x++) {
-                    for (let y = source.pos.y-1; y <= source.pos.y+1; y++) {
-                        if (terrain.get(x,y) != TERRAIN_MASK_WALL) {
-                            count++;
-                            room_limit["mine"]++;
-                        }
-                    }
-                }
-                let task = new MineTask(source.id, count);
-                tasks.set(task.id, task);
-            }
+    static getTasks(room) {
+        // 1 per node for now, eventually base on harvest efficiency and/or resources required?
+        let tasks = []
+        for (let source of room.find(FIND_SOURCES)) {
+            tasks.push(new Mine(source.id,1));
         }
+        return tasks;
     }
 
     static doTask(creep) {
-        let source = Game.getObjectById(creep.memory.task.source);
+        let source = Game.getObjectById(creep.memory.task.tgt);
 
         // Depo
         utils.depo(creep);
@@ -55,10 +35,6 @@ class MineTask extends Task {
         }
     }
 
-    static alert(task) {
-        let source = Game.getObjectById(task.source);
-        source.room.visual.text(task.local_limit + "⛏️",source.pos);
-    }
 }
 
-module.exports = MineTask;
+module.exports = Mine;

@@ -2,25 +2,27 @@ Body = require("body");
 
 class Task {
 
-    constructor(workers=1) {
-        // Old
-        this.local_limit = 3;
-        this.body_base = [WORK,CARRY,CARRY,MOVE];
-        this.body_add = [WORK,CARRY,MOVE];
-        this.permissive = true;
-        this.task_lock;
-        this.step = 0;
-        this.emoji;
+    constructor(name, tgt, wanted) {
+        // Task type (class name)
+        this.name = name;
 
-        // Initialize
-        this.id;
-        this.wanted;
+        // Unique string ID for task
+        this.id = name + ":" + tgt
 
-        // Defaults
-        this.name = "Task";
-        this.body = Body;
+        // Target of task
+        this.tgt = tgt;
 
-        this.workers = workers;
+        // Body of assignable workers
+        this.body = new Body();
+
+        // Workers assigned
+        this.workers = 0;
+
+        // Total workers wanted
+        this.wanted = wanted;
+
+        // Weight for task prioritization
+        this.weight = 1;
     }
 
     // Generate list of tasks for a given room
@@ -29,7 +31,14 @@ class Task {
     // Make provided creep perform this task
     static dotask(creep) {}
 
-    static alert(task) {}
+    // Compress tasks for memory storage
+    compress() {
+        return {
+            name: this.name,
+            id: this.id,
+            tgt: this.tgt,
+        }
+    }
 }
 
 module.exports = Task;
