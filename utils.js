@@ -39,46 +39,29 @@ utils = {
     },
 
     // Empty a creep's inventory to available dsts.
-    depo: function(creep, empty=false) {
-        // Check creep needs filling
-        if (!creep.store.getUsedCapacity(RESOURCE_ENERGY) || (creep.store.getFreeCapacity(RESOURCE_ENERGY) && !creep.memory.curDepo)) {
-            creep.memory.curDepo = null;
-            return;
-        }
-
-        // Set fill
-        let depo;
-
+    depo: function(creep, resource=RESOURCE_ENERGY) {
         // Try current depo
-        if (depo = Game.getObjectById(creep.memory.curDepo)) {}
+        let depo = Game.getObjectById(creep.memory.curDepo)
 
-        // Try containers/storage
-        else if (depo = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: function(o) {return o.store && o.store.getFreeCapacity(RESOURCE_ENERGY)}})) {}
-
-        // No depo found
-        else {
-            creep.memory.curDepo = null;
-            return;
+        // Find new depo
+        if (!depo) {
+            // Find closest
+            depo = creep.pos.findClosestByPath(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
+                o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) });
         }
 
-        // Access depo
-        let result = creep.transfer(depo, RESOURCE_ENERGY)
+        // Try transfer
+        let result = creep.transfer(depo, RESOURCE_ENERGY);
 
-        // Handle movement
-        if (result == ERR_NOT_IN_RANGE) {
-            if (creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}}) != OK) {
-                // Depo unreachable, unset
-                creep.memory.curDepo = null;
-                return
-            }
-        } else if (result != OK) {
-            // Invalid depot, unset
-            creep.memory.curDepo = null;
-            return;
-        }
+        // Move in range
+        if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}}) }
 
-        creep.memory.curDepo = depo.id;
-        return depo;
+        // Allowed result, return OK
+        if (result == OK || result == ERR_NOT_IN_RANGE || result == ERR_TIRED) { return OK }
+
+        // Bad result, unset and return
+        creep.memory.curDepo = null;
+        return result;
     }
 }
 
