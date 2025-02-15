@@ -1,11 +1,12 @@
 class Body {
-    base = [WORK,CARRY,CARRY,MOVE];
-    add = [WORK,CARRY,MOVE];
-    limit = 5;
 
-    name = "Worker";
+    constructor() {
+        this.base = [WORK,CARRY,CARRY,MOVE];
+        this.add = [WORK,CARRY,MOVE];
+        this.limit = 5;
 
-    constructor() {}
+        this.name = "Worker";
+    }
 
     spawn(spawner, task) {
         // Get maximum affordable size

@@ -1,25 +1,25 @@
 Body = require("body");
 
 class Task {
-    // Old
-    local_limit = 3;
-    body_base = [WORK,CARRY,CARRY,MOVE];
-    body_add = [WORK,CARRY,MOVE];
-    permissive = true;
-    task_lock;
-    step = 0;
-    emoji;
-
-    // Initialize
-    id;
-    workers;
-    wanted;
-
-    // Defaults
-    name = "Task";
-    body = Body;
 
     constructor(workers=1) {
+        // Old
+        this.local_limit = 3;
+        this.body_base = [WORK,CARRY,CARRY,MOVE];
+        this.body_add = [WORK,CARRY,MOVE];
+        this.permissive = true;
+        this.task_lock;
+        this.step = 0;
+        this.emoji;
+
+        // Initialize
+        this.id;
+        this.wanted;
+
+        // Defaults
+        this.name = "Task";
+        this.body = Body;
+
         this.workers = workers;
     }
 

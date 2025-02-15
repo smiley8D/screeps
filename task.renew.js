@@ -2,12 +2,11 @@ Task = require("task");
 utils = require("utils");
 
 class RenewTask extends Task {
-    name = "renew";
-
-    old_task;
 
     constructor(old_task) {
         super();
+        this.name = "renew";
+
         this.old_task = old_task;
     }
 

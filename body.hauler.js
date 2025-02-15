@@ -1,13 +1,13 @@
 Body = require("body");
 
 class Hauler extends Body {
-    base = [CARRY,CARRY,MOVE,CARRY,CARRY,MOVE];
-    add = [CARRY,CARRY,MOVE];
-
-    name = "Hauler";
 
     constructor() {
         super();
+        this.base = [CARRY,CARRY,MOVE,CARRY,CARRY,MOVE];
+        this.add = [CARRY,CARRY,MOVE];
+    
+        this.name = "Hauler";
     }
 }
 

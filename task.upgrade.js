@@ -2,14 +2,13 @@ Task = require("task");
 utils = require("utils");
 
 class UpgradeTask extends Task {
-    name = "upgrade";
-    emoji = "⬆️";
-    local_limit = 10;
-
-    room;
 
     constructor(room) {
         super();
+        this.name = "upgrade";
+        this.emoji = "⬆️";
+        this.local_limit = 10;
+
         this.id = "upgrade:" + room;
         this.room = room;
     }

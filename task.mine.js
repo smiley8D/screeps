@@ -2,17 +2,16 @@ Task = require("task");
 utils = require("utils");
 
 class MineTask extends Task {
-    body_add = [WORK];
-    body_base = [WORK,WORK,CARRY,MOVE];
-    name = "mine"
-    emoji = "⛏️";
-    permissive = false;
-    task_lock = "mine";
-
-    source;
 
     constructor(source, count) {
         super();
+        this.body_add = [WORK];
+        this.body_base = [WORK,WORK,CARRY,MOVE];
+        this.name = "mine"
+        this.emoji = "⛏️";
+        this.permissive = false;
+        this.task_lock = "mine";
+
         this.source = source
         this.id = "mine:" + source;
         this.local_limit = count;

@@ -3,15 +3,14 @@ Hauler = require("body.hauler");
 Body = require("body");
 
 class StockSpawn extends Task {
-    // Initialize
-    room;
-
-    // Overwrite defaults
-    name = "StockSpawn";
-    body = Hauler;
 
     constructor(id, workers) {
         super(workers);
+
+        // Overwrite defaults
+        this.name = "StockSpawn";
+        this.body = Hauler;
+
         this.id = "StockSpawn:" + id;
         this.room = id;
     }

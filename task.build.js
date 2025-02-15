@@ -2,13 +2,13 @@ Task = require("task");
 utils = require("utils");
 
 class BuildTask extends Task {
-    name = "build";
-    emoji = "🔨";
-
-    site_id;
 
     constructor(site_id) {
         super();
+
+        this.name = "build";
+        this.emoji = "🔨";
+
         this.id = "build:" + site_id;
         this.site_id = site_id;
     }

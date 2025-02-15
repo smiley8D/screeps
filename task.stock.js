@@ -2,15 +2,14 @@ Task = require("task");
 utils = require("utils");
 
 class StockTask extends Task {
-    body_base = [CARRY,CARRY,MOVE,CARRY,CARRY,MOVE];
-    body_add = [CARRY,CARRY,MOVE];
-    name = "stock";
-    emoji = "📦";
-
-    container;
 
     constructor(container) {
         super();
+        this.body_base = [CARRY,CARRY,MOVE,CARRY,CARRY,MOVE];
+        this.body_add = [CARRY,CARRY,MOVE];
+        this.name = "stock";
+        this.emoji = "📦";
+
         this.id = "stock:" + container
         this.container = container
     }

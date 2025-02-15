@@ -2,13 +2,12 @@ Task = require("task");
 utils = require("utils");
 
 class RepairTask extends Task {
-    name = "repair";
-    emoji = "🔧";
-
-    structure;
 
     constructor(structure) {
         super();
+        this.name = "repair";
+        this.emoji = "🔧";
+
         this.id = "repair:" + structure.id;
         this.structure = structure.id;
     }
