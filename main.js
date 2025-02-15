@@ -1,24 +1,8 @@
 utils = require("utils");
 
-UpgradeTask = require("task.upgrade");
-BuildTask = require("task.build");
-StockTask = require("task.stock");
-RepairTask = require("task.repair");
-MineTask = require("task.mine");
-RenewTask = require("task.renew");
-
-TASKS = {
-    "mine": MineTask,
-    "stock": StockTask,
-    "repair": RepairTask,
-    "upgrade": UpgradeTask,
-    "build": BuildTask,
-    "renew": RenewTask,
-}
-
 StockSpawn = require("task.stock_spawn");
 
-TASKS_NEW = {
+TASKS = {
     "StockSpawn": StockSpawn,
 }
 
@@ -26,6 +10,15 @@ Memory.room_energies = {};
 Memory.room_energy_changes = {};
 
 module.exports.loop = function() {
+    // Cleanup dead creeps
+    if (Game.time % 50 == 0) {
+        for (let creep in Memory.creeps) {
+            if (!Game.creeps[creep]) {
+                delete Memory.creeps[creep];
+            }
+        }
+    }
+
     // Update tasks
     if (Game.time % 10 == 0) {
         for (let room_name in Game.rooms) {
@@ -53,8 +46,8 @@ module.exports.loop = function() {
             // Get unfilled tasks
             let tasks = [];
             let lowest;
-            for (let task_name in TASKS_NEW) {
-                for (let task of TASKS_NEW[task_name].getTasks(room)) {
+            for (let task_name in TASKS) {
+                for (let task of TASKS[task_name].getTasks(room)) {
                     if (!avail_creeps.has(task.body.name)) { avail_creeps.set(task.body.name, []) }
                     if (!busy_creeps.has(task.id)) { busy_creeps.set(task.id, []) }
                     task.wanted = task.workers - busy_creeps.get(task.id).length;
@@ -95,122 +88,6 @@ module.exports.loop = function() {
         }
     }
 
-    let spawner = Game.spawns["Spawn1"];
-
-    if (Game.time % 50 == 0) {
-        // Remove dead creeps
-        let kill_counter = 0;
-        for (let creep in Memory.creeps) {
-            if (!Game.creeps[creep]) {
-                delete Memory.creeps[creep];
-                kill_counter++;
-            }
-        }
-    }
-
-    if (Game.time % 10 == 0) {
-        // Update tasks
-        let tasks = new Map();
-        let room_limit = new Map();
-        let task_locks = new Map();
-
-        // Generate tasks
-        for (let taskname in TASKS) {
-            TASKS[taskname].getTasks(tasks, room_limit);
-        }
-
-        let avail_creeps = [];
-
-        // Check creep tasks
-        for (let creepname in Game.creeps) {
-            let creep = Game.creeps[creepname];
-            let task = creep.memory.task;
-            if (creep.ticksToLive < 50) {
-                // Creep will die soon, prepare to replace
-            } else if (task && !tasks.has(task.id)) {
-                // Continue outdated task
-            } else if (task && tasks.get(task.id).local_limit > 0 && room_limit[task.name] > 0) {
-                // Continue task
-                tasks.get(task.id).local_limit--;
-                room_limit[task.name]--;
-            } else {
-                // Mark available
-                creep.memory.task = null
-
-                // Apply task locks
-                if (creep.memory.task_lock) {
-                    if (!task_locks.has(creep.memory.task_lock)) {
-                        task_locks.set(creep.memory.task_lock, []);
-                    }
-                    task_locks.get(creep.memory.task_lock).push(creep);
-                } else {
-                    avail_creeps.push(creep);
-                }
-            }
-        }
-
-        // Check tasks
-        let lock_spawn = false;
-        if (spawner.spawning) {lock_spawn = true};
-        for (let [id, task] of tasks) {
-            creep_loop:
-            while (task.local_limit > 0 && room_limit[task.name] > 0) {
-                // Assign existing creep
-                let creep;
-                if (task.task_lock) {
-                    if (task_locks.get(task.name)) {
-                        creep = task_locks.get(task.name).pop()
-                    }
-                } else {
-                    creep = avail_creeps.pop();
-                }
-                if (creep) {
-                    creep.memory.task = task;
-                    task.local_limit--;
-                    room_limit[task.name]--;
-                    continue;
-                }
-
-                if (spawner.memory.lastEnergy == spawner.room.energyAvailable && !lock_spawn && !spawner.spawning) {
-                    // Spawn correct body
-                    let name = "worker-";
-                    let body = task.body_base;
-                    if (task.task_lock)  {name = task.task_lock + "-"}
-                    let i = 0;
-                    for (; i < task.body_limit; i++) {
-                        let result = spawner.spawnCreep(body.concat(task.body_add), Game.time, {dryRun: true});
-                        if (result != ERR_NOT_ENOUGH_RESOURCES) {
-                            body = body.concat(task.body_add)
-                        } else {
-                            break;
-                        }
-                    }
-
-                    let result = spawner.spawnCreep(body, name + Game.time, {memory:{task: task, task_lock: task.task_lock}});
-                    if (result == OK) {
-                        console.log("Spawning " + name + Game.time + " size " + i + " for " + task.id);
-                        task.local_limit--;
-                        room_limit[task.name]--;
-                        lock_spawn = true;
-                        continue creep_loop;
-                    }
-                }
-
-                break;
-            }
-        }
-
-        // Handle idle creeps
-        for (let creep of avail_creeps) {
-            creep.memory.task = new UpgradeTask("W7N2");
-        }
-        for (let creep_list of task_locks.values()) {
-            for (let creep of creep_list) {
-                creep.memory.task = new UpgradeTask("W7N2");
-            }
-        }
-    }
-
     // Do tasks
     for (let creepname in Game.creeps) {
         let creep = Game.creeps[creepname];
@@ -218,20 +95,6 @@ module.exports.loop = function() {
         // Do task
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             TASKS[creep.memory.task.name].doTask(creep);
-        } else if (creep.memory.task && TASKS_NEW[creep.memory.task.name]) {
-            TASKS_NEW[creep.memory.task.name].doTask(creep);
-        }
-
-        // Handle idle creeps
-        if (!creep.memory.task) {
-            utils.depo(creep);
-            if (!creep.memory.curDepo) {
-                creep.moveTo(25,25);
-            }
         }
     }
-
-    // Update spawn
-    spawner.memory.lastEnergy = spawner.room.energyAvailable;
-
 }
