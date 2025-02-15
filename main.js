@@ -23,6 +23,7 @@ TASKS_NEW = {
 }
 
 Memory.room_energies = {};
+Memory.room_energy_changes = {};
 
 module.exports.loop = function() {
     // Update tasks
