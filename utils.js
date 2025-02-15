@@ -1,77 +1,41 @@
 utils = {
     // Fill a creep's inventory from available fills.
-    fill: function(creep, mine=false, full=false) {
-        // Check creep needs filling
-        if (!creep.store.getFreeCapacity(RESOURCE_ENERGY) || (creep.store.getUsedCapacity(RESOURCE_ENERGY) && !creep.memory.curFill)) {
-            creep.memory.curFill = null;
-            return;
-        }
-
-        // Set fill
-        let fill;
-
+    fill: function(creep, mine=false, resource=RESOURCE_ENERGY) {
         // Try current fill
-        if (fill = Game.getObjectById(creep.memory.curFill)) {}
+        let fill = Game.getObjectById(creep.memory.curFill)
 
-        // Try drops
-        else if (fill = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES,
-            {filter: {resourceType: RESOURCE_ENERGY}})) {}
+        // Find new fill
+        if (!fill) {
+            // Assemble list of candidate fills
+            let fills = [];
+            if (mine && resource == RESOURCE_ENERGY) { fills = creep.room.find(FIND_SOURCES_ACTIVE) }
+            fills = fills.concat(creep.room.find(FIND_DROPPED_RESOURCES, { filter: (o => o.resourceType == resource && o.amount >= creep.store.getFreeCapacity(resource) ) }),
+                creep.room.find(FIND_TOMBSTONES, { filter: (o) => o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) }),
+                creep.room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
+                     o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) }));
 
-        // Try tombstones
-        else if (fill = creep.pos.findClosestByPath(FIND_TOMBSTONES,
-            {filter: function(o) {return o.store.getUsedCapacity(RESOURCE_ENERGY)}})) {}
-
-        // Try storage/containers (if restocking, can only take from yellow-flagged containers)
-        else if (fill = creep.pos.findClosestByPath(FIND_STRUCTURES,
-            {filter: function(o) { return ((o.structureType == STRUCTURE_STORAGE || o.structureType == STRUCTURE_CONTAINER) && o.store.getUsedCapacity(RESOURCE_ENERGY)) }})) {}
-
-        // Try mining if allowed
-        else if (fill = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE)) {
-            if (!mine) {
-                creep.memory.curFill = null;
-                return;
-            }
+            // Find closest
+            fill = creep.pos.findClosestByPath(fills);
         }
 
-        // No fill found
-        else {
-            creep.memory.curFill = null;
-            return;
-        }
+        // Try pickup
+        let result = creep.pickup(fill);
 
-        // Access fill
-        let result;
+        // Try withdraw
+        if (result != OK && result != ERR_NOT_IN_RANGE) { result = creep.harvest(fill) }
 
-        // Pickup drops
-        if (fill.amount) { result = creep.pickup(fill); }
+        // Try harvest
+        if (result != OK && result != ERR_NOT_IN_RANGE) { result = creep.withdraw(fill, RESOURCE_ENERGY) }
 
-        // Harvest source
-        else if (fill.energy) { result = creep.harvest(fill); }
+        // Move in range
+        if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}}) }
 
-        // Withdraw
-        else if (fill.store) { result = creep.withdraw(fill, RESOURCE_ENERGY) }
+        // Allowed result, return OK
+        if (result == OK || result == ERR_NOT_IN_RANGE || result == ERR_TIRED) { return OK }
 
-        // Invalid fill
-        else {
-            creep.memory.curFill = null;
-            return;
-        }
-
-        if (result == ERR_NOT_IN_RANGE) {
-            // Move to fill
-            if (creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}}) != OK) {
-                // Fill unreachable, unset
-                creep.memory.curFill = null;
-                return
-            }
-        } else if (result != OK) {
-            // Invalid fill
-            creep.memory.curFill = null;
-            return;
-        }
-
-        creep.memory.curFill = fill.id;
-        return fill;
+        // Bad result, unset and return
+        creep.memory.curFill = null;
+        return result;
     },
 
     // Empty a creep's inventory to available dsts.

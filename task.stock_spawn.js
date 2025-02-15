@@ -23,39 +23,28 @@ class StockSpawn extends Task {
     static doTask(creep) {
         creep.say("📦");
 
-        // Move to room first
-        let room = Game.rooms[creep.memory.task.tgt];
-        if (room != creep.room) {
-            creep.moveTo(room);
-            return;
+        // Get depo
+        let depo = Game.getObjectById(creep.memory.curDepo);
+        if (!depo) {
+            depo = creep.pos.findClosestByPath(FIND_MY_STRUCTURES,
+            {filter: (o) => (o.structureType == STRUCTURE_SPAWN || o.structureType == STRUCTURE_EXTENSION) && o.store.getFreeCapacity(RESOURCE_ENERGY)});
+            creep.memory.curDepo = depo;
         }
 
-        // Collect
-        utils.fill(creep, creep.memory.body == "Worker");
+        // Attempt restock
+        let result = creep.transfer(depo, RESOURCE_ENERGY);
+        if (result == ERR_NOT_IN_RANGE) {
+            // Move in range
+            creep.moveTo(depo, {visualizePathStyle: {}});
+        } else if (result == ERR_NOT_ENOUGH_ENERGY) {
+            // Fill inventory
+            result = utils.fill(creep, creep.body == "Worker");
+        }
 
-        // Store
-        if (!creep.memory.curFill) {
-            // Determine depo
-            let depo = Game.getObjectById(creep.memory.task.curDepo);
-            if (!depo) {
-                depo = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {filter: (c) => (c.structureType == STRUCTURE_SPAWN || c.structureType == STRUCTURE_EXTENSION) && c.store.getFreeCapacity(RESOURCE_ENERGY)});
-            }
-
-            // Attempt to depo
-            if (depo) {
-                creep.memory.task.curDepo = depo.id;
-                let result = creep.transfer(depo, RESOURCE_ENERGY);
-                if (result == ERR_NOT_IN_RANGE || result == OK) {
-                    creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
-                    return;
-                } else {
-                    // Depo invalid
-                    creep.memory.task.curDepo = null;
-                }
-            } else {
-                // No depo available, finish task
-                creep.memory.task = null;
-            }
+        // Cannot complete task
+        if (result != OK && result != ERR_NOT_IN_RANGE) {
+            creep.memory.task = null;
+            creep.memory.curDepo = null;
         }
     }
 

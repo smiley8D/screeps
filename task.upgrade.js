@@ -17,19 +17,19 @@ class Upgrade extends Task {
         creep.say("⬆️");
         let controller = Game.rooms[creep.memory.task.tgt].controller;
 
-        // Fill inventory
-        if (creep.memory.filling) {
-            
-        } else {
-            // Upgrade
-            if (!creep.memory.curFill) {
-                let result = creep.upgradeController(controller)
-                if (result == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(controller, {visualizePathStyle: {}});
-                } else if (result != OK && result != ERR_NOT_ENOUGH_ENERGY) {
-                    creep.memory.task = null;
-                }
-            }
+        // Attempt upgrade
+        let result = creep.upgradeController(controller)
+        if (result == ERR_NOT_IN_RANGE) {
+            // Move in range
+            creep.moveTo(controller, {visualizePathStyle: {}});
+        } else if (result == ERR_NOT_ENOUGH_ENERGY) {
+            // Fill inventory
+            result = utils.fill(creep);
+        }
+
+        // Cannot complete task
+        if (result != OK && result != ERR_NOT_IN_RANGE) {
+            creep.memory.task = null;
         }
     }
 

@@ -24,7 +24,6 @@ module.exports.loop = function() {
 
     // Assign tasks
     if (Game.time % 1 == 0) {
-        console.log();
         let room_tasks = new Map();
         let room_creeps = new Map();
 
@@ -49,7 +48,7 @@ module.exports.loop = function() {
 
             // Get current assignments
             for (let creep of room.find(FIND_MY_CREEPS)) {
-                if (creep.memory.task && tasks.has(creep.memory.task.id)) {
+                if (creep.memory.task && tasks.has(creep.memory.task.id) && tasks.get(creep.memory.task.id).workers < tasks.get(creep.memory.task.id).wanted) {
                     // Mark assigned
                     let task = tasks.get(creep.memory.task.id);
                     task.workers++;
@@ -73,11 +72,6 @@ module.exports.loop = function() {
                     creep.memory.task = null;
                     avail_creeps.get(creep.memory.body).push(creep);
                 }
-            }
-
-            // testing sorting feature
-            for (let task of sorted_tasks) {
-                console.log(task.id, (task.weight * task.workers / task.wanted), task.workers, task.wanted);
             }
 
             // Assign creeps

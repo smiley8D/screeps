@@ -22,10 +22,10 @@ class Mine extends Task {
         let source = Game.getObjectById(creep.memory.task.tgt);
 
         // Depo
-        utils.depo(creep);
+        if (creep.memory.depo) { utils.depo(creep); }
 
         // Mine
-        if (!creep.memory.curDepo) {
+        if (!creep.memory.depo) {
             let result = creep.harvest(source)
             if (result == ERR_NOT_IN_RANGE) {
                 creep.moveTo(source, {visualizePathStyle: {}})
