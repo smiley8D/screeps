@@ -42,7 +42,7 @@ class Repair extends Task {
         if (!creep.memory.curFill) {
             // Get closest damaged site
             let structure = Game.getObjectById(creep.memory.curStructure);
-            if (!structure || structure.hits / structure.hitsMax > 0.95) {
+            if (!structure) {
                 structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.9 });
                 if (structure) {
                     creep.memory.curStructure = structure.id;
@@ -50,11 +50,12 @@ class Repair extends Task {
                     creep.memory.curStructure = null;
                 }
             }
-    
+
             // Attempt repair
             let result = creep.repair(structure);
-            creep.moveTo(structure, {visualizePathStyle: {}});
-            if (result == ERR_NOT_ENOUGH_ENERGY) {
+            if (result == ERR_NOT_IN_RANGE) {
+                creep.moveTo(structure, {visualizePathStyle: {}});
+            } else if (result == ERR_NOT_ENOUGH_ENERGY) {
                 // Fill inventory
                 creep.memory.curFill = true;
             } else if (result == ERR_NO_BODYPART) {

@@ -29,8 +29,9 @@ class Mine extends Task {
         // Mine
         if (!creep.memory.curDepo) {
             let result = creep.harvest(source)
-            creep.moveTo(source, {visualizePathStyle: {}})
-            if (result != OK && result != ERR_NOT_IN_RANGE) {
+            if (result == ERR_NOT_IN_RANGE) {
+                creep.moveTo(source, {visualizePathStyle: {}})
+            } else if (result != OK && result != ERR_NOT_IN_RANGE) {
                 // Cannot complete task
                 creep.memory.task = null;
             }

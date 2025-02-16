@@ -53,8 +53,9 @@ class Build extends Task {
     
             // Attempt build
             let result = creep.build(structure);
-            creep.moveTo(structure, {visualizePathStyle: {}});
-            if (result == ERR_NOT_ENOUGH_ENERGY) {
+            if (result == ERR_NOT_IN_RANGE) {
+                creep.moveTo(structure, {visualizePathStyle: {}});
+            } else if (result == ERR_NOT_ENOUGH_ENERGY) {
                 // Fill inventory
                 creep.memory.curFill = true;
             } else if (result == ERR_NO_BODYPART) {
