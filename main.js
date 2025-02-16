@@ -123,19 +123,13 @@ module.exports.loop = function() {
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             TASKS[creep.memory.task.name].doTask(creep);
         } else {
-            // Recycle
-            let spawn = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
-            if (spawn) {
-                spawn.recycleCreep(creep);
-                creep.moveTo(spawn, {visualizePathStyle: {stroke: "#dc0000"}});
-                creep.say("♻️");
-            }
+            // Trash cleanup
+            creep.say("♻️");
 
-            // Depo
-            utils.depo(creep);
-
-            // Pickup trash
             utils.fill(creep, false, true);
+            if (!creep.memory.curFill) {
+                utils.depo(creep);
+            }
         }
     }
 }

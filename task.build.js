@@ -34,7 +34,11 @@ class Build extends Task {
             let structure = Game.getObjectById(creep.memory.curStructure);
             if (!structure) {
                 structure = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
-                creep.memory.curStructure = structure.id;
+                if (structure) {
+                    creep.memory.curStructure = structure.id;
+                } else {
+                    creep.memory.curStructure = null;
+                }
             }
     
             // Attempt build

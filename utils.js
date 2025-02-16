@@ -1,11 +1,17 @@
 utils = {
     // Fill a creep's inventory from available fills.
     fill: function(creep, mine=false, trash_only=false, resource=RESOURCE_ENERGY) {
+        // Check capacity
+        if (!creep.store.getFreeCapacity()) {
+            creep.memory.curFill = null;
+            return;
+        }
+
         // Try current fill
-        let fill = Game.getObjectById(creep.memory.curFill)
+        let fill = Game.getObjectById(creep.memory.curFill);
 
         // Find new fill
-        if (!fill) {
+        if (!fill || trash_only) {
             // Assemble list of candidate fills
             let fills = [];
             if (mine && resource == RESOURCE_ENERGY) { fills = creep.room.find(FIND_SOURCES_ACTIVE) }
@@ -16,7 +22,12 @@ utils = {
 
             // Find closest
             fill = creep.pos.findClosestByPath(fills);
-            creep.memory.curFill = fill.id;
+            if (fill) {
+                creep.memory.curFill = fill.id;
+            } else {
+                creep.memory.curFill = null;
+                return;
+            }
         }
 
         if (fill) { creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}}) }
@@ -39,6 +50,11 @@ utils = {
 
     // Empty a creep's inventory to available dsts.
     depo: function(creep, resource=RESOURCE_ENERGY) {
+        // Check capacity
+        if (!creep.store.getUsedCapacity()) {
+            creep.memory.curDepo = null;
+            return;
+        }
         // Try current depo
         let depo = Game.getObjectById(creep.memory.curDepo)
 
@@ -46,9 +62,14 @@ utils = {
         if (!depo) {
             // Find closest
             depo = creep.pos.findClosestByPath(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
-                o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) });
+                o.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource) });
 
-            creep.memory.curDepo = depo.id;
+            if (depo) {
+                creep.memory.curDepo = depo.id;
+            } else {
+                creep.memory.curDepo = null;
+                return;
+            }
         }
 
         if (depo) { creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}}) } 
