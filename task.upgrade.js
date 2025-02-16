@@ -26,13 +26,11 @@ class Upgrade extends Task {
         if (!creep.memory.curFill) {
             // Attempt upgrade
             let result = creep.upgradeController(controller)
-            if (result == ERR_NOT_IN_RANGE) {
-                // Move in range
-                creep.moveTo(controller, {visualizePathStyle: {}});
-            } else if (result == ERR_NOT_ENOUGH_ENERGY) {
+            creep.moveTo(controller, {visualizePathStyle: {}});
+            if (result == ERR_NOT_ENOUGH_ENERGY) {
                 // Fill inventory
                 creep.memory.curFill = true;
-            } else if (result != OK) {
+            } else if (result != OK && result != ERR_NOT_IN_RANGE) {
                 // Cannot complete task
                 creep.memory.task = null;
             }

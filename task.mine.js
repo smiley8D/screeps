@@ -19,6 +19,8 @@ class Mine extends Task {
     }
 
     static doTask(creep) {
+        creep.say("⛏️");
+
         let source = Game.getObjectById(creep.memory.task.tgt);
 
         // Depo
@@ -27,9 +29,9 @@ class Mine extends Task {
         // Mine
         if (!creep.memory.depo) {
             let result = creep.harvest(source)
-            if (result == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source, {visualizePathStyle: {}})
-            } else if (result == ERR_NO_BODYPART) {
+            creep.moveTo(source, {visualizePathStyle: {}})
+            if (result != OK && result != ERR_NOT_IN_RANGE) {
+                // Cannot complete task
                 creep.memory.task = null;
             }
         }

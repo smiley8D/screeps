@@ -1,58 +1,62 @@
 Task = require("task");
 utils = require("utils");
 
-class RepairTask extends Task {
+class Repair extends Task {
 
-    constructor(structure) {
-        super();
-        this.name = "repair";
-        this.emoji = "🔧";
-
-        this.id = "repair:" + structure.id;
-        this.structure = structure.id;
+    constructor(room, wanted) {
+        super("Repair", room, wanted);
     }
 
-    static getTasks(tasks, room_limit) {
+    static getTasks(room) {
         let total_dmg = 0;
-        for (let room in Game.rooms) {
-            for (let structure of Game.rooms[room].find(FIND_STRUCTURES, {filter: function(o) {return o.owner == null || o.my}})) {
-                if (structure.hits / structure.hitsMax < 0.9) {
-                    let task = new RepairTask(structure);
-                    tasks.set(task.id, task);
-                    task.local_limit = Math.ceil(Math.log(structure.hitsMax - structure.hits) / Math.log(5000));
-                    total_dmg += structure.hitsMax - structure.hits;
-                }
-            }
+        for (let structure of room.find(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.9 })) {
+            total_dmg += structure.hitsMax - structure.hits;
         }
-        room_limit["repair"] = Math.ceil(Math.log(total_dmg) / Math.log(5000));
+        if (total_dmg > 0) {
+            let task = new Repair(room.name, Math.max(0, Math.ceil(Math.log(total_dmg) / Math.log(100))));
+            return [task];
+        }
+        return [];
     }
 
     static doTask(creep) {
-        let structure = Game.getObjectById(creep.memory.task.structure);
+        creep.say("🔧");
 
-        // Collect
-        utils.fill(creep);
+        // Fill
+        if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
+            utils.fill(creep);
+            creep.memory.curRepair = null;
+        }
 
-        // Repair
+        // Stock spawner
         if (!creep.memory.curFill) {
-            let result = creep.repair(structure)
-            if (result == ERR_NOT_IN_RANGE) {
-                creep.moveTo(structure, {visualizePathStyle: {}})
-            } else if (result != OK) {
+            // Get closest damaged site
+            let structure = Game.getObjectById(creep.memory.curStructure);
+            if (!structure || structure.hits / structure.hitsMax > 0.95) {
+                structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.9 });
+                if (structure) {
+                    creep.memory.curStructure = structure.id;
+                } else {
+                    creep.memory.curStructure = null;
+                }
+            }
+    
+            // Attempt repair
+            let result = creep.repair(structure);
+            creep.moveTo(structure, {visualizePathStyle: {}});
+            if (result == ERR_NOT_ENOUGH_ENERGY) {
+                // Fill inventory
+                creep.memory.curFill = true;
+            } else if (result == ERR_NO_BODYPART) {
+                // Cannot complete task
                 creep.memory.task = null;
+            } else {
+                // Find new site
+                creep.memory.curStructure = null;
             }
         }
-
-        if (structure.hitsMax == structure.hits) {
-            creep.memory.task = null;
-        }
-    }
-
-    static alert(task) {
-        let structure = Game.getObjectById(task.structure);
-        structure.room.visual.text(task.local_limit + "🔧",structure.pos);
     }
 
 }
 
-module.exports = RepairTask;
+module.exports = Repair;

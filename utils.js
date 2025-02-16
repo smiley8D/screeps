@@ -16,7 +16,10 @@ utils = {
 
             // Find closest
             fill = creep.pos.findClosestByPath(fills);
+            creep.memory.curFill = fill.id;
         }
+
+        creep.moveTo(fill, {resusePath: 50, ignoreCreeps: true, visualizePathStyle: {stroke: "#ffa500"}});
 
         // Try pickup
         let result = creep.pickup(fill);
@@ -27,15 +30,11 @@ utils = {
         // Try harvest
         if (result != OK && result != ERR_NOT_IN_RANGE) { result = creep.withdraw(fill, RESOURCE_ENERGY) }
 
-        // Move in range
-        if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}}) }
-
         // Allowed result, return OK
-        if (result == OK || result == ERR_NOT_IN_RANGE || result == ERR_TIRED) { return OK }
-
-        // Bad result, unset and return
-        creep.memory.curFill = null;
-        return result;
+        if (result != OK && result != ERR_NOT_IN_RANGE) { 
+            // Cannot fill
+            creep.memory.curFill = null;
+        }
     },
 
     // Empty a creep's inventory to available dsts.
@@ -48,20 +47,20 @@ utils = {
             // Find closest
             depo = creep.pos.findClosestByPath(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
                 o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) });
+
+            creep.memory.curDepo = depo.id;
         }
+
+        creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
 
         // Try transfer
         let result = creep.transfer(depo, RESOURCE_ENERGY);
 
-        // Move in range
-        if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}}) }
-
         // Allowed result, return OK
-        if (result == OK || result == ERR_NOT_IN_RANGE || result == ERR_TIRED) { return OK }
-
-        // Bad result, unset and return
-        creep.memory.curDepo = null;
-        return result;
+        if (result != OK && result != ERR_NOT_IN_RANGE) { 
+            // Cannot depo
+            creep.memory.curDepo = null;
+        }
     }
 }
 

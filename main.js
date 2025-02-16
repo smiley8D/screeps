@@ -2,12 +2,18 @@ utils = require("utils");
 
 StockSpawn = require("task.stock_spawn");
 Mine = require("task.mine");
+Repair = require("task.repair");
+Build = require("task.build");
 Upgrade = require("task.upgrade");
+Stock = require("task.stock");
 
 TASKS = {
     "StockSpawn": StockSpawn,
     "Mine": Mine,
+    "Repair": Repair,
+    "Build": Build,
     "Upgrade": Upgrade,
+    "Stock": Stock
 }
 
 module.exports.loop = function() {
@@ -48,7 +54,7 @@ module.exports.loop = function() {
 
             // Get current assignments
             for (let creep of room.find(FIND_MY_CREEPS)) {
-                if (creep.memory.task && tasks.has(creep.memory.task.id) && tasks.get(creep.memory.task.id).workers < tasks.get(creep.memory.task.id).wanted) {
+                if (creep.ticksToLive > 100 && creep.memory.task && tasks.has(creep.memory.task.id) && tasks.get(creep.memory.task.id).workers < tasks.get(creep.memory.task.id).wanted) {
                     // Mark assigned
                     let task = tasks.get(creep.memory.task.id);
                     task.workers++;
@@ -66,7 +72,7 @@ module.exports.loop = function() {
                         task.i++;
                         next_task.i--;
                     }
-                } else if (creep.memory.body) {
+                } else if (creep.memory.body && creep.ticksToLive > 100) {
                     // Mark available
                     if (!avail_creeps.get(creep.memory.body)) { avail_creeps.set(creep.memory.body, []) }
                     creep.memory.task = null;
@@ -118,6 +124,13 @@ module.exports.loop = function() {
         // Do task
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             TASKS[creep.memory.task.name].doTask(creep);
+        } else {
+            // Depo and move out of way
+            if (creep.store.getUsedCapacity()) {
+                utils.depo(creep);
+            } else {
+                creep.moveTo(25,25);
+            }
         }
     }
 }

@@ -1,54 +1,58 @@
 Task = require("task");
 utils = require("utils");
 
-class BuildTask extends Task {
+class Build extends Task {
 
-    constructor(site_id) {
-        super();
-
-        this.name = "build";
-        this.emoji = "🔨";
-
-        this.id = "build:" + site_id;
-        this.site_id = site_id;
+    constructor(room, wanted) {
+        super("Build", room, wanted);
     }
 
-    static getTasks(tasks, room_limit) {
+    static getTasks(room) {
         let total_build = 0;
-        for (let site_id in Game.constructionSites) {
-            let site = Game.constructionSites[site_id];
-            let task = new BuildTask(site_id);
-            tasks.set(task.id, task);
-            total_build += site.progressTotal - site.progress + 1;
-            task.local_limit = Math.ceil(Math.log(site.progressTotal - site.progress + 1) / Math.log(1000));
+        for (let structure of room.find(FIND_MY_CONSTRUCTION_SITES)) {
+            total_build += 1 + structure.progressTotal - structure.progress;
         }
-        room_limit["build"] = Math.ceil(Math.log(total_build) / Math.log(1000));
+        if (total_build > 0) {
+            let task = new Build(room.name, Math.ceil(Math.log(total_build) / Math.log(100)));
+            return [task];
+        }
+        return [];
     }
 
     static doTask(creep) {
-        creep.say("🔨")
-        let site = Game.constructionSites[creep.memory.task.site_id];
+        creep.say("🔨");
 
-        // Collect
-        utils.fill(creep);
+        // Fill
+        if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
+            utils.fill(creep);
+            creep.memory.curRepair = null;
+        }
 
-        // Build
+        // Stock spawner
         if (!creep.memory.curFill) {
-            let result = creep.build(site)
-            if (result == ERR_NOT_IN_RANGE) {
-                creep.moveTo(site, {visualizePathStyle: {}})
-            } else if (result != OK) {
+            // Get closest construction site
+            let structure = Game.getObjectById(creep.memory.curStructure);
+            if (!structure) {
+                structure = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
+                creep.memory.curStructure = structure.id;
+            }
+    
+            // Attempt build
+            let result = creep.build(structure);
+            creep.moveTo(structure, {visualizePathStyle: {}});
+            if (result == ERR_NOT_ENOUGH_ENERGY) {
+                // Fill inventory
+                creep.memory.curFill = true;
+            } else if (result == ERR_NO_BODYPART) {
+                // Cannot complete task
                 creep.memory.task = null;
+            } else {
+                // Find new site
+                creep.memory.curStructure = null;
             }
         }
     }
 
-    static alert(task) {
-        let site = Game.constructionSites[task.site_id];
-        if (!site) {return}
-        site.room.visual.text(task.local_limit + "🔨",site.pos);
-    }
-
 }
 
-module.exports = BuildTask;
+module.exports = Build;

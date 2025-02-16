@@ -11,7 +11,7 @@ class StockSpawn extends Task {
 
     static getTasks(room) {
         if (room.energyAvailable < room.energyCapacityAvailable) {
-            let task = new StockSpawn(room.name, Math.ceil(Math.log(room.energyCapacityAvailable - room.energyAvailable) / Math.log(10)))
+            let task = new StockSpawn(room.name, Math.max(0, Math.ceil(Math.log(room.energyCapacityAvailable - room.energyAvailable) / Math.log(10))))
             if (room.energyAvailable <= 300) {
                 task.body = new Body();
             }
@@ -21,7 +21,7 @@ class StockSpawn extends Task {
     }
 
     static doTask(creep) {
-        creep.say("📦");
+        creep.say("🛌");
 
         // Fill
         if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
@@ -33,23 +33,24 @@ class StockSpawn extends Task {
         if (!creep.memory.curFill) {
             // Get closest spawn container
             let depo = Game.getObjectById(creep.memory.curDepo);
-            if (!depo) {
+            if (!depo || !depo.store.getFreeCapacity(RESOURCE_ENERGY)) {
                 depo = creep.pos.findClosestByPath(FIND_MY_STRUCTURES,
                 {filter: (o) => (o.structureType == STRUCTURE_SPAWN || o.structureType == STRUCTURE_EXTENSION) && o.store.getFreeCapacity(RESOURCE_ENERGY)});
-                creep.memory.curDepo = depo;
+                if (depo) {
+                    creep.memory.curDepo = depo.id;
+                } else {
+                    creep.memory.curDepo = null;
+                }
             }
-    
+
             // Attempt restock
             let result = creep.transfer(depo, RESOURCE_ENERGY);
-            if (result == ERR_NOT_IN_RANGE) {
-                // Move in range
-                creep.moveTo(depo, {visualizePathStyle: {}});
-            } else if (result == ERR_NOT_ENOUGH_ENERGY) {
+            creep.moveTo(depo, {visualizePathStyle: {}});
+            if (result == ERR_NOT_ENOUGH_ENERGY) {
                 // Fill inventory
                 creep.memory.curFill = true;
-            } else if (result != OK) {
-                // Cannot complete task
-                creep.memory.task = null;
+            } else if (result == ERR_FULL) {
+                // Find new depo
                 creep.memory.curDepo = null;
             }
         }

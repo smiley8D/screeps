@@ -3,7 +3,7 @@ class Body {
     constructor() {
         this.base = [WORK,CARRY,CARRY,MOVE,MOVE];
         this.add = [WORK,CARRY,MOVE];
-        this.limit = 5;
+        this.limit = 10;
 
         this.name = "Worker";
     }
