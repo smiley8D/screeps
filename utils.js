@@ -1,6 +1,6 @@
 utils = {
     // Fill a creep's inventory from available fills.
-    fill: function(creep, mine=false, resource=RESOURCE_ENERGY) {
+    fill: function(creep, mine=false, trash_only=false, resource=RESOURCE_ENERGY) {
         // Try current fill
         let fill = Game.getObjectById(creep.memory.curFill)
 
@@ -9,17 +9,17 @@ utils = {
             // Assemble list of candidate fills
             let fills = [];
             if (mine && resource == RESOURCE_ENERGY) { fills = creep.room.find(FIND_SOURCES_ACTIVE) }
+            if (!trash_only) { fills = creep.room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
+                     o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) }) }
             fills = fills.concat(creep.room.find(FIND_DROPPED_RESOURCES, { filter: (o => o.resourceType == resource && o.amount >= creep.store.getFreeCapacity(resource) ) }),
-                creep.room.find(FIND_TOMBSTONES, { filter: (o) => o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) }),
-                creep.room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
-                     o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) }));
+                creep.room.find(FIND_TOMBSTONES, { filter: (o) => o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) }));
 
             // Find closest
             fill = creep.pos.findClosestByPath(fills);
             creep.memory.curFill = fill.id;
         }
 
-        creep.moveTo(fill, {resusePath: 50, ignoreCreeps: true, visualizePathStyle: {stroke: "#ffa500"}});
+        if (fill) { creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}}) }
 
         // Try pickup
         let result = creep.pickup(fill);
@@ -51,7 +51,7 @@ utils = {
             creep.memory.curDepo = depo.id;
         }
 
-        creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
+        if (depo) { creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}}) } 
 
         // Try transfer
         let result = creep.transfer(depo, RESOURCE_ENERGY);

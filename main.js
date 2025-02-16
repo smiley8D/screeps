@@ -17,8 +17,6 @@ TASKS = {
 }
 
 module.exports.loop = function() {
-    // Gather metrics
-
     // Cleanup
     if (Game.time % 50 == 0) {
         for (let creep in Memory.creeps) {
@@ -29,7 +27,7 @@ module.exports.loop = function() {
     }
 
     // Assign tasks
-    if (Game.time % 1 == 0) {
+    if (Game.time % 10 == 0) {
         let room_tasks = new Map();
         let room_creeps = new Map();
 
@@ -125,12 +123,19 @@ module.exports.loop = function() {
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             TASKS[creep.memory.task.name].doTask(creep);
         } else {
-            // Depo and move out of way
-            if (creep.store.getUsedCapacity()) {
-                utils.depo(creep);
-            } else {
-                creep.moveTo(25,25);
+            // Recycle
+            let spawn = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
+            if (spawn) {
+                spawn.recycleCreep(creep);
+                creep.moveTo(spawn, {visualizePathStyle: {stroke: "#dc0000"}});
+                creep.say("♻️");
             }
+
+            // Depo
+            utils.depo(creep);
+
+            // Pickup trash
+            utils.fill(creep, false, true);
         }
     }
 }
