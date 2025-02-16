@@ -13,7 +13,7 @@ class Repair extends Task {
             total_dmg += structure.hitsMax - structure.hits;
         }
         if (total_dmg > 0) {
-            let task = new Repair(room.name, Math.max(0, Math.ceil(Math.log(total_dmg) / Math.log(50))));
+            let task = new Repair(room.name, Math.max(0, Math.ceil(Math.log(total_dmg) / Math.log(100))));
             return [task];
         }
         return [];

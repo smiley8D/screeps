@@ -68,7 +68,7 @@ class Stock extends Task {
         if ((!creep.memory.curFill && !creep.store.getUsedCapacity(RESOURCE_ENERGY)) || (!creep.memory.curFill && !creep.memory.curDepo)) {
             let cur = 0;
             let cur_flagged = 0;
-            for (let structure of room.find(FIND_MY_STRUCTURES, { filter: (o) => o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE } )) {
+            for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE } )) {
                 let filled = structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY);
                 if (structure.pos.lookFor(LOOK_FLAGS, {filter: {color: COLOR_YELLOW}}).length > 0) {
                     // Flagged as empty
@@ -78,7 +78,7 @@ class Stock extends Task {
                     }
                 } else if (structure.pos.lookFor(LOOK_FLAGS).length == 0) {
                     // Unflagged
-                    if (filled > cur && !cur_flagged) {
+                    if (filled > cur && cur_flagged == 0) {
                         cur = filled;
                         creep.memory.curFill = structure.id;
                     }
@@ -107,9 +107,9 @@ class Stock extends Task {
             let cur = 0;
             let cur_flagged = 0;
             let cur_other = 0;
-            for (let structure of room.find(FIND_MY_STRUCTURES, { filter: (o) => o.store && (o.my || !o.owner) } )) {
+            for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => o.store && (o.my || !o.owner) } )) {
                 let empty = structure.store.getFreeCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY);
-                if (structure.structureType != STRUCTURE_CONTAINER || structure.structureType != STRUCUTRE_STORAGE) {
+                if (structure.structureType != STRUCTURE_CONTAINER && structure.structureType != STRUCTURE_STORAGE) {
                     // Not container or storage
                     if (empty > cur_other) {
                         cur_other = empty;
@@ -117,13 +117,13 @@ class Stock extends Task {
                     }
                 } else if (structure.pos.lookFor(LOOK_FLAGS, {filter: {color: COLOR_BLUE}}).length > 0) {
                     // Flagged as fill
-                    if (empty > cur_flagged & !cur_other) {
+                    if (empty > cur_flagged & cur_other == 0) {
                         cur_flagged = empty;
                         creep.memory.curDepo = structure.id;
                     }
                 } else if (structure.pos.lookFor(LOOK_FLAGS).length == 0) {
                     // Unflagged
-                    if (empty > cur && !cur_flagged && !cur_other) {
+                    if (empty > cur && cur_flagged == 0 && cur_other == 0) {
                         cur = empty;
                         creep.memory.curDepo = structure.id;
                     }
