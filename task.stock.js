@@ -23,7 +23,7 @@ class Stock extends Task {
         let imbalance = 0;
         for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) })) {
             let diff = (structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY)) - avg_fill;
-            if (diff > 10) {
+            if (diff > 0.1) {
                 imbalance += structure.store.getCapacity(RESOURCE_ENERGY) * diff;
             }
         }
@@ -38,12 +38,16 @@ class Stock extends Task {
 
     static doTask(creep) {
         creep.say("📦");
+        let room = Game.rooms[creep.memory.task.tgt];
 
         // Move to room
         if (creep.room.name != creep.memory.task.tgt) {
             creep.moveTo(Game.rooms[creep.memory.task.tgt], {visualizePathStyle: {}});
             return;
         }
+
+        // Initial condition
+        if (!creep.memory.curFill && !creep.memory.curDepo) { creep.memory.curFill = true }
 
         // Find most filled container
         if (!creep.memory.curFill && !creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
@@ -60,7 +64,7 @@ class Stock extends Task {
         if (creep.memory.curFill) {
             let fill = Game.getObjectById(creep.memory.curFill);
             let result = creep.withdraw(fill, RESOURCE_ENERGY);
-            creep.moveTo(fill, {visualizePathStyle: {}});
+            creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}});
             if (result == ERR_NOT_ENOUGH_ENERGY) {
                 // Find new inventory
                 creep.memory.curFill = false;
@@ -74,7 +78,7 @@ class Stock extends Task {
         if (!creep.memory.curDepo && !creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
             let cur = 1;
             for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) })) {
-                if (structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY) << cur) {
+                if (structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY) < cur) {
                     cur = structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY);
                     creep.memory.curDepo = structure.id;
                 }
@@ -85,7 +89,7 @@ class Stock extends Task {
         if (creep.memory.curDepo) {
             let depo = Game.getObjectById(creep.memory.curDepo);
             let result = creep.transfer(depo, RESOURCE_ENERGY);
-            creep.moveTo(depo, {visualizePathStyle: {}});
+            creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
             if (result == ERR_NOT_ENOUGH_ENERGY) {
                 // Find new inventory
                 creep.memory.curDepo = false;
