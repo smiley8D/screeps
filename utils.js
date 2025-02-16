@@ -17,7 +17,7 @@ utils = {
             if (mine && creep.body.some((b) => b.type == WORK) && resource == RESOURCE_ENERGY) { fills = creep.room.find(FIND_SOURCES_ACTIVE) }
             if (!trash_only) { fills = fills.concat(creep.room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
                     (o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) || (partial && o.store.getUsedCapacity(resource))) })) }
-            fills = fills.concat(creep.room.find(FIND_DROPPED_RESOURCES, { filter: (o => o.resourceType == resource && o.amount >= creep.store.getFreeCapacity(resource) || (partial && o.store.getUsedCapacity(resource))) }),
+            fills = fills.concat(creep.room.find(FIND_DROPPED_RESOURCES, { filter: (o => o.resourceType == resource && o.amount >= creep.store.getFreeCapacity(resource) || partial) }),
                 creep.room.find(FIND_TOMBSTONES, { filter: (o) => o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) || (partial && o.store.getUsedCapacity(resource)) }));
 
             // Find closest
