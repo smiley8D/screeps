@@ -15,7 +15,7 @@ class Recycle extends Task {
     static doTask(creep) {
         creep.say("♻️");
         // Cleanup trash
-        utils.fill(creep, false, true);
+        utils.fill(creep, false, true, true);
         if (!creep.memory.curFill) {
 
             // Depo

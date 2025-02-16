@@ -1,8 +1,8 @@
 utils = {
     // Fill a creep's inventory from available fills.
-    fill: function(creep, mine=false, trash_only=false, resource=RESOURCE_ENERGY) {
+    fill: function(creep, mine=false, trash_only=false, partial=false, resource=RESOURCE_ENERGY) {
         // Check capacity
-        if (!creep.store.getFreeCapacity()) {
+        if (!creep.store.getFreeCapacity(resource)) {
             creep.memory.curFill = null;
             return;
         }
@@ -15,10 +15,10 @@ utils = {
             // Assemble list of candidate fills
             let fills = [];
             if (mine && creep.body.some((b) => b.type == WORK) && resource == RESOURCE_ENERGY) { fills = creep.room.find(FIND_SOURCES_ACTIVE) }
-            if (!trash_only) { fills = creep.room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
-                     o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) }) }
+            if (!trash_only) { fills = fills.concat(creep.room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
+                    (o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) || partial) })) }
             fills = fills.concat(creep.room.find(FIND_DROPPED_RESOURCES, { filter: (o => o.resourceType == resource && o.amount >= creep.store.getFreeCapacity(resource) ) }),
-                creep.room.find(FIND_TOMBSTONES, { filter: (o) => o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) }));
+                creep.room.find(FIND_TOMBSTONES, { filter: (o) => o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) || partial }));
 
             // Find closest
             fill = creep.pos.findClosestByPath(fills);

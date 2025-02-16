@@ -45,7 +45,7 @@ class Stock extends Task {
 
         // Create task
         let imbalance = Math.max(over, under);
-        let workers = Math.max(0, Math.ceil(Math.log(Math.ceil(Math.abs(imbalance) / 1000))));
+        let workers = Math.max(Math.ceil((room.energyCapacityAvailable - room.energyAvailable) / 500), Math.ceil(Math.log(Math.ceil(Math.abs(imbalance) / 1000))));
         if (workers > 0) {
             let task = new Stock(room.name, workers);
             if (room.find(FIND_MY_CREEPS).length == 0) {
@@ -69,15 +69,11 @@ class Stock extends Task {
         // Spawners not full, prioritize
         if (room.energyAvailable < room.energyCapacityAvailable) {
             // Fill
-            if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
-                utils.fill(creep, true, false, RESOURCE_ENERGY);
+            if (!creep.store.getUsedCapacity(RESOURCE_ENERGY) || creep.memory.curFill) {
+                utils.fill(creep, true, false, true, RESOURCE_ENERGY);
                 creep.memory.curDepo = null;
-            } else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 && !creep.memory.curFill) {
-                // Cannot fill, finish task
-                creep.memory.task = null;
-                return;
             }
-    
+
             // Stock spawner
             if (!creep.memory.curFill) {
                 // Get closest spawn container
@@ -91,7 +87,7 @@ class Stock extends Task {
                         creep.memory.curDepo = null;
                     }
                 }
-    
+
                 // Attempt restock
                 let result = creep.transfer(depo, RESOURCE_ENERGY);
                 creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
