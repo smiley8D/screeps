@@ -1,19 +1,21 @@
-utils = require("utils");
+const utils = require("utils");
 
-StockSpawn = require("task.stock_spawn");
-Mine = require("task.mine");
-Repair = require("task.repair");
-Build = require("task.build");
-Upgrade = require("task.upgrade");
-Stock = require("task.stock");
+const StockSpawn = require("task.stock_spawn");
+const Mine = require("task.mine");
+const Repair = require("task.repair");
+const Build = require("task.build");
+const Upgrade = require("task.upgrade");
+const Stock = require("task.stock");
+const Recycle = require("task.recycle");
 
 TASKS = {
-    "StockSpawn": StockSpawn,
+    // "StockSpawn": StockSpawn,
     "Mine": Mine,
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,
-    "Stock": Stock
+    "Stock": Stock,
+    "Recycle": Recycle
 }
 
 module.exports.loop = function() {
@@ -25,6 +27,8 @@ module.exports.loop = function() {
             }
         }
     }
+
+    let avail_creeps;
 
     // Assign tasks
     if (Game.time % 10 == 0) {
@@ -39,7 +43,7 @@ module.exports.loop = function() {
 
             // Get current tasks
             let tasks = new Map();
-            let avail_creeps = new Map();
+            avail_creeps = new Map();
             let sorted_tasks = [];
             for (let task_name in TASKS) {
                 for (let task of TASKS[task_name].getTasks(room)) {
@@ -113,6 +117,12 @@ module.exports.loop = function() {
         }
 
         // Inter-room
+
+        // Recycle idle
+        for (let name in avail_creeps) {
+            let creep = avail_creeps[name];
+            creep.memory.task = new Recycle(true);
+        }
     }
 
     // Do tasks
@@ -123,22 +133,7 @@ module.exports.loop = function() {
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             TASKS[creep.memory.task.name].doTask(creep);
         } else {
-            // Cleanup trash
-            utils.fill(creep, false, true);
-            if (!creep.memory.curFill) {
-                // Depo
-                utils.depo(creep);
-
-                if (!creep.memory.curDepo) {
-                    // Move to graveyard
-                    let graveyard = creep.pos.findClosestByRange(FIND_FLAGS, { filter: (f) => f.color == COLOR_GREY });
-                    if (graveyard) {
-                        creep.moveTo(graveyard, {visualizePathStyle: {}});
-                    }
-                }
-            } else {
-                creep.say("♻️");
-            }
+            creep.memory.task = new Recycle();
         }
     }
 }

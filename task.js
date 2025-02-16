@@ -2,7 +2,7 @@ Body = require("body");
 
 class Task {
 
-    constructor(name, tgt, wanted) {
+    constructor(name, tgt=null, wanted=0) {
         // Task type (class name)
         this.name = name;
 
@@ -28,9 +28,6 @@ class Task {
     // Generate list of tasks for a given room
     static getTasks(tasks, room_limit) {}
 
-    // Make provided creep perform this task
-    static dotask(creep) {}
-
     // Compress tasks for memory storage
     compress() {
         return {
@@ -39,6 +36,9 @@ class Task {
             tgt: this.tgt,
         }
     }
+
+    // Make provided creep perform this task
+    static dotask(creep) {}
 }
 
 module.exports = Task;

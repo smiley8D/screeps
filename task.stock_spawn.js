@@ -33,6 +33,10 @@ class StockSpawn extends Task {
         if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
             utils.fill(creep, creep.body == "Worker");
             creep.memory.curDepo = null;
+        } else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 && !creep.memory.curFill) {
+            // Cannot fill, finish task
+            creep.memory.task = null;
+            return;
         }
 
         // Stock spawner

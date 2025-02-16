@@ -25,6 +25,10 @@ class Upgrade extends Task {
         // Fill
         if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
             utils.fill(creep);
+        } else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 && !creep.memory.curFill) {
+            // Cannot fill, finish task
+            creep.memory.task = null;
+            return;
         }
 
         // Upgrade

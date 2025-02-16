@@ -3,10 +3,9 @@ Hauler = require("body.hauler");
 
 class Stock extends Task {
 
-    constructor(room, wanted, avg_fill) {
+    constructor(room, wanted) {
         super("Stock", room, wanted);
         this.body = new Hauler();
-        this.avg_fill = avg_fill;
     }
 
     static getTasks(room) {
@@ -46,9 +45,9 @@ class Stock extends Task {
 
         // Create task
         let imbalance = Math.max(over, under);
-        let workers = Math.max(0, Math.round(Math.log(Math.abs(imbalance)) / Math.log(50)));
+        let workers = Math.max(0, Math.round(Math.log(Math.abs(imbalance)) / Math.log(20)));
         if (workers > 0) {
-            let task = new Stock(room.name, workers, avg_fill);
+            let task = new Stock(room.name, workers);
             return [task];
         }
         return [];

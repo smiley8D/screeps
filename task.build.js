@@ -32,6 +32,10 @@ class Build extends Task {
         if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
             utils.fill(creep);
             creep.memory.curRepair = null;
+        } else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 && !creep.memory.curFill) {
+            // Cannot fill, finish task
+            creep.memory.task = null;
+            return;
         }
 
         // Stock spawner
