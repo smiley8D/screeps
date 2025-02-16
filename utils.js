@@ -30,8 +30,6 @@ utils = {
             }
         }
 
-        if (fill) { creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}}) }
-
         // Try pickup
         let result = creep.pickup(fill);
 
@@ -40,6 +38,9 @@ utils = {
 
         // Try harvest
         if (result != OK && result != ERR_NOT_IN_RANGE) { result = creep.withdraw(fill, RESOURCE_ENERGY) }
+
+        // Move in range
+        if (result == ERR_NOT_IN_RANGE) { creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}}) }
 
         // Allowed result, return OK
         if (result != OK && result != ERR_NOT_IN_RANGE) { 
@@ -72,10 +73,11 @@ utils = {
             }
         }
 
-        if (depo) { creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}}) } 
-
         // Try transfer
         let result = creep.transfer(depo, RESOURCE_ENERGY);
+
+        // Move in range
+        if (result == ERR_NOT_IN_RANGE) { creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}}) }
 
         // Allowed result, return OK
         if (result != OK && result != ERR_NOT_IN_RANGE) { 
