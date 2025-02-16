@@ -14,7 +14,7 @@ utils = {
         if (!fill || trash_only) {
             // Assemble list of candidate fills
             let fills = [];
-            if (mine && resource == RESOURCE_ENERGY) { fills = creep.room.find(FIND_SOURCES_ACTIVE) }
+            if (mine && creep.body.some((b) => b.type == WORK) && resource == RESOURCE_ENERGY) { fills = creep.room.find(FIND_SOURCES_ACTIVE) }
             if (!trash_only) { fills = creep.room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
                      o.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) }) }
             fills = fills.concat(creep.room.find(FIND_DROPPED_RESOURCES, { filter: (o => o.resourceType == resource && o.amount >= creep.store.getFreeCapacity(resource) ) }),

@@ -94,7 +94,7 @@ class Stock extends Task {
     
                 // Attempt restock
                 let result = creep.transfer(depo, RESOURCE_ENERGY);
-                creep.moveTo(depo, {visualizePathStyle: {}});
+                creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
                 if (result == ERR_NOT_ENOUGH_ENERGY) {
                     // Fill inventory
                     creep.memory.curFill = true;

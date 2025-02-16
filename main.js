@@ -1,6 +1,5 @@
 const utils = require("utils");
 
-const StockSpawn = require("task.stock_spawn");
 const Mine = require("task.mine");
 const Repair = require("task.repair");
 const Build = require("task.build");
@@ -9,16 +8,24 @@ const Stock = require("task.stock");
 const Recycle = require("task.recycle");
 
 TASKS = {
-    // "StockSpawn": StockSpawn,
+    "Stock": Stock,
     "Mine": Mine,
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,
-    "Stock": Stock,
     "Recycle": Recycle
 }
 
+// Metrics
+Memory.global_metrics = {}
+Memory.room_metrics = {}
+
+// Visuals
+Memory.room_visuals = {}
+
 module.exports.loop = function() {
+    // Update metrics
+
     // Cleanup
     if (Game.time % 50 == 0) {
         for (let creep in Memory.creeps) {
@@ -119,9 +126,10 @@ module.exports.loop = function() {
         // Inter-room
 
         // Recycle idle
-        for (let name in avail_creeps) {
-            let creep = avail_creeps[name];
-            creep.memory.task = new Recycle(true);
+        for (let body of avail_creeps.values()) {
+            for (let creep of body) {
+                creep.memory.task = new Recycle(creep.ticksToLive < 500);
+            }
         }
     }
 
@@ -136,4 +144,6 @@ module.exports.loop = function() {
             creep.memory.task = new Recycle();
         }
     }
+
+    // Paint visuals
 }
