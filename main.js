@@ -123,12 +123,21 @@ module.exports.loop = function() {
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             TASKS[creep.memory.task.name].doTask(creep);
         } else {
-            // Trash cleanup
-            creep.say("♻️");
-
+            // Cleanup trash
             utils.fill(creep, false, true);
             if (!creep.memory.curFill) {
+                // Depo
                 utils.depo(creep);
+
+                if (!creep.memory.curDepo) {
+                    // Move to graveyard
+                    let graveyard = creep.pos.findClosestByRange(FIND_FLAGS, { filter: (f) => f.color == COLOR_GREY });
+                    if (graveyard) {
+                        creep.moveTo(graveyard, {visualizePathStyle: {}});
+                    }
+                }
+            } else {
+                creep.say("♻️");
             }
         }
     }
