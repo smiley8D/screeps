@@ -22,6 +22,12 @@ class Repair extends Task {
     static doTask(creep) {
         creep.say("🔧");
 
+        // Move to room
+        if (creep.room.name != creep.memory.task.tgt) {
+            creep.moveTo(Game.rooms[creep.memory.task.tgt], {visualizePathStyle: {}});
+            return;
+        }
+
         // Fill
         if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
             utils.fill(creep);

@@ -39,6 +39,12 @@ class Stock extends Task {
     static doTask(creep) {
         creep.say("📦");
 
+        // Move to room
+        if (creep.room.name != creep.memory.task.tgt) {
+            creep.moveTo(Game.rooms[creep.memory.task.tgt], {visualizePathStyle: {}});
+            return;
+        }
+
         // Find most filled container
         if (!creep.memory.curFill && !creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             let cur = 0;
