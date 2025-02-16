@@ -13,7 +13,7 @@ class Mine extends Task {
         // 1 per node for now, eventually base on harvest efficiency and/or resources required?
         let tasks = []
         for (let source of room.find(FIND_SOURCES)) {
-            tasks.push(new Mine(source.id,1));
+            tasks.push(new Mine(source.id,4));
         }
         return tasks;
     }
@@ -24,16 +24,13 @@ class Mine extends Task {
         let source = Game.getObjectById(creep.memory.task.tgt);
 
         // Depo
-        if ( creep.store.getFreeCapacity() == 0 || creep.memory.curDepo) { utils.depo(creep) }
+        if ( creep.store.getFreeCapacity(RESOURCE_ENERGY) < ((creep.memory.size + 2) * 2) || creep.memory.curDepo) { utils.depo(creep) }
 
         // Mine
         if (!creep.memory.curDepo) {
             let result = creep.harvest(source)
             if (result == ERR_NOT_IN_RANGE) {
                 creep.moveTo(source, {visualizePathStyle: {}})
-            } else if (result != OK && result != ERR_NOT_IN_RANGE) {
-                // Cannot complete task
-                creep.memory.task = null;
             }
         }
     }

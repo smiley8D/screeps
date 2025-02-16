@@ -66,14 +66,14 @@ module.exports.loop = function() {
                 if (creep.ticksToLive > 100 && creep.memory.task && tasks.has(creep.memory.task.id) && tasks.get(creep.memory.task.id).workers < tasks.get(creep.memory.task.id).wanted) {
                     // Mark assigned
                     let task = tasks.get(creep.memory.task.id);
-                    task.workers++;
+                    task.workers += creep.memory.size;
 
                     // Update task fulfillment
                     let i = 0
                     while (task.i < sorted_tasks.length - 1) {
                         // Compare to next task
                         let next_task = sorted_tasks[task.i+1];
-                        if ((task.weight * task.workers / task.wanted) <= (next_task.weight * next_task.workers / next_task.wanted)) { break; }
+                        if ((task.workers / task.wanted) <= (next_task.workers / next_task.wanted)) { break; }
 
                         // Swap with next task
                         sorted_tasks[task.i] = next_task;
@@ -94,24 +94,28 @@ module.exports.loop = function() {
                 let task = sorted_tasks[0];
 
                 // Try available creep
-                creep = avail_creeps.get(task.body.name).pop()
-                if (creep) { creep.memory.task = task.compress() }
+                let creep = avail_creeps.get(task.body.name).pop()
+                let size;
+                if (creep) {
+                    creep.memory.task = task.compress();
+                    size = creep.memory.size;
+                }
 
                 // Try spawning
                 if (!creep) {
                     let spawner = spawners.pop()
                     if (spawner) {
-                        creep = task.body.spawn(spawner, task);
+                        [creep, size] = task.body.spawn(spawner, task, task.wanted - task.workers);
                     }
                 }
 
                 // Update task fullfillment
                 if (creep) {
-                    task.workers++;
+                    task.workers += size;
                     for (let i = 0; i < sorted_tasks.length - 1; i++) {
                         // Compare to next task
                         let next_task = sorted_tasks[i+1];
-                        if ((task.weight * task.workers / task.wanted) <= (next_task.weight * next_task.workers / next_task.wanted)) { break; }
+                        if ((task.workers / task.wanted) <= (next_task.workers / next_task.wanted)) { break; }
 
                         // Swap with next task
                         sorted_tasks[task.i] = next_task;

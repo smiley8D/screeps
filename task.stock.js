@@ -25,10 +25,10 @@ class Stock extends Task {
         let under = 0;
         for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => o.store && (o.my || !o.owner) } )) {
             if (structure.structureType == STRUCTURE_CONTAINER || structure.structureType == STRUCTURE_STORAGE) {
-                if (structure.pos.lookFor(LOOK_FLAGS, {filter: {color: COLOR_YELLOW}}).length > 0) {
+                if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_YELLOW).length > 0) {
                     // Flagged as empty
                     over += structure.store.getUsedCapacity(RESOURCE_ENERGY);
-                } else if (structure.pos.lookFor(LOOK_FLAGS, {filter: {color: COLOR_BLUE}}).length > 0) {
+                } else if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_BLUE).length > 0) {
                     // Flagged as fill
                     under += structure.store.getFreeCapacity(RESOURCE_ENERGY);
                 } else {
@@ -109,7 +109,7 @@ class Stock extends Task {
                 for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE } )) {
                     let filled = structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY);
                     let range = creep.pos.getRangeTo(structure);
-                    if (structure.pos.lookFor(LOOK_FLAGS, {filter: {color: COLOR_YELLOW}}).length > 0) {
+                    if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_YELLOW).length > 0) {
                         // Flagged as empty
                         if (filled > cur || (filled == cur && range < cur_range)) {
                             cur = filled;
@@ -127,12 +127,12 @@ class Stock extends Task {
                     }
                 }
             }
-    
+
             // Attempt fill
             if (creep.memory.curFill) {
                 let fill = Game.getObjectById(creep.memory.curFill);
                 let result = creep.withdraw(fill, RESOURCE_ENERGY);
-                if (result == ERR_NOT_ENOUGH_ENERGY || !fill.store.getUsedCapacity(RESOURCE_ENERGY)) {
+                if (result == ERR_NOT_ENOUGH_ENERGY) {
                     // Find new fill
                     creep.memory.curFill = true;
                 } else if (result == ERR_FULL) {
@@ -147,7 +147,7 @@ class Stock extends Task {
                     creep.memory.task = null;
                 }
             }
-    
+
             // Find most imbalanaced dst
             if (creep.memory.curDepo == true || (!creep.memory.curDepo && !creep.store.getFreeCapacity(RESOURCE_ENERGY))) {
                 let cur = 0;
@@ -172,7 +172,7 @@ class Stock extends Task {
                             cur_level = 2;
                             cur_range = range;
                         }
-                    } else if (structure.pos.lookFor(LOOK_FLAGS, {filter: {color: COLOR_BLUE}}).length > 0) {
+                    } else if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_BLUE).length > 0) {
                         // Flagged as fill
                         if (cur_level < 2 && (empty > cur || (empty == cur && range < cur_range))) {
                             cur = empty;
@@ -190,12 +190,12 @@ class Stock extends Task {
                     }
                 }
             }
-    
+
             // Attempt depo
             if (creep.memory.curDepo) {
                 let depo = Game.getObjectById(creep.memory.curDepo);
                 let result = creep.transfer(depo, RESOURCE_ENERGY);
-                if (result == ERR_FULL || !depo.store.getFreeCapacity(RESOURCE_ENERGY)) {
+                if (result == ERR_FULL) {
                     // Find new depo
                     creep.memory.curDepo = true;
                 } else if (result == ERR_NOT_ENOUGH_ENERGY) {

@@ -13,7 +13,7 @@ class Build extends Task {
             total_build += 1 + structure.progressTotal - structure.progress;
         }
         if (total_build > 0) {
-            let task = new Build(room.name, Math.max(1, Math.ceil(Math.log(total_dmg / 10000))));
+            let task = new Build(room.name, Math.max(1, Math.ceil(Math.log(total_dmg / 200))));
             return [task];
         }
         return [];

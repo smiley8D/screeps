@@ -15,14 +15,11 @@ class Task {
         // Body of assignable workers
         this.body = new Body();
 
-        // Workers assigned
+        // Total size of workers assigned
         this.workers = 0;
 
         // Total workers wanted
         this.wanted = wanted;
-
-        // Weight for task prioritization
-        this.weight = 1;
     }
 
     // Generate list of tasks for a given room
