@@ -8,8 +8,13 @@ class Upgrade extends Task {
     }
 
     static getTasks(room) {
-        // Hardcode 5 for now, eventually base on change in energy over time?
-        let task = new Upgrade(room.name, 5)
+        // Find energy available in room
+        let energy = 0;
+        for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => o.structureType == STRUCTURE_CONTAINER || o.structuredType == STRUCTURE_STORAGE } )) {
+            energy += structure.store.getUsedCapacity(RESOURCE_ENERGY);
+        }
+
+        let task = new Upgrade(room.name, Math.ceil(Math.log(energy)))
         return [task];
     }
 
