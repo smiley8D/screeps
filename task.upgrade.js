@@ -14,7 +14,7 @@ class Upgrade extends Task {
             energy += structure.store.getUsedCapacity(RESOURCE_ENERGY);
         }
 
-        let task = new Upgrade(room.name, Math.ceil(Math.log(energy) / Math.log(5)))
+        let task = new Upgrade(room.name, Math.max(0, Math.log(Math.ceil(energy / 1000))))
         return [task];
     }
 

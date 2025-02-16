@@ -18,13 +18,13 @@ class Recycle extends Task {
         utils.fill(creep, false, true, true);
         if (!creep.memory.curFill) {
 
-            // Depo
-            utils.depo(creep);
-            if (!creep.memory.curDepo) {
-
-                let spawner
+            if (creep.store.getUsedCapacity()) {
+                // Depo
+                utils.depo(creep);
+            } else {
+                // Find spawner if recyclable
+                let spawner;
                 if (creep.memory.task.tgt) {
-                    // Find spawner if recyclable
                     spawner = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
                 }
 
