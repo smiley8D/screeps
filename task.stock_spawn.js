@@ -12,7 +12,7 @@ class StockSpawn extends Task {
     static getTasks(room) {
         if (room.energyAvailable < room.energyCapacityAvailable) {
             let task = new StockSpawn(room.name, Math.max(0, Math.ceil(Math.log(room.energyCapacityAvailable - room.energyAvailable) / Math.log(10))))
-            if (room.energyAvailable <= 300) {
+            if (room.find(FIND_MY_CREEPS).length == 0) {
                 task.body = new Body();
             }
             return [task];
