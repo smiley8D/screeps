@@ -1,4 +1,5 @@
 const utils = require("utils");
+const config = require("config");
 
 const Mine = require("task.mine");
 const Repair = require("task.repair");
@@ -7,7 +8,7 @@ const Upgrade = require("task.upgrade");
 const Stock = require("task.stock");
 const Recycle = require("task.recycle");
 
-TASKS = {
+const TASKS = {
     "Stock": Stock,
     "Mine": Mine,
     "Repair": Repair,
@@ -16,18 +17,30 @@ TASKS = {
     "Recycle": Recycle
 }
 
-// Metrics
-Memory.global_metrics = {}
-Memory.room_metrics = {}
-
-// Visuals
-Memory.room_visuals = {}
-
 module.exports.loop = function() {
-    // Update metrics
+    // Apply visuals
+    for (let room_name in Game.rooms) {
+        let room = Game.rooms[room_name];
+        let visual = room.visual;
+
+        // Show memory
+        if (!room.memory.stats) { room.memory.stats = {} }
+        visual.text(JSON.stringify(room.memory.stats), 25,0)
+
+        // Apply visuals
+        let new_visuals = []
+        for (let i in room.memory.visuals) {
+            let [text, x, y, ticks] = room.memory.visuals[i];
+            room.visual.text(text, x, y);
+            if (ticks > 1) {
+                new_visuals.push([text, x, y, ticks-1]);
+            }
+        }
+        room.memory.visuals = new_visuals;
+    }
 
     // Cleanup
-    if (Game.time % 50 == 0) {
+    if (Game.time % config.CLEANUP_TICK == 0) {
         for (let creep in Memory.creeps) {
             if (!Game.creeps[creep]) {
                 delete Memory.creeps[creep];
@@ -37,16 +50,15 @@ module.exports.loop = function() {
 
     let avail_creeps;
 
-    // Assign tasks
-    if (Game.time % 10 == 0) {
-        let room_tasks = new Map();
-        let room_creeps = new Map();
-
+    // Compute metrics and assign tasks
+    if (Game.time % config.TASK_TICK == 0) {
         // Intra-room
         for (let room_name in Game.rooms) {
             // Get room info
             let room = Game.rooms[room_name];
-            let spawners = room.find(FIND_MY_SPAWNS, {filter: (spawner) => !spawner.spawning });
+
+            // Calculate metrics
+            
 
             // Get current tasks
             let tasks = new Map();
@@ -58,6 +70,18 @@ module.exports.loop = function() {
                     tasks.set(task.id, task)
                     task.i = sorted_tasks.length;
                     sorted_tasks.push(task);
+                }
+            }
+
+            // Find elligible spawners
+            let spawners = [];
+            for (let spawner of room.find(FIND_MY_SPAWNS)) {
+                // Cancel now-unneeded spawns
+                if (!spawner.spawning) {
+                    spawners.push(spawner);
+                } else if (Game.creeps[spawner.spawning.name].memory.task && !tasks.has(Game.creeps[spawner.spawning.name].memory.task.id)) {
+                    spawner.spawning.cancel;
+                    spawners.push(spawner);
                 }
             }
 

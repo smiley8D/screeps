@@ -7,14 +7,14 @@ class Body {
         this.name = "Worker";
     }
 
-    spawn(spawner, task, limit=10) {
+    spawn(spawner, task, limit=true) {
         // Get maximum affordable size
         let i = 0;
         let body = this.base;
         let name = this.name + "-" + Game.time;
-        for (; i < limit; i++) {
+        for (; i < limit || limit == true; i++) {
             let result = spawner.spawnCreep(body.concat(this.add), name, {dryRun: true});
-            if (result != ERR_NOT_ENOUGH_RESOURCES) {
+            if (result == OK) {
                 body = body.concat(this.add)
             } else {
                 break;
@@ -26,6 +26,7 @@ class Body {
             console.log("Spawning " + name + " size " + i + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name);
             return [name, i];
         }
+        return [null, null];
     }
 
 }

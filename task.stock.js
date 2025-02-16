@@ -1,3 +1,5 @@
+config = require("config");
+
 Task = require("task");
 Hauler = require("body.hauler");
 
@@ -28,24 +30,33 @@ class Stock extends Task {
                 if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_YELLOW).length > 0) {
                     // Flagged as empty
                     over += structure.store.getUsedCapacity(RESOURCE_ENERGY);
+                    if (structure.store.getUsedCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
                 } else if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_BLUE).length > 0) {
                     // Flagged as fill
                     under += structure.store.getFreeCapacity(RESOURCE_ENERGY);
+                    if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
                 } else {
                     // Non-flagged container/storage, check against avg
                     let diff = structure.store.getCapacity(RESOURCE_ENERGY) * ((structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY)) - avg_fill);
-                    if (diff > 0) { over += diff }
-                    else if (diff < 0) { under -= diff }
+                    if (diff > 0) {
+                        over += diff
+                        room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    } else if (diff < 0) {
+                        under -= diff
+                        room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    }
                 }
             } else {
                 // Not a container or storage, always fill
                 under += structure.store.getFreeCapacity(RESOURCE_ENERGY);
+                if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
             }
         }
 
-        // Create task
-        let imbalance = Math.max(over, under);
-        let workers = Math.max(Math.ceil((room.energyCapacityAvailable - room.energyAvailable) / 500), Math.ceil(Math.log(Math.ceil(Math.abs(imbalance) / 1000))));
+        // Create task  
+        let imbalance = Math.round(Math.max(over, under));
+        room.memory.stats.imbalance = imbalance;
+        let workers = Math.max(Math.ceil((room.energyCapacityAvailable - room.energyAvailable) / 100), Math.round(Math.log(imbalance)));
         if (workers > 0) {
             let task = new Stock(room.name, workers);
             if (room.find(FIND_MY_CREEPS).length == 0) {

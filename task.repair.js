@@ -1,5 +1,7 @@
-Task = require("task");
 utils = require("utils");
+config = require("config");
+
+Task = require("task");
 
 class Repair extends Task {
 
@@ -10,10 +12,12 @@ class Repair extends Task {
     static getTasks(room) {
         let total_dmg = 0;
         for (let structure of room.find(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.9 })) {
+            room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
             total_dmg += structure.hitsMax - structure.hits;
         }
+        room.memory.stats.dmg = total_dmg;
         if (total_dmg > 0) {
-            let task = new Repair(room.name, Math.max(1, Math.ceil(Math.log(total_dmg / 200))));
+            let task = new Repair(room.name, Math.max(1,Math.round(Math.log(total_dmg))));
             return [task];
         }
         return [];
@@ -42,7 +46,7 @@ class Repair extends Task {
         if (!creep.memory.curFill) {
             // Get closest damaged site
             let structure = Game.getObjectById(creep.memory.curStructure);
-            if (!structure) {
+            if (!structure || structure.hitsMax == structure.hits) {
                 structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.9 });
                 if (structure) {
                     creep.memory.curStructure = structure.id;
@@ -61,7 +65,7 @@ class Repair extends Task {
             } else if (result == ERR_NO_BODYPART) {
                 // Cannot complete task
                 creep.memory.task = null;
-            } else {
+            } else if (result != OK) {
                 // Find new site
                 creep.memory.curStructure = null;
             }
