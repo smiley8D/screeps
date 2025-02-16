@@ -46,11 +46,8 @@ class Stock extends Task {
             return;
         }
 
-        // Initial condition
-        if (!creep.memory.curFill && !creep.memory.curDepo) { creep.memory.curFill = true }
-
         // Find most filled container
-        if (!creep.memory.curFill && !creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
+        if ((!creep.memory.curFill && !creep.store.getUsedCapacity(RESOURCE_ENERGY)) || (!creep.memory.curFill && !creep.memory.curDepo)) {
             let cur = 0;
             for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) })) {
                 if (structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY) > cur) {
@@ -64,13 +61,16 @@ class Stock extends Task {
         if (creep.memory.curFill) {
             let fill = Game.getObjectById(creep.memory.curFill);
             let result = creep.withdraw(fill, RESOURCE_ENERGY);
-            creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}});
             if (result == ERR_NOT_ENOUGH_ENERGY) {
                 // Find new inventory
                 creep.memory.curFill = false;
-            } else if (result != OK && result != ERR_NOT_IN_RANGE) {
+            } else if (result == ERR_NOT_IN_RANGE) {
+                // Move in range
+                creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}});
+            } else if (result != OK) {
                 // Cannot complete task
                 creep.memory.task = null;
+                creep.say(result);
             }
         }
 
@@ -89,13 +89,16 @@ class Stock extends Task {
         if (creep.memory.curDepo) {
             let depo = Game.getObjectById(creep.memory.curDepo);
             let result = creep.transfer(depo, RESOURCE_ENERGY);
-            creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
             if (result == ERR_NOT_ENOUGH_ENERGY) {
                 // Find new inventory
                 creep.memory.curDepo = false;
-            } else if (result != OK && result != ERR_NOT_IN_RANGE) {
+            } else if (result == ERR_NOT_IN_RANGE) {
+                // Move in range
+                creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
+            } else if (result != OK) {
                 // Cannot complete task
                 creep.memory.task = null;
+                creep.say(result);
             }
         }
     }
