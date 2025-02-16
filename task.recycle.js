@@ -13,8 +13,8 @@ class Recycle extends Task {
     }
 
     static doTask(creep) {
-        creep.say("♻️");
         // Cleanup trash
+        let recycling = true;
         utils.fill(creep, false, true, true);
         if (!creep.memory.curFill) {
 
@@ -24,6 +24,7 @@ class Recycle extends Task {
             } else {
                 // Find spawner if recyclable
                 let spawner;
+                recycling = false;
                 if (creep.memory.task.tgt) {
                     spawner = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
                 }
@@ -39,6 +40,10 @@ class Recycle extends Task {
                     }
                 }
             }
+        }
+
+        if (recycling) {
+            creep.say("♻️");
         }
     }
 
