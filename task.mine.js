@@ -13,7 +13,7 @@ class Mine extends Task {
         // 1 per node for now, eventually base on harvest efficiency and/or resources required?
         let tasks = []
         for (let source of room.find(FIND_SOURCES)) {
-            tasks.push(new Mine(source.id,4));
+            tasks.push(new Mine(source.id,5));
         }
         return tasks;
     }

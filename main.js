@@ -17,28 +17,13 @@ const TASKS = {
     "Recycle": Recycle
 }
 
+// Clear visuals & metrics
+for (let room_name in Game.rooms) {
+    Game.rooms[room_name].memory.visuals = [];
+    Game.rooms[room_name].memory.metrics = null;
+}
+
 module.exports.loop = function() {
-    // Apply visuals
-    for (let room_name in Game.rooms) {
-        let room = Game.rooms[room_name];
-        let visual = room.visual;
-
-        // Show memory
-        if (!room.memory.stats) { room.memory.stats = {} }
-        visual.text(JSON.stringify(room.memory.stats), 25,0)
-
-        // Apply visuals
-        let new_visuals = []
-        for (let i in room.memory.visuals) {
-            let [text, x, y, ticks] = room.memory.visuals[i];
-            room.visual.text(text, x, y);
-            if (ticks > 1) {
-                new_visuals.push([text, x, y, ticks-1]);
-            }
-        }
-        room.memory.visuals = new_visuals;
-    }
-
     // Cleanup
     if (Game.time % config.CLEANUP_TICK == 0) {
         for (let creep in Memory.creeps) {
@@ -56,9 +41,7 @@ module.exports.loop = function() {
         for (let room_name in Game.rooms) {
             // Get room info
             let room = Game.rooms[room_name];
-
-            // Calculate metrics
-            
+            utils.roomMetrics(room);
 
             // Get current tasks
             let tasks = new Map();
@@ -173,5 +156,24 @@ module.exports.loop = function() {
         }
     }
 
-    // Paint visuals
+    // Apply visuals
+    for (let room_name in Game.rooms) {
+        let room = Game.rooms[room_name];
+
+        let new_visuals = []
+        for (let i in room.memory.visuals) {
+            let [text, x, y, ticks, opts] = room.memory.visuals[i];
+            if (ticks) {
+                if (typeof text == "object") {
+                    for (let i = 0; i < text.length; i++) {
+                        room.visual.text(text[i], x, y + parseInt(i), opts);
+                    }
+                } else {
+                    room.visual.text(text, x, y, opts);
+                }
+                new_visuals.push([text, x, y, ticks-1, opts]);
+            }
+        }
+        room.memory.visuals = new_visuals;
+    }
 }

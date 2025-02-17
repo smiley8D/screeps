@@ -15,7 +15,6 @@ class Repair extends Task {
             room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
             total_dmg += structure.hitsMax - structure.hits;
         }
-        room.memory.stats.dmg = total_dmg;
         if (total_dmg > 0) {
             let task = new Repair(room.name, Math.max(1,Math.round(Math.log(total_dmg))));
             return [task];

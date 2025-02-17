@@ -2,16 +2,7 @@ Body = require("body");
 
 class Task {
 
-    constructor(name, tgt=null, wanted=0) {
-        // Task type (class name)
-        this.name = name;
-
-        // Unique string ID for task
-        this.id = name + ":" + tgt
-
-        // Target of task
-        this.tgt = tgt;
-
+    constructor(name, tgt, wanted, room=null) {
         // Body of assignable workers
         this.body = new Body();
 
@@ -20,17 +11,30 @@ class Task {
 
         // Total workers wanted
         this.wanted = wanted;
+
+        // Unique string ID
+        this.id = name + ":" + tgt
+
+        // Task type (class name)
+        this.name = name;
+
+        // Target of task
+        this.tgt = tgt;
+
+        // Attached room
+        this.room = room;
     }
 
     // Generate list of tasks for a given room
-    static getTasks(tasks, room_limit) {}
+    static getTasks(tasks) {}
 
     // Compress tasks for memory storage
     compress() {
         return {
-            name: this.name,
             id: this.id,
+            name: this.name,
             tgt: this.tgt,
+            room: this.room,
         }
     }
 

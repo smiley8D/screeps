@@ -12,7 +12,6 @@ class Build extends Task {
         for (let structure of room.find(FIND_MY_CONSTRUCTION_SITES)) {
             total_build += 1 + structure.progressTotal - structure.progress;
         }
-        room.memory.stats.build = total_build;
         if (total_build > 0) {
             let task = new Build(room.name, Math.max(1,Math.round(Math.log(total_build))));
             return [task];
