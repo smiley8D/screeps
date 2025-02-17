@@ -2,7 +2,7 @@ Body = require("body");
 
 class Task {
 
-    constructor(name, tgt, wanted, max_workers=8, room=null) {
+    constructor(name, tgt, wanted, max_workers=4, room=null) {
         // Body of assignable workers
         this.body = new Body();
 
