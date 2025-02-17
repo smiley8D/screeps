@@ -120,7 +120,7 @@ utils = {
         let result = {};
         for (let i in prev) {
             if (typeof prev[i] == "object") { result[i] = utils.doChange(prev[i], cur[i])}
-            else { result[i] = config.TASK_TICK * (cur[i] - prev[i]) }
+            else { result[i] = (cur[i] - prev[i]) / config.TASK_TICK }
         }
         return result;
     },
@@ -251,9 +251,10 @@ utils = {
         // Process controller
         let controller = room.controller;
         if (controller.my) {
-            for (let i = 0; i < controller.level; i++) {
-                metrics.upgrade += CONTROLLER_LEVELS[controller.level];
+            for (let i = 1; i < controller.level - 1; i++) {
+                metrics.upgrade += CONTROLLER_LEVELS[i];
             }
+            metrics.upgrade += controller.progress;
         }
 
         // Ignore non-present resources
@@ -264,7 +265,6 @@ utils = {
         }
 
         // Calculcate changes
-        let last;
         let mov_change;
         let mov;
         let change;
@@ -278,26 +278,32 @@ utils = {
         } }
         change = utils.doChange(prev_metrics.last, metrics);
         mov_change = utils.doMov(prev_metrics.mov_change, change)
-        last = metrics;
         mov = utils.doMov(prev_metrics.mov, metrics);
-
-        // Update memory
-        room.memory.metrics = {
-            last: last,
-            mov_change: mov_change,
-            mov: mov,
-            change:change
-        }
 
         // Submit visuals
         let text = ["Room: " + room.name];
         if (metrics.build) { text.push(
-            "Build: " + (Math.round(1000 * metrics.build / metrics.build_max)/10) + "% (" + (mov_change.build > 0 ? "" : "+") + (Math.round(1000 * mov_change.build / prev_metrics.mov.build_max)/(10)) + "%)"
+            "Build: " + (metrics.build_max - metrics.build) + " (" + (Math.round(1000 * metrics.build / metrics.build_max)/10) + "%)"
         ) }
         if (metrics.hits < metrics.hits_max) {text.push(
-            "Damage: " + (Math.round(1000 * metrics.hits / metrics.hits_max)/10) + "% (" + (mov_change.hits > 0 ? "" : "+") + (Math.round(1000 * mov_change.hits / prev_metrics.mov.hits_max)/(-10)) + "%)"
+            "Damage: " + (metrics.hits_max - metrics.hits) + " (" + (Math.round(1000 * metrics.hits / metrics.hits_max)/10) + "%)"
         ) }
+        for (let resource in RESOURCES_ALL) {
+            if (metrics.resources.total[resource]) {text.push(
+                resouce + ": " + metrics.resources.total[resource] + " (" + Math.round(mov_change.resources.total[resource]) + ")"
+            )}
+        }
+        text.push("Upgrade: " + metrics.upgrade + " (" + Math.round(mov_change.upgrade) + ")")
+        text.push("Energy: " + metrics.resources.total[RESOURCE_ENERGY] + " (" + Math.round(mov_change.resources.total[RESOURCE_ENERGY]) + ")")
         room.memory.visuals.push([text, 0, 0, config.TASK_TICK, {align: "left"}]);
+
+        // Update memory
+        room.memory.metrics = {
+            last: metrics,
+            mov_change: mov_change,
+            mov: mov,
+            change:change
+        }
     }
 }
 
