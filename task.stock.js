@@ -58,7 +58,7 @@ class Stock extends Task {
         let workers = Math.max(Math.ceil((room.energyCapacityAvailable - room.energyAvailable) / 100), Math.round(Math.log(imbalance)));
         if (workers > 0) {
             let task = new Stock(room.name, workers);
-            if (room.find(FIND_MY_CREEPS).length == 0) {
+            if (room.energyAvailable < 300) {
                 task.body.base = [WORK,CARRY,MOVE];
             }
             return [task];

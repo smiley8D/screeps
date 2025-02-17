@@ -1,7 +1,7 @@
 class Body {
 
     constructor() {
-        this.base = [WORK,CARRY,CARRY,MOVE,MOVE];
+        this.base = [WORK,CARRY,MOVE];
         this.add = [WORK,CARRY,MOVE];
 
         this.name = "Worker";
@@ -9,7 +9,7 @@ class Body {
 
     spawn(spawner, task, limit=true) {
         // Get maximum affordable size
-        let i = 0;
+        let i = 1;
         let body = this.base;
         let name = this.name + "-" + Game.time;
         for (; i < limit || limit == true; i++) {
