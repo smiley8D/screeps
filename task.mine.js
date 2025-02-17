@@ -1,6 +1,8 @@
-Task = require("task");
-Miner = require("body.miner");
-utils = require("utils");
+const Task = require("task");
+const Miner = require("body.miner");
+
+const utils = require("utils");
+const config = require("config");
 
 class Mine extends Task {
 
@@ -20,7 +22,7 @@ class Mine extends Task {
                     if (source.room.getTerrain().get(x,y) == 0) { spots++; }
                 }
             }
-            tasks.push(new Mine(source.id, 4, spots));
+            tasks.push(new Mine(source.id, 4 / config.PART_MULT, spots));
         }
         return tasks;
     }

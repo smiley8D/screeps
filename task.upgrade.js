@@ -4,7 +4,7 @@ utils = require("utils");
 class Upgrade extends Task {
 
     constructor(room, wanted) {
-        super("Upgrade", room, wanted);
+        super("Upgrade", room, wanted, 8);
     }
 
     static getTasks(room) {
@@ -14,7 +14,7 @@ class Upgrade extends Task {
             energy += structure.store.getUsedCapacity(RESOURCE_ENERGY);
         }
 
-        let task = new Upgrade(room.name, Math.round(Math.log(energy*5)), 8)
+        let task = new Upgrade(room.name, Math.log(energy*5))
         return [task];
     }
 
