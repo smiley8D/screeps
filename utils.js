@@ -298,7 +298,7 @@ utils = {
         if (metrics.hits < metrics.hits_max) {text.push(
             "Damage: " + (metrics.hits_max - metrics.hits) + " (" + Math.round(-1 * change.hits) + ") " + (Math.round(1000 * metrics.hits_per)/10) + "% (" + (Math.round(1000 * change.hits_per)/10) + "%)"
         ) }
-        text.push("Upgrade: " + metrics.upgrade + " (" + Math.round(change.upgrade) + ") (" + Math.round(1000 * change.upgrade / (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK))/10 + "%)")
+        text.push("Upgrade: " + metrics.upgrade + " (" + Math.round(1000 * room.controller.progress / room.controller.progressTotal)/10 + "%) " + Math.round(change.upgrade) + " (" + Math.round(1000 * change.upgrade / (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK))/10 + "%)")
         let overhead = (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK) - change.upgrade - change.resources.total[RESOURCE_ENERGY];
         text.push("Overhead: " + Math.round(overhead) + " (" + Math.round(1000 * overhead / (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK))/10 + "%)")
         for (let resource of RESOURCES_ALL) {
