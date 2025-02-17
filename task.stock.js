@@ -55,9 +55,9 @@ class Stock extends Task {
 
         // Create task  
         let imbalance = Math.round(Math.max(over, under));
-        let workers = Math.max(Math.ceil((room.energyCapacityAvailable - room.energyAvailable) / 100), Math.round(Math.log(imbalance)));
-        if (workers > 0) {
-            let task = new Stock(room.name, workers);
+        let parts = Math.max(Math.ceil((room.energyCapacityAvailable - room.energyAvailable) / 100), Math.round(Math.log(imbalance)));
+        if (parts > 0) {
+            let task = new Stock(room.name, parts);
             if (room.energyAvailable < 300) {
                 task.body.base = [WORK,CARRY,MOVE];
             }

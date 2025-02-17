@@ -2,14 +2,20 @@ Body = require("body");
 
 class Task {
 
-    constructor(name, tgt, wanted, room=null) {
+    constructor(name, tgt, wanted, max_workers=8, room=null) {
         // Body of assignable workers
         this.body = new Body();
 
-        // Total size of workers assigned
+        // Number of workers assigned
         this.workers = 0;
 
-        // Total workers wanted
+        // Maximum number of allowed workers
+        this.max_workers = max_workers;
+
+        // Total size of parts assigned
+        this.parts = 0;
+
+        // Total parts wanted
         this.wanted = wanted;
 
         // Unique string ID

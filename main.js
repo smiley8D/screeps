@@ -70,17 +70,19 @@ module.exports.loop = function() {
 
             // Get current assignments
             for (let creep of room.find(FIND_MY_CREEPS)) {
-                if (creep.ticksToLive > 100 && creep.memory.task && tasks.has(creep.memory.task.id) && tasks.get(creep.memory.task.id).workers < tasks.get(creep.memory.task.id).wanted) {
+                if (creep.ticksToLive > 100 && creep.memory.task && tasks.has(creep.memory.task.id) &&
+                tasks.get(creep.memory.task.id).parts < tasks.get(creep.memory.task.id).wanted &&
+                tasks.get(creep.memory.task.id).workers < tasks.get(creep.memory.task.id).max_workers) {
                     // Mark assigned
                     let task = tasks.get(creep.memory.task.id);
-                    task.workers += creep.memory.size;
+                    task.parts += creep.memory.size;
+                    task.workers++;
 
                     // Update task fulfillment
-                    let i = 0
                     while (task.i < sorted_tasks.length - 1) {
                         // Compare to next task
                         let next_task = sorted_tasks[task.i+1];
-                        if ((task.workers / task.wanted) <= (next_task.workers / next_task.wanted)) { break; }
+                        if ((task.parts / task.wanted) <= (next_task.parts / next_task.wanted)) { break; }
 
                         // Swap with next task
                         sorted_tasks[task.i] = next_task;
@@ -97,8 +99,14 @@ module.exports.loop = function() {
             }
 
             // Assign creeps
-            while (sorted_tasks.length > 0 && sorted_tasks[0].workers < sorted_tasks[0].wanted) {
+            while (sorted_tasks.length > 0 && sorted_tasks[0].parts < sorted_tasks[0].wanted) {
                 let task = sorted_tasks[0];
+
+                // Skip if already at max_workers
+                if (task.workers >= task.max_workers) {
+                    sorted_tasks.shift();
+                    continue;
+                }
 
                 // Try available creep
                 let creep = avail_creeps.get(task.body.name).pop()
@@ -112,21 +120,21 @@ module.exports.loop = function() {
                 if (!creep) {
                     let spawner = spawners.pop()
                     if (spawner) {
-                        [creep, size] = task.body.spawn(spawner, task, task.wanted - task.workers);
+                        [creep, size] = task.body.spawn(spawner, task, task.wanted - task.parts);
                     }
                 }
 
                 // Update task fullfillment
                 if (creep) {
-                    task.workers += size;
+                    task.parts += size;
                     for (let i = 0; i < sorted_tasks.length - 1; i++) {
                         // Compare to next task
                         let next_task = sorted_tasks[i+1];
-                        if ((task.workers / task.wanted) <= (next_task.workers / next_task.wanted)) { break; }
+                        if ((task.parts / task.wanted) <= (next_task.parts / next_task.wanted)) { break; }
 
                         // Swap with next task
-                        sorted_tasks[task.i] = next_task;
-                        sorted_tasks[next_task.i] = task;
+                        sorted_tasks[i] = next_task;
+                        sorted_tasks[i+1] = task;
                     }
                 } else {
                     sorted_tasks.shift();

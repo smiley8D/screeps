@@ -4,16 +4,23 @@ utils = require("utils");
 
 class Mine extends Task {
 
-    constructor(pos, wanted) {
-        super("Mine", pos, wanted);
+    constructor(pos, wanted, spots) {
+        super("Mine", pos, wanted, spots);
         this.body = new Miner();
     }
 
     static getTasks(room) {
-        // 1 per node for now, eventually base on harvest efficiency and/or resources required?
+        // Find sources
         let tasks = []
         for (let source of room.find(FIND_SOURCES)) {
-            tasks.push(new Mine(source.id,4));
+            // Calculate parking spots
+            let spots = 0;
+            for (let x = source.pos.x-1; x <= source.pos.x+1; x++) {
+                for (let y = source.pos.y-1; y <= source.pos.y+1; y++) {
+                    if (source.room.getTerrain().get(x,y) == 0) { spots++; }
+                }
+            }
+            tasks.push(new Mine(source.id, 4, spots));
         }
         return tasks;
     }
