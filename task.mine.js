@@ -32,24 +32,29 @@ class Mine extends Task {
     }
 
     static doTask(creep) {
-        creep.say("⛏️");
         let mine_amount = 2 * (1 + 2 * (creep.memory.size - 1));
-        let source = Game.getObjectById(creep.memory.task.tgt);
+        let target = Game.getObjectById(creep.memory.task.tgt);
         let resource = RESOURCE_ENERGY;
-        if (source.mineralType) { resource = source.mineralType }
+        if (target.mineralType) { resource = target.mineralType }
 
-        // Depo
-        if ( creep.store.getFreeCapacity(resource) < ((creep.memory.size + 2) * 2) || creep.memory.curDepo) { utils.depo(creep, resource) }
-
-        // Mine
-        if (!creep.memory.curDepo) {
-            let result = creep.harvest(source)
-            if (result == ERR_NOT_IN_RANGE) {
-                creep.moveTo(source, {visualizePathStyle: {}})
-            } else if (result == OK) {
-                creep.room.memory.metrics.count.resources.total[resource] += mine_amount;
+        let result;
+        if (creep.store.getFreeCapacity(resource)) {
+            // Space in inventory, mine
+            creep.memory.curDepo = null;
+            result = creep.harvest(target)
+            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(target, {visualizePathStyle: {}}) }
+            else if (result == OK) { creep.room.memory.metrics.count.resources.total[resource] += mine_amount }
+        } else {
+            // Full inventory, depo
+            for (let cur_resource of RESOURCES_ALL) {
+                if (creep.store.getUsedCapacity(cur_resource)) {
+                    result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
+                    if (result == OK || result == ERR_NOT_IN_RANGE) { break }
+                }
             }
         }
+
+        creep.say("⛏️" + result);
     }
 
 }

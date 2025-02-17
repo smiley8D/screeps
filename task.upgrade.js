@@ -8,42 +8,35 @@ class Upgrade extends Task {
     }
 
     static getTasks(room) {
-        // Find energy available in room
-        let energy = 0;
-        for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => o.structureType == STRUCTURE_CONTAINER || o.structuredType == STRUCTURE_STORAGE } )) {
-            energy += structure.store.getUsedCapacity(RESOURCE_ENERGY);
-        }
-
+        let energy = room.memory.metrics.last.resources.total[RESOURCE_ENERGY];
         let task = new Upgrade(room.name, Math.log(energy*5))
         return [task];
     }
 
     static doTask(creep) {
-        creep.say("⬆️");
         let controller = Game.rooms[creep.memory.task.tgt].controller;
 
-        // Fill
-        if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
-            utils.fill(creep);
-        } else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 && !creep.memory.curFill) {
-            // Cannot fill, finish task
-            creep.memory.task = null;
-            return;
-        }
-
-        // Upgrade
-        if (!creep.memory.curFill) {
-            // Attempt upgrade
-            let result = creep.upgradeController(controller)
-            creep.moveTo(controller, {visualizePathStyle: {}});
-            if (result == ERR_NOT_ENOUGH_ENERGY) {
-                // Fill inventory
-                creep.memory.curFill = true;
-            } else if (result != OK && result != ERR_NOT_IN_RANGE) {
-                // Cannot complete task
-                creep.memory.task = null;
+        let result;
+        if (creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
+            // Energy in inventory, upgrade and move closer
+            creep.memory.curSrc = null;
+            result = creep.upgradeController(controller);
+            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {}})  }
+            else if (result == OK) { creep.moveTo(controller, {visualizePathStyle: {}}) }
+        } else if (!creep.store.getUsedCapacity()) {
+            // Empty inventory, refill
+            result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY));
+        } else {
+            // Non-energy in inventory, depo
+            creep.memory.curSrc = null;
+            for (let resource of RESOURCES_ALL) {
+                if (creep.store.getUsedCapacity(resource)) {
+                    result = utils.doDst(creep, utils.findDst(creep, resource), resource);
+                }
             }
         }
+
+        creep.say("⬆️" + result);
     }
 
 }

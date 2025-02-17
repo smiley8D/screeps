@@ -19,26 +19,17 @@ class Repair extends Task {
     }
 
     static doTask(creep) {
-        creep.say("🔧");
-
         // Move to room
         if (creep.room.name != creep.memory.task.tgt) {
             creep.moveTo(Game.rooms[creep.memory.task.tgt], {visualizePathStyle: {}});
             return;
         }
 
-        // Fill
-        if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
-            utils.fill(creep);
-            creep.memory.curRepair = null;
-        } else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 && !creep.memory.curFill) {
-            // Cannot fill, finish task
-            creep.memory.task = null;
-            return;
-        }
+        let result;
+        if (creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
+            // Energy in inventory, repair
+            creep.memory.curSrc = null;
 
-        // Repair
-        if (!creep.memory.curFill) {
             // Get structure
             let structure = Game.getObjectById(creep.memory.curStructure);
             if (!structure || structure.hitsMax == structure.hits) {
@@ -54,20 +45,23 @@ class Repair extends Task {
             }
 
             // Attempt repair
-            let result = creep.repair(structure);
-            if (result == ERR_NOT_IN_RANGE) {
-                creep.moveTo(structure, {visualizePathStyle: {}});
-            } else if (result == ERR_NOT_ENOUGH_ENERGY) {
-                // Fill inventory
-                creep.memory.curFill = true;
-            } else if (result == ERR_NO_BODYPART) {
-                // Cannot complete task
-                creep.memory.task = null;
-            } else if (result != OK) {
-                // Find new site
-                creep.memory.curStructure = null;
+            result = creep.repair(structure);
+            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
+        } else if (!creep.store.getUsedCapacity()) {
+            // Empty inventory, refill
+            result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY));
+        } else {
+            // Non-energy in inventory, depo
+            creep.memory.curSrc = null;
+            for (let resource of RESOURCES_ALL) {
+                if (creep.store.getUsedCapacity(resource)) {
+                    result = utils.doDst(creep, utils.findDst(creep, resource), resource);
+                    if (result == OK || result == ERR_NOT_IN_RANGE) { break }
+                }
             }
         }
+
+        creep.say("🔧" + result);
     }
 
 }
