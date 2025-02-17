@@ -102,9 +102,11 @@ utils = {
             },
             hits: 0,
             hits_max: 0,
+            hits_per: 0,
             build: 0,
             build_max: 0,
-            upgrade: 0
+            build_per: 0,
+            upgrade: 0,
         }
         for (let resource of RESOURCES_ALL) {
             metrics.resources.total[resource] = 0;
@@ -112,6 +114,7 @@ utils = {
             metrics.resources.under[resource] = 0;
             metrics.resources.fill[resource] = 0;
             metrics.resources.fill_max[resource] = 0;
+            metrics.resources.extracted[resource] = 0;
         }
         return metrics;
     },
@@ -266,6 +269,10 @@ utils = {
             }
         }
 
+        // Process percentages
+        metrics.build_per = metrics.build / metrics.build_max;
+        metrics.hits_per = metrics.hits / metrics.hits_max;
+
         // Calculcate changes
         let mov_change;
         let mov;
@@ -285,10 +292,10 @@ utils = {
         // Submit visuals
         let text = ["Room: " + room.name];
         if (metrics.build) { text.push(
-            "Build: " + (metrics.build_max - metrics.build) + " (" + (Math.round(1000 * metrics.build / metrics.build_max)/10) + "%)"
+            "Build: " + (metrics.build_max - metrics.build) + " (" + Math.round(mov_change.build) + ") " + (Math.round(1000 * metrics.build_per)/10) + "% (" + (Math.round(1000 * mov_change.build_per)/10) + "%)"
         ) }
         if (metrics.hits < metrics.hits_max) {text.push(
-            "Damage: " + (metrics.hits_max - metrics.hits) + " (" + (Math.round(1000 * metrics.hits / metrics.hits_max)/10) + "%)"
+            "Damage: " + (metrics.hits_max - metrics.hits) + " (" + Math.round(mov_change.hits) + ") " + (Math.round(1000 * metrics.hits_per)/10) + "% (" + (Math.round(1000 * mov_change.hits_per)/10) + "%)"
         ) }
         for (let resource in RESOURCES_ALL) {
             if (metrics.resources.total[resource]) {text.push(
