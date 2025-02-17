@@ -154,11 +154,13 @@ utils = {
         // Process structures
         for (let structure of room.find(FIND_STRUCTURES, {filter: (s) => s.my || !s.owner})) {
             // Process damage
+            if (structure.hitsMax) {
                 metrics.hits_max += structure.hitsMax;
-            if (structure.hits < structure.hitsMax * config.DMG_THRESHOLD) {
-                metrics.hits += structure.hits;
-            } else {
-                metrics.hits += structure.hitsMax;
+                if (structure.hits < structure.hitsMax * config.DMG_THRESHOLD) {
+                    metrics.hits += structure.hits;
+                } else {
+                    metrics.hits += structure.hitsMax;
+                }
             }
 
             // Process inventory

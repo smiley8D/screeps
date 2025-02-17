@@ -60,9 +60,15 @@ module.exports.loop = function() {
             let spawners = [];
             for (let spawner of room.find(FIND_MY_SPAWNS)) {
                 // Cancel now-unneeded spawns
-                if (!spawner.spawning) {
+                let creep;
+                let task;
+                if (spawner.spawning) { creep = Game.creeps[spawner.spawning.name] }
+                if (creep) { task = tasks.get(creep.memory.task.id) }
+                if (!creep) {
                     spawners.push(spawner);
-                } else if (Game.creeps[spawner.spawning.name].memory.task && !tasks.has(Game.creeps[spawner.spawning.name].memory.task.id)) {
+                } else if (!task ||
+                    task.parts >= task.wanted ||
+                    task.workers >= task.max_workers) {
                     spawner.spawning.cancel;
                     spawners.push(spawner);
                 }
@@ -147,7 +153,7 @@ module.exports.loop = function() {
         // Recycle idle
         for (let body of avail_creeps.values()) {
             for (let creep of body) {
-                creep.memory.task = new Recycle(creep.ticksToLive < 500);
+                creep.memory.task = new Recycle(creep.ticksToLive < 500 || creep.room.energyAvailable < creep.room.energyCapacityAvailable);
             }
         }
     }
