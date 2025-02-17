@@ -17,11 +17,11 @@ const TASKS = {
     "Recycle": Recycle
 }
 
-// Clear visuals & metrics
-for (let room_name in Game.rooms) {
-    Game.rooms[room_name].memory.visuals = [];
-    Game.rooms[room_name].memory.metrics = null;
-}
+// // Clear visuals & metrics
+// for (let room_name in Game.rooms) {
+//     Game.rooms[room_name].memory.visuals = [];
+//     Game.rooms[room_name].memory.metrics = null;
+// }
 
 module.exports.loop = function() {
     // Cleanup
@@ -133,6 +133,7 @@ module.exports.loop = function() {
                 // Update task fullfillment
                 if (creep) {
                     task.parts += size;
+                    task.workers++;
                     for (let i = 0; i < sorted_tasks.length - 1; i++) {
                         // Compare to next task
                         let next_task = sorted_tasks[i+1];

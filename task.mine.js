@@ -27,6 +27,7 @@ class Mine extends Task {
 
     static doTask(creep) {
         creep.say("⛏️");
+        let mine_amount = 2 * (1 + 2 * (creep.memory.size - 1))
 
         let source = Game.getObjectById(creep.memory.task.tgt);
 
@@ -38,6 +39,8 @@ class Mine extends Task {
             let result = creep.harvest(source)
             if (result == ERR_NOT_IN_RANGE) {
                 creep.moveTo(source, {visualizePathStyle: {}})
+            } else if (result == OK && creep.room.memory.metrics) {
+                creep.room.memory.metrics.count.resources.total[RESOURCE_ENERGY] += mine_amount;
             }
         }
     }

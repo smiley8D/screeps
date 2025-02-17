@@ -99,6 +99,7 @@ utils = {
                 fill_max: {},
                 fill_avg: {},
                 imbalance: {},
+                extracted: {}
             },
             hits: 0,
             hits_max: 0,
@@ -274,44 +275,49 @@ utils = {
         metrics.hits_per = metrics.hits / metrics.hits_max;
 
         // Calculcate changes
-        let mov_change;
-        let mov;
         let change;
+        let mov;
         let prev_metrics = room.memory.metrics;
         if (!prev_metrics) { prev_metrics = {
             // Initialize metrics
             last: JSON.parse(JSON.stringify(metrics)),
-            mov_change: utils.freshMetrics(),
-            mov: JSON.parse(JSON.stringify(metrics)),
             change: utils.freshMetrics(),
+            mov: JSON.parse(JSON.stringify(metrics)),
+            mov_count: utils.freshMetrics(),
+            count: utils.freshMetrics(),
         } }
-        change = utils.doChange(prev_metrics.last, metrics);
-        mov_change = utils.doMov(prev_metrics.mov_change, change)
+        change = utils.doMov(prev_metrics.change, utils.doChange(prev_metrics.last, metrics));
         mov = utils.doMov(prev_metrics.mov, metrics);
+        mov_count = utils.doMov(prev_metrics.mov_count, prev_metrics.count);
 
         // Submit visuals
         let text = ["Room: " + room.name];
         if (metrics.build) { text.push(
-            "Build: " + (metrics.build_max - metrics.build) + " (" + Math.round(mov_change.build) + ") " + (Math.round(1000 * metrics.build_per)/10) + "% (" + (Math.round(1000 * mov_change.build_per)/10) + "%)"
+            "Build: " + (metrics.build_max - metrics.build) + " (" + Math.round(change.build) + ") " + (Math.round(1000 * metrics.build_per)/10) + "% (" + (Math.round(1000 * change.build_per)/10) + "%)"
         ) }
         if (metrics.hits < metrics.hits_max) {text.push(
-            "Damage: " + (metrics.hits_max - metrics.hits) + " (" + Math.round(mov_change.hits) + ") " + (Math.round(1000 * metrics.hits_per)/10) + "% (" + (Math.round(1000 * mov_change.hits_per)/10) + "%)"
+            "Damage: " + (metrics.hits_max - metrics.hits) + " (" + Math.round(-1 * change.hits) + ") " + (Math.round(1000 * metrics.hits_per)/10) + "% (" + (Math.round(1000 * change.hits_per)/10) + "%)"
         ) }
-        for (let resource in RESOURCES_ALL) {
+        text.push("Upgrade: " + metrics.upgrade + " (" + Math.round(change.upgrade) + ") (" + Math.round(1000 * change.upgrade / (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK))/10 + "%)")
+        let overhead = (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK) - change.upgrade - change.resources.total[RESOURCE_ENERGY];
+        text.push("Overhead: " + Math.round(overhead) + " (" + Math.round(1000 * overhead / (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK))/10 + "%)")
+        for (let resource of RESOURCES_ALL) {
             if (metrics.resources.total[resource]) {text.push(
-                resouce + ": " + metrics.resources.total[resource] + " (" + Math.round(mov_change.resources.total[resource]) + ")"
+                resource + ": " + metrics.resources.total[resource] + " (" + Math.round(change.resources.total[resource]) + ")"
+            )}
+            if (mov_count.resources.total[resource]) {text.push(
+                resource + " extracted: " + Math.round(mov_count.resources.total[resource] / config.TASK_TICK) + " (" + (Math.round(100 * mov_count.resources.total[resource] / (room.find(FIND_SOURCES_ACTIVE).length)  / config.TASK_TICK)/10) + "%)"
             )}
         }
-        text.push("Upgrade: " + metrics.upgrade + " (" + Math.round(mov_change.upgrade) + ")")
-        text.push("Energy: " + metrics.resources.total[RESOURCE_ENERGY] + " (" + Math.round(mov_change.resources.total[RESOURCE_ENERGY]) + ")")
         room.memory.visuals.push([text, 0, 0, config.TASK_TICK, {align: "left"}]);
 
         // Update memory
         room.memory.metrics = {
             last: metrics,
-            mov_change: mov_change,
+            change: change,
             mov: mov,
-            change:change
+            mov_count: mov_count,
+            count: utils.freshMetrics(),
         }
     }
 }
