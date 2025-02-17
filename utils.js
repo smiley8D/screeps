@@ -39,7 +39,7 @@ utils = {
         if (result != OK && result != ERR_NOT_IN_RANGE) { result = creep.harvest(fill) }
 
         // Try harvest
-        if (result != OK && result != ERR_NOT_IN_RANGE) { result = creep.withdraw(fill, RESOURCE_ENERGY) }
+        if (result != OK && result != ERR_NOT_IN_RANGE) { result = creep.withdraw(fill, resource) }
 
         // Move in range
         if (result == ERR_NOT_IN_RANGE) { creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}}) }
@@ -76,7 +76,7 @@ utils = {
         }
 
         // Try transfer
-        let result = creep.transfer(depo, RESOURCE_ENERGY);
+        let result = creep.transfer(depo, resource);
 
         // Move in range
         if (result == ERR_NOT_IN_RANGE) { creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}}) }
