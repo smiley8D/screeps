@@ -17,12 +17,6 @@ const TASKS = {
     "Recycle": Recycle
 }
 
-// // Clear visuals & metrics
-// for (let room_name in Game.rooms) {
-//     Game.rooms[room_name].memory.visuals = [];
-//     Game.rooms[room_name].memory.metrics = null;
-// }
-
 module.exports.loop = function() {
     // Cleanup
     if (Game.time % config.CLEANUP_TICK == 0) {
@@ -154,7 +148,7 @@ module.exports.loop = function() {
         // Recycle idle
         for (let body of avail_creeps.values()) {
             for (let creep of body) {
-                creep.memory.task = new Recycle(creep.ticksToLive < 500 || creep.room.energyAvailable < creep.room.energyCapacityAvailable);
+                creep.memory.task = new Recycle(creep.ticksToLive < 500 || creep.room.energyAvailable < creep.room.energyCapacityAvailable * 0.5);
             }
         }
     }

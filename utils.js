@@ -116,6 +116,7 @@ utils = {
             metrics.resources.fill[resource] = 0;
             metrics.resources.fill_max[resource] = 0;
             metrics.resources.extracted[resource] = 0;
+            metrics.resources.imbalance[resource] = 0;
         }
         return metrics;
     },
@@ -159,11 +160,10 @@ utils = {
         for (let structure of room.find(FIND_STRUCTURES, {filter: (s) => s.my || !s.owner})) {
             // Process damage
             if (structure.hitsMax) {
+                metrics.hits += structure.hits;
                 metrics.hits_max += structure.hitsMax;
-                if (structure.hits < structure.hitsMax * config.DMG_THRESHOLD) {
-                    metrics.hits += structure.hits;
-                } else {
-                    metrics.hits += structure.hitsMax;
+                if (structure.hits < structure.hitsMax) {
+                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 }
             }
 
@@ -176,18 +176,16 @@ utils = {
 
                 // Find imbalance
                 if (structure.structureType == STRUCTURE_CONTAINER || structure.structureType == STRUCTURE_STORAGE) {
-                    if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_YELLOW).length) {
+                    if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_GREY).length) {
                         // Flagged as empty
                         if (structure.store.getUsedCapacity()) { room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
                         for (let resource of RESOURCES_ALL) {
                             metrics.resources.over[resource] += structure.store.getUsedCapacity(resource);
                         }
-                    } else if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_BLUE).length) {
-                        // Flagged as fill
-                        if (structure.store.getUsedCapacity()) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
-                        for (let resource of RESOURCES_ALL) {
-                            metrics.resources.under[resource] += structure.store.getFreeCapacity(resource);
-                        }
+                    } else if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_YELLOW).length) {
+                        // Flagged as fill w/ energy
+                        if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
+                        metrics.resources.under[RESOURCE_ENERGY] += structure.store.getFreeCapacity(RESOURCE_ENERGY);
                     } else {
                         // Non-flagged container/storage, build average
                         for (let resource of RESOURCES_ALL) {
@@ -199,7 +197,7 @@ utils = {
                     // Not a container or storage, always fill
                     for (let resource of RESOURCES_ALL) {
                         metrics.resources.under[resource] += structure.store.getFreeCapacity(resource);
-                        if (structure.store.getFreeCapacity()) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
+                        if (structure.store.getFreeCapacity(resource)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
                     }
                 }
             }
@@ -271,28 +269,21 @@ utils = {
         }
 
         // Process percentages
-        metrics.build_per = metrics.build / metrics.build_max;
-        metrics.hits_per = metrics.hits / metrics.hits_max;
+        if (metrics.build_max) { metrics.build_per = metrics.build / metrics.build_max }
+        if (metrics.hits_max) { metrics.hits_per = metrics.hits / metrics.hits_max }
 
         // Calculcate changes
         let change;
         let mov;
+        if (!room.memory.metrics) { utils.reset(room.name, metrics) }
         let prev_metrics = room.memory.metrics;
-        if (!prev_metrics) { prev_metrics = {
-            // Initialize metrics
-            last: JSON.parse(JSON.stringify(metrics)),
-            change: utils.freshMetrics(),
-            mov: JSON.parse(JSON.stringify(metrics)),
-            mov_count: utils.freshMetrics(),
-            count: utils.freshMetrics(),
-        } }
         change = utils.doMov(prev_metrics.change, utils.doChange(prev_metrics.last, metrics));
         mov = utils.doMov(prev_metrics.mov, metrics);
         mov_count = utils.doMov(prev_metrics.mov_count, prev_metrics.count);
 
         // Submit visuals
         let text = ["Room: " + room.name];
-        if (metrics.build) { text.push(
+        if (metrics.build_max) { text.push(
             "Build: " + (metrics.build_max - metrics.build) + " (" + Math.round(change.build) + ") " + (Math.round(1000 * metrics.build_per)/10) + "% (" + (Math.round(1000 * change.build_per)/10) + "%)"
         ) }
         if (metrics.hits < metrics.hits_max) {text.push(
@@ -308,6 +299,9 @@ utils = {
             if (mov_count.resources.total[resource]) {text.push(
                 resource + " extracted: " + Math.round(mov_count.resources.total[resource] / config.TASK_TICK) + " (" + (Math.round(100 * mov_count.resources.total[resource] / (room.find(FIND_SOURCES_ACTIVE).length)  / config.TASK_TICK)/10) + "%)"
             )}
+            if (metrics.resources.imbalance[resource]) {text.push(
+                resource + " imbalance: " + Math.round(metrics.resources.imbalance[resource]) + " (" + Math.round(change.resources.imbalance[resource]) + ")"
+            )}
         }
         room.memory.visuals.push([text, 0, 0, config.TASK_TICK, {align: "left"}]);
 
@@ -318,6 +312,28 @@ utils = {
             mov: mov,
             mov_count: mov_count,
             count: utils.freshMetrics(),
+        }
+    },
+
+    // Clear visuals & metrics
+    reset: function(room_name=null, metrics=null) {
+        if (room_name) {
+            Game.rooms[room_name].memory.visuals = [];
+            if (metrics) {
+                Game.rooms[room_name].memory.metrics = {
+                    last: JSON.parse(JSON.stringify(metrics)),
+                    change: utils.freshMetrics(),
+                    mov: JSON.parse(JSON.stringify(metrics)),
+                    mov_count: utils.freshMetrics(),
+                    count: utils.freshMetrics(),
+                }
+            } else {
+                Game.rooms[room_name].memory.metrics = null;
+            }
+        } else {
+            for (let room_name in Game.rooms) {
+                utils.reset(room_name, metrics);
+            }
         }
     }
 }

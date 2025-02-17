@@ -5,65 +5,22 @@ Hauler = require("body.hauler");
 
 class Stock extends Task {
 
-    constructor(room, wanted) {
+    constructor(room, wanted, resource) {
         super("Stock", room, wanted);
         this.body = new Hauler();
+        this.resources = resource;
     }
 
     static getTasks(room) {
-        // Get totals
-        let amount = 0;
-        let capacity = 0;
-        for (let structure of room.find(FIND_STRUCTURES, { filter: (o) =>
-            (o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE) &&
-            o.pos.lookFor(LOOK_FLAGS).length == 0 })) {
-            amount += structure.store.getUsedCapacity(RESOURCE_ENERGY);
-            capacity += structure.store.getCapacity(RESOURCE_ENERGY);
-        }
-        let avg_fill = amount / capacity;
-
-        // Get imbalances
-        let over = 0;
-        let under = 0;
-        for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => o.store && (o.my || !o.owner) } )) {
-            if (structure.structureType == STRUCTURE_CONTAINER || structure.structureType == STRUCTURE_STORAGE) {
-                if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_YELLOW).length > 0) {
-                    // Flagged as empty
-                    over += structure.store.getUsedCapacity(RESOURCE_ENERGY);
-                    if (structure.store.getUsedCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
-                } else if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_BLUE).length > 0) {
-                    // Flagged as fill
-                    under += structure.store.getFreeCapacity(RESOURCE_ENERGY);
-                    if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
-                } else {
-                    // Non-flagged container/storage, check against avg
-                    let diff = structure.store.getCapacity(RESOURCE_ENERGY) * ((structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY)) - avg_fill);
-                    if (diff > 0) {
-                        over += diff
-                        room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, config.TASK_TICK]);
-                    } else if (diff < 0) {
-                        under -= diff
-                        room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]);
-                    }
-                }
-            } else {
-                // Not a container or storage, always fill
-                under += structure.store.getFreeCapacity(RESOURCE_ENERGY);
-                if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
+        // Create tasks
+        let tasks = []
+        for (let resource of RESOURCES_ALL) {
+            let parts = Math.max(0, Math.round(Math.log(room.memory.metrics.last.resources.imbalance[resource])));
+            if (parts > 0) {
+                tasks.push(new Stock(room.name, parts, resource));
             }
         }
-
-        // Create task  
-        let imbalance = Math.round(Math.max(over, under));
-        let parts = Math.max(Math.ceil((room.energyCapacityAvailable - room.energyAvailable) / 100), Math.round(Math.log(imbalance)));
-        if (parts > 0) {
-            let task = new Stock(room.name, parts);
-            if (room.energyAvailable < 300) {
-                task.body.base = [WORK,CARRY,MOVE];
-            }
-            return [task];
-        }
-        return [];
+        return tasks;
     }
 
     static doTask(creep) {

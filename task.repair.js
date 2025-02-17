@@ -10,13 +10,9 @@ class Repair extends Task {
     }
 
     static getTasks(room) {
-        let total_dmg = 0;
-        for (let structure of room.find(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.9 })) {
-            room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
-            total_dmg += structure.hitsMax - structure.hits;
-        }
+        let total_dmg = room.memory.metrics.last.hits_max - room.memory.metrics.last.hits;
         if (total_dmg > 0) {
-            let task = new Repair(room.name, Math.max(1,Math.round(Math.log(total_dmg))));
+            let task = new Repair(room.name, Math.max(0,Math.round(Math.log(total_dmg))));
             return [task];
         }
         return [];
@@ -41,12 +37,15 @@ class Repair extends Task {
             return;
         }
 
-        // Stock spawner
+        // Repair
         if (!creep.memory.curFill) {
-            // Get closest damaged site
+            // Get structure
             let structure = Game.getObjectById(creep.memory.curStructure);
             if (!structure || structure.hitsMax == structure.hits) {
-                structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.9 });
+                // Mixed priority of damage & distance
+                structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.1});
+                structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.5});
+                if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits < o.hitsMax}) }
                 if (structure) {
                     creep.memory.curStructure = structure.id;
                 } else {

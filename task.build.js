@@ -8,10 +8,7 @@ class Build extends Task {
     }
 
     static getTasks(room) {
-        let total_build = 0;
-        for (let structure of room.find(FIND_MY_CONSTRUCTION_SITES)) {
-            total_build += 1 + structure.progressTotal - structure.progress;
-        }
+        let total_build = room.memory.metrics.last.build_max - room.memory.metrics.last.build;
         if (total_build > 0) {
             let task = new Build(room.name, Math.max(1,Math.round(Math.log(total_build))));
             return [task];
@@ -38,7 +35,7 @@ class Build extends Task {
             return;
         }
 
-        // Stock spawner
+        // Build
         if (!creep.memory.curFill) {
             // Get closest construction site
             let structure = Game.getObjectById(creep.memory.curStructure);
