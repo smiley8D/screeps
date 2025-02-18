@@ -12,7 +12,7 @@ class Repair extends Task {
     static getTasks(room) {
         let total_dmg = room.memory.metrics.last.hits_max - room.memory.metrics.last.hits;
         if (total_dmg > 0) {
-            let task = new Repair(room.name, Math.max(0,Math.log(total_dmg / 1000)));
+            let task = new Repair(room.name, Math.max(1,Math.log(total_dmg / 1000)));
             return [task];
         }
         return [];
@@ -43,6 +43,7 @@ class Repair extends Task {
             let structure = Game.getObjectById(creep.memory.curStructure);
             if (!structure || structure.hitsMax == structure.hits) {
                 // Mixed priority of damage & distance
+                structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits  < 100});
                 structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.1});
                 structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.5});
                 if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits < o.hitsMax}) }
@@ -58,6 +59,7 @@ class Repair extends Task {
             if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
+            creep.memory.curStructure = null;
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY));
         }
 

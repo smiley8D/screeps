@@ -53,6 +53,7 @@ class Build extends Task {
             if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
+            creep.memory.curStructure = null;
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY));
         }
 

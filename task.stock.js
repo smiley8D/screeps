@@ -79,10 +79,10 @@ class Stock extends Task {
         let result = ERR_NOT_FOUND;
         if (src) {
             result = utils.doSrc(creep, src, resource);
-            if (result == ERR_NOT_ENOUGH_RESOURCES) { src = null }
+            if (result == ERR_NOT_ENOUGH_RESOURCES || result == ERR_FULL) { src = null }
         } else if (dst) {
             result = utils.doDst(creep, dst, resource);
-            if (result == ERR_NOT_ENOUGH_RESOURCES) { dst = null }
+            if (result == ERR_NOT_ENOUGH_RESOURCES || result == ERR_FULL) { dst = null }
         }
 
         // Update cache

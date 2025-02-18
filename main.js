@@ -18,6 +18,24 @@ const TASKS = {
 }
 
 module.exports.loop = function() {
+    // Tower defenses
+    for (let room_name in Game.rooms) {
+        let room = Game.rooms[room_name];
+        let creeps;
+        if (creeps = room.find(FIND_HOSTILE_CREEPS)) {
+            for (let tower of room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER})) {
+                let hostile = tower.pos.findClosestByRange(creeps);
+                if (hostile) {
+                    tower.attack(hostile);
+                    console.log(tower.pos,"attacking",hostile.pos);
+                }
+            }
+
+            // Log
+            room.memory.last_sighting = Game.time;
+        }
+    }
+
     // Cleanup
     if (Game.time % config.CLEANUP_TICK == 0) {
         for (let creep in Memory.creeps) {
