@@ -324,6 +324,7 @@ utils = {
             repair: 0,
             upgrade: 0,
             harvest: {},
+            spawn: 0
         }
         for (let resource of RESOURCES_ALL) {
             counts.harvest[resource] = 0;
