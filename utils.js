@@ -18,7 +18,7 @@ utils = {
 
         // Check current src
         let src = Game.getObjectById(creep.memory.curSrc);
-        if (src) { return src; }
+        if (src && src.store && src.store.getUsedCapacity(resource)) { return src; }
 
         // Find new src
         let srcs = [];
@@ -239,7 +239,7 @@ utils = {
 
         // Check current dst
         let dst = Game.getObjectById(creep.memory.curDst);
-        if (dst) { return dst; }
+        if (dst && dst.store && dst.store.getFreeCapacity(resource)) { return dst; }
 
         // Find new dst
         let dsts = []
