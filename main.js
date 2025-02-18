@@ -32,7 +32,9 @@ module.exports.loop = function() {
             }
 
             // Log
-            room.memory.last_sighting = Game.time;
+            if (creeps.length) {
+                room.memory.sightings[creeps[0].owner.username] = Game.time;
+            }
         }
     }
 
