@@ -38,7 +38,16 @@ class Mine extends Task {
         if (target.mineralType) { resource = target.mineralType }
 
         let result;
-        if (creep.store.getFreeCapacity(resource)) {
+        if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
+            // Inventory contains wrong resource, depo
+            creep.memory.curSrc = null;
+            for (let cur_resource of RESOURCES_ALL) {
+                if (creep.store.getUsedCapacity(cur_resource) && cur_resource != resource) {
+                    result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
+                    if (result == OK || result == ERR_NOT_IN_RANGE) { break }
+                }
+            }
+        } else if (creep.store.getFreeCapacity()) {
             // Space in inventory, mine
             creep.memory.curDepo = null;
             result = creep.harvest(target)

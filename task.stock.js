@@ -6,9 +6,10 @@ Hauler = require("body.hauler");
 class Stock extends Task {
 
     constructor(room, wanted, resource) {
-        super("Stock", room, wanted);
+        super("Stock", room + ":" + resource, wanted);
         this.body = new Hauler();
-        this.resources = resource;
+        this.room = room;
+        this.resource = resource;
     }
 
     static getTasks(room) {
@@ -23,161 +24,102 @@ class Stock extends Task {
         return tasks;
     }
 
+    // Compress tasks for memory storage
+    compress() {
+        return {
+            id: this.id,
+            name: this.name,
+            tgt: this.tgt,
+            room: this.room,
+            resource: this.resource
+        }
+    }
+
     static doTask(creep) {
-        creep.say("📦");
-        let room = Game.rooms[creep.memory.task.tgt];
+        let room = Game.rooms[creep.memory.task.room];
+        let resource = creep.memory.task.resource;
 
         // Move to room
-        if (creep.room.name != creep.memory.task.tgt) {
-            creep.moveTo(Game.rooms[creep.memory.task.tgt], {visualizePathStyle: {}});
+        if (creep.room.name != creep.memory.task.room) {
+            creep.moveTo(Game.rooms[creep.memory.task.room], {visualizePathStyle: {}});
             return;
         }
 
-        // Spawners not full, prioritize
-        if (room.energyAvailable < room.energyCapacityAvailable) {
-            // Fill
-            if (!creep.store.getUsedCapacity(RESOURCE_ENERGY) || creep.memory.curFill) {
-                utils.fill(creep, true, false, true, RESOURCE_ENERGY);
-                creep.memory.curDepo = null;
-            }
-
-            // Stock spawner
-            if (!creep.memory.curFill) {
-                // Get closest spawn container
-                let depo = Game.getObjectById(creep.memory.curDepo);
-                if (!depo || !depo.store.getFreeCapacity(RESOURCE_ENERGY)) {
-                    depo = creep.pos.findClosestByPath(FIND_MY_STRUCTURES,
-                    {filter: (o) => (o.structureType == STRUCTURE_SPAWN || o.structureType == STRUCTURE_EXTENSION) && o.store.getFreeCapacity(RESOURCE_ENERGY)});
-                    if (depo) {
-                        creep.memory.curDepo = depo.id;
-                    } else {
-                        creep.memory.curDepo = null;
+        // Determine next step
+        let src = Game.getObjectById(creep.memory.curSrc);
+        let dst = Game.getObjectById(creep.memory.curDst);
+        if (src && creep.store.getFreeCapacity()) {
+            // Src cached & space available, refill
+            dst = null;
+        } else if (dst && creep.store.getUsedCapacity()) {
+            // Dst cached & resources available, depo
+            src = null;
+        } else if (room.energyAvailable < room.energyCapacityAvailable) {
+            // Spawners not full, prioritize
+            if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
+                // Inventory contains wrong resource, depo
+                for (let cur_resource of RESOURCES_ALL) {
+                    if (creep.store.getUsedCapacity(cur_resource) && cur_resource != RESOURCE_ENERGY) {
+                        dst = utils.findDst(creep, cur_resource);
                     }
                 }
-
-                // Attempt restock
-                let result = creep.transfer(depo, RESOURCE_ENERGY);
-                creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
-                if (result == ERR_NOT_ENOUGH_ENERGY) {
-                    // Fill inventory
-                    creep.memory.curFill = true;
-                } else if (result == ERR_FULL) {
-                    // Find new depo
-                    creep.memory.curDepo = null;
+                src = null;
+            } else if (creep.store.getUsedCapacity()) {
+                // Energy in inventory, depo
+                dst = utils.findDst(creep, RESOURCE_ENERGY, {containers: false, haulers: false});
+                src = null;
+            } else {
+                // Empty inventory, refill
+                src = utils.findSrc(creep, RESOURCE_ENERGY, {source: creep.body.some((p) => p.type == WORK).length > 0});
+                dst = null;
+            }
+        } else if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
+            // Inventory contains wrong resource, depo
+            for (let cur_resource of RESOURCES_ALL) {
+                if (creep.store.getUsedCapacity(cur_resource) && cur_resource != resource) {
+                    dst = utils.findDst(creep, cur_resource);
+                    if (dst) { break }
                 }
             }
+        } else if (!creep.store.getUsedCapacity()) {
+            // Find new src
+            src = utils.bestSrc(creep, resource);
+            dst = null;
+        } else if (!creep.store.getFreeCapacity()) {
+            // Find new dst
+            dst = utils.bestDst(creep, resource);
+            src = null;
         } else {
-            // Find most full valid src (closest if several equal)
-            if (creep.memory.curFill == true || (!creep.memory.curFill && !creep.store.getUsedCapacity(RESOURCE_ENERGY)) || (!creep.memory.curFill && !creep.memory.curDepo)) {
-                // Find most full
-                let cur = 0;
-                let cur_level = 0;
-                let cur_range = 200;
-                for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => o.structureType == STRUCTURE_CONTAINER || o.structureType == STRUCTURE_STORAGE } )) {
-                    let filled = structure.store.getUsedCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY);
-                    let range = creep.pos.getRangeTo(structure);
-                    if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_YELLOW).length > 0) {
-                        // Flagged as empty
-                        if (filled > cur || (filled == cur && range < cur_range)) {
-                            cur = filled;
-                            creep.memory.curFill = structure.id;
-                            cur_range = range;
-                            cur_level = 1;
-                        }
-                    } else if (structure.pos.lookFor(LOOK_FLAGS).length == 0) {
-                        // Unflagged
-                        if (cur_level < 1 && (filled > cur || (filled == cur && range < cur_range))) {
-                            cur = filled;
-                            creep.memory.curFill = structure.id;
-                            cur_range = range;
-                        }
-                    }
-                }
-            }
-
-            // Attempt fill
-            if (creep.memory.curFill) {
-                let fill = Game.getObjectById(creep.memory.curFill);
-                let result = creep.withdraw(fill, RESOURCE_ENERGY);
-                if (result == ERR_NOT_ENOUGH_ENERGY) {
-                    // Find new fill
-                    creep.memory.curFill = true;
-                } else if (result == ERR_FULL) {
-                    // Begin depo
-                    creep.memory.curDepo = true;
-                    creep.memory.curFill = null;
-                } else if (result == ERR_NOT_IN_RANGE) {
-                    // Move in range
-                    creep.moveTo(fill, {visualizePathStyle: {stroke: "#ffa500"}});
-                } else if (result != OK) {
-                    // Cannot complete task
-                    creep.memory.task = null;
-                }
-            }
-
-            // Find most imbalanaced dst
-            if (creep.memory.curDepo == true || (!creep.memory.curDepo && !creep.store.getFreeCapacity(RESOURCE_ENERGY))) {
-                let cur = 0;
-                let cur_level = 0;
-                let cur_range = 200;
-                for (let structure of room.find(FIND_STRUCTURES, { filter: (o) => o.store && (o.my || !o.owner) } )) {
-                    let empty = structure.store.getFreeCapacity(RESOURCE_ENERGY) / structure.store.getCapacity(RESOURCE_ENERGY);
-                    let range = creep.pos.getRangeTo(empty);
-                    if (structure.structureType == STRUCTURE_SPAWN || structure.structureType == STRUCTURE_EXTENSION) {
-                        // Spawning container
-                        if (empty > 0 && range < cur_range) {
-                            cur = empty;
-                            creep.memory.curDepo = structure.id;
-                            cur_level = 3;
-                            cur_range = range;
-                        }
-                    } else if (structure.structureType != STRUCTURE_CONTAINER && structure.structureType != STRUCTURE_STORAGE) {
-                        // Not container or storage
-                        if (cur_level < 3 && (empty > cur || (empty == cur && range < cur_range))) {
-                            cur = empty;
-                            creep.memory.curDepo = structure.id;
-                            cur_level = 2;
-                            cur_range = range;
-                        }
-                    } else if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_BLUE).length > 0) {
-                        // Flagged as fill
-                        if (cur_level < 2 && (empty > cur || (empty == cur && range < cur_range))) {
-                            cur = empty;
-                            creep.memory.curDepo = structure.id;
-                            cur_level = 1;
-                            cur_range = range;
-                        }
-                    } else if (structure.pos.lookFor(LOOK_FLAGS).length == 0) {
-                        // Unflagged
-                        if (cur_level < 1 && (empty > cur || (empty == cur && range < cur_range))) {
-                            cur = empty;
-                            creep.memory.curDepo = structure.id;
-                            cur_range = range;
-                        }
-                    }
-                }
-            }
-
-            // Attempt depo
-            if (creep.memory.curDepo) {
-                let depo = Game.getObjectById(creep.memory.curDepo);
-                let result = creep.transfer(depo, RESOURCE_ENERGY);
-                if (result == ERR_FULL) {
-                    // Find new depo
-                    creep.memory.curDepo = true;
-                } else if (result == ERR_NOT_ENOUGH_ENERGY) {
-                    // Begin fill
-                    creep.memory.curFill = true;
-                    creep.memory.curDepo = false;
-                } else if (result == ERR_NOT_IN_RANGE) {
-                    // Move in range
-                    creep.moveTo(depo, {visualizePathStyle: {stroke: "#1e90ff"}});
-                } else if (result != OK) {
-                    // Cannot complete task
-                    creep.memory.task = null;
-                }
+            // Pick new src or dst by distance
+            src = utils.bestSrc(creep, resource);
+            dst = utils.bestDst(creep, resource);
+            if (creep.pos.finePathTo(src).length < creep.pos.findPathTo(dst).length) {
+                dst = null;
+            } else {
+                src = null;
             }
         }
+
+        // Execute
+        let result = ERR_NOT_FOUND;
+        if (src) {
+            result = utils.doSrc(creep, src, resource);
+        } else if (dst) {
+            result = utils.doDst(creep, dst, resource);
+        }
+
+        // Update cache
+        if (src) { creep.memory.curSrc = src.id }
+        else { creep.memory.curSrc = null }
+        if (dst) { creep.memory.curDst = dst.id }
+        else { creep.memory.curDst = null }
+
+        if (room.energyAvailable < room.energyCapacityAvailable) {
+            creep.say("📦" + result);
+        } else {
+            creep.say(resource[0] + "📦" + result);
+        }
+        return;
     }
 
 }

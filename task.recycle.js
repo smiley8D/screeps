@@ -13,37 +13,37 @@ class Recycle extends Task {
     }
 
     static doTask(creep) {
-        // Cleanup trash
-        let recycling = true;
-        utils.fill(creep, false, true, true);
-        if (!creep.memory.curFill) {
-
-            if (creep.store.getUsedCapacity()) {
-                // Depo
-                utils.depo(creep);
-            } else {
-                // Find spawner if recyclable
-                let spawner;
-                recycling = false;
-                if (creep.memory.task.tgt) {
-                    spawner = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
+        let result;
+        if (creep.store.getUsedCapacity()) {
+            // Resources in inventory, depo
+            for (let cur_resource of RESOURCES_ALL) {
+                if (creep.store.getUsedCapacity(cur_resource)) {
+                    result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
+                    if (result == OK || result == ERR_NOT_IN_RANGE) { break }
                 }
+            }
+        } else {
+            // Empty inventory, find spawner if recyclable
+            let spawner;
+            if (creep.memory.task.tgt) {
+                spawner = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
+            }
 
-                if (spawner) {
-                    // Recycle
-                    if (spawner.recycleCreep(creep) == ERR_NOT_IN_RANGE) { creep.moveTo(spawner, {visualizePathStyle: {stroke: "#dc0000"}})}
-                } else {
-                    // Move to graveyard
-                    let graveyard = creep.pos.findClosestByRange(FIND_FLAGS, { filter: (f) => f.color == COLOR_GREY });
-                    if (graveyard) {
-                        creep.moveTo(graveyard, {visualizePathStyle: {}});
-                    }
+            if (spawner) {
+                // Recycle
+                result = spawner.recycleCreep(creep);
+                if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(spawner, {visualizePathStyle: {stroke: "#dc0000"}})}
+            } else {
+                // Move to graveyard
+                let graveyard = creep.pos.findClosestByRange(FIND_FLAGS, { filter: (f) => f.color == COLOR_GREY && f.pos.lookFor(LOOK_STRUCTURES).length == 0});
+                if (graveyard) {
+                    result = creep.moveTo(graveyard, {visualizePathStyle: {}});
                 }
             }
         }
 
-        if (recycling) {
-            creep.say("♻️");
+        if (creep.memory.task.tgt) {
+            creep.say("♻️" + result);
         }
     }
 

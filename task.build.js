@@ -25,19 +25,21 @@ class Build extends Task {
             return;
         }
 
-        // Fill
-        if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 || creep.memory.curFill) {
-            utils.fill(creep);
-            creep.memory.curRepair = null;
-        } else if (creep.store.getUsedCapacity(RESOURCE_ENERGY) == 0 && !creep.memory.curFill) {
-            // Cannot fill, finish task
-            creep.memory.task = null;
-            return;
-        }
+        let result;
+        if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
+            // Inventory contains wrong resource, depo
+            creep.memory.curSrc = null;
+            for (let cur_resource of RESOURCES_ALL) {
+                if (creep.store.getUsedCapacity(cur_resource) && cur_resource != RESOURCE_ENERGY) {
+                    result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
+                    if (result == OK || result == ERR_NOT_IN_RANGE) { break }
+                }
+            }
+        } else if (creep.store.getUsedCapacity()) {
+            // Energy in inventory, build
+            creep.memory.curSrc = null;
 
-        // Build
-        if (!creep.memory.curFill) {
-            // Get closest construction site
+            // Get structure
             let structure = Game.getObjectById(creep.memory.curStructure);
             if (!structure) {
                 structure = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
@@ -47,21 +49,13 @@ class Build extends Task {
                     creep.memory.curStructure = null;
                 }
             }
-    
+
             // Attempt build
-            let result = creep.build(structure);
-            if (result == ERR_NOT_IN_RANGE) {
-                creep.moveTo(structure, {visualizePathStyle: {}});
-            } else if (result == ERR_NOT_ENOUGH_ENERGY) {
-                // Fill inventory
-                creep.memory.curFill = true;
-            } else if (result == ERR_NO_BODYPART) {
-                // Cannot complete task
-                creep.memory.task = null;
-            } else if (result != OK) {
-                // Find new site
-                creep.memory.curStructure = null;
-            }
+            result = creep.build(structure);
+            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
+        } else {
+            // Empty inventory, refill
+            result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY));
         }
     }
 
