@@ -25,7 +25,7 @@ class Mine extends Task {
 
             // Determine wanted
             let wanted = 4 / config.PART_MULT;
-            if (source.mineralType ) { wanted = 1 }
+            if (source.mineralType ) { wanted = Math.max(0, Math.log(source.mineralAmount)) }
             tasks.push(new Mine(source.id, wanted, spots));
         }
         return tasks;
