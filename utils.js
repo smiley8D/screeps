@@ -86,7 +86,9 @@ utils = {
             let cur = 0;
             let srcs = [];
 
-            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_GREY).length})) {
+            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getUsedCapacity(resource) &&
+                (s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_STORAGE) &&
+                s.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_GREY).length})) {
                 let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
                 if (fill > cur) {
                     srcs = [structure]
@@ -108,7 +110,8 @@ utils = {
             let cur = 0;
             let srcs = [];
 
-            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.pos.lookFor(LOOK_FLAGS).length == 0})) {
+            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getUsedCapacity(resource) &&
+                (s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_STORAGE) && s.pos.lookFor(LOOK_FLAGS).length == 0})) {
                 let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
                 if (fill > cur) {
                     srcs = [structure]
@@ -134,10 +137,10 @@ utils = {
         let result = creep.withdraw(src, resource);
 
         // Try pickup
-        if (result != OK && result != ERR_NOT_IN_RANGE) { result = creep.pickup(src) }
+        if (result == ERR_INVALID_TARGET) { result = creep.pickup(src) }
 
         // Try harvest
-        if (result != OK && result != ERR_NOT_IN_RANGE) { result = creep.harvest(src) }
+        if (result == ERR_INVALID_TARGET) { result = creep.harvest(src) }
 
         // Move in range
         if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(src, {visualizePathStyle: {stroke: "#ffa500"}}) }
@@ -150,14 +153,14 @@ utils = {
         let dst;
 
         // Try spawn containers
-        dst = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType == STRUCTURE_SPAWN || s.structureType == STRUCTURE_EXTENSION) && s.store.getFreeCapacity()});
+        dst = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType == STRUCTURE_SPAWN || s.structureType == STRUCTURE_EXTENSION) && s.store.getFreeCapacity(resource)});
 
         // Try flagged
         if (!dst) {
             let cur = 1;
             let dsts = [];
 
-            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == utils.resource_flag[resource]).length})) {
+            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getFreeCapacity(resource) && s.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == utils.resource_flag[resource]).length})) {
                 let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
                 if (fill < cur) {
                     dsts = [structure]
@@ -179,7 +182,7 @@ utils = {
             let cur = 1;
             let dsts = [];
 
-            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.structureType != STRUCTURE_CONTAINER && s.structureType != STRUCTURE_STORAGE})) {
+            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getFreeCapacity(resource) && s.structureType != STRUCTURE_CONTAINER && s.structureType != STRUCTURE_STORAGE})) {
                 let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
                 if (fill < cur) {
                     dsts = [structure]
@@ -201,7 +204,7 @@ utils = {
             let cur = 1;
             let dsts = [];
 
-            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.pos.lookFor(LOOK_FLAGS).length == 0})) {
+            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getFreeCapacity(resource) && s.pos.lookFor(LOOK_FLAGS).length == 0})) {
                 let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
                 if (fill < cur) {
                     dsts = [structure]
@@ -485,27 +488,32 @@ utils = {
 
     // Display a room's metrics
     showMetrics(room) {
+        let last = room.memory.metrics.last;
+        let change = room.memory.metrics.change;
+        let mov = room.memory.metrics.mov;
+        let mov_count = room.memory.metrics.mov_count;
+        let count = room.memory.metrics.count;
         // Build visuals
         let text = ["Room: " + room.name];
 
-        if (metrics.build_max) { text.push(
-            "Build: " + (metrics.build_max - metrics.build) + " (" + Math.round(change.build) + ") " + (Math.round(1000 * metrics.build_per)/10) + "% (" + (Math.round(1000 * change.build_per)/10) + "%)"
+        if (last.build_max) { text.push(
+            "Build: " + (last.build_max - last.build) + " (" + Math.round(change.build) + ") " + (Math.round(1000 * last.build_per)/10) + "% (" + (Math.round(1000 * change.build_per)/10) + "%)"
         ) }
-        if (metrics.hits < metrics.hits_max) {text.push(
-            "Damage: " + (metrics.hits_max - metrics.hits) + " (" + Math.round(-1 * change.hits) + ") " + (Math.round(1000 * metrics.hits_per)/10) + "% (" + (Math.round(1000 * change.hits_per)/10) + "%)"
+        if (last.hits < last.hits_max) {text.push(
+            "Damage: " + (last.hits_max - last.hits) + " (" + Math.round(-1 * change.hits) + ") " + (Math.round(1000 * last.hits_per)/10) + "% (" + (Math.round(1000 * change.hits_per)/10) + "%)"
         ) }
-        text.push("Upgrade: " + metrics.upgrade + " (" + Math.round(1000 * room.controller.progress / room.controller.progressTotal)/10 + "%) " + Math.round(change.upgrade) + " (" + Math.round(1000 * change.upgrade / (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK))/10 + "%)")
+        text.push("Upgrade: " + last.upgrade + " (" + Math.round(1000 * room.controller.progress / room.controller.progressTotal)/10 + "%) " + Math.round(change.upgrade) + " (" + Math.round(1000 * change.upgrade / (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK))/10 + "%)")
         let overhead = (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK) - change.upgrade - change.resources.total[RESOURCE_ENERGY];
         text.push("Overhead: " + Math.round(overhead) + " (" + Math.round(1000 * overhead / (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK))/10 + "%)")
         for (let resource of RESOURCES_ALL) {
-            if (metrics.resources.total[resource]) {text.push(
-                resource + ": " + metrics.resources.total[resource] + " (" + Math.round(change.resources.total[resource]) + ")"
+            if (last.resources.total[resource]) {text.push(
+                resource + ": " + last.resources.total[resource] + " (" + Math.round(change.resources.total[resource]) + ")"
             )}
             if (mov_count.resources.total[resource]) {text.push(
                 resource + " extracted: " + Math.round(mov_count.resources.total[resource] / config.TASK_TICK) + " (" + (Math.round(100 * mov_count.resources.total[resource] / (room.find(FIND_SOURCES_ACTIVE).length)  / config.TASK_TICK)/10) + "%)"
             )}
-            if (metrics.resources.imbalance[resource]) {text.push(
-                resource + " imbalance: " + Math.round(metrics.resources.imbalance[resource]) + " (" + Math.round(change.resources.imbalance[resource]) + ")"
+            if (last.resources.imbalance[resource]) {text.push(
+                resource + " imbalance: " + Math.round(last.resources.imbalance[resource]) + " (" + Math.round(change.resources.imbalance[resource]) + ")"
             )}
         }
 

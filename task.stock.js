@@ -40,21 +40,15 @@ class Stock extends Task {
         let resource = creep.memory.task.resource;
 
         // Move to room
-        if (creep.room.name != creep.memory.task.room) {
-            creep.moveTo(Game.rooms[creep.memory.task.room], {visualizePathStyle: {}});
+        if (creep.room != room) {
+            creep.moveTo(room, {visualizePathStyle: {}});
             return;
         }
 
         // Determine next step
         let src = Game.getObjectById(creep.memory.curSrc);
         let dst = Game.getObjectById(creep.memory.curDst);
-        if (src && creep.store.getFreeCapacity()) {
-            // Src cached & space available, refill
-            dst = null;
-        } else if (dst && creep.store.getUsedCapacity()) {
-            // Dst cached & resources available, depo
-            src = null;
-        } else if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
+        if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
             // Inventory contains wrong resource, depo
             for (let cur_resource of RESOURCES_ALL) {
                 if (creep.store.getUsedCapacity(cur_resource) && cur_resource != resource) {
@@ -62,15 +56,15 @@ class Stock extends Task {
                     if (dst) { break }
                 }
             }
-        } else if (!creep.store.getUsedCapacity()) {
-            // Find new src
+        } else if (!src && !creep.store.getUsedCapacity()) {
+            // Inventory empty, get src
             src = utils.bestSrc(creep, resource);
             dst = null;
-        } else if (!creep.store.getFreeCapacity()) {
-            // Find new dst
+        } else if (!dst && !creep.store.getFreeCapacity()) {
+            // Inventory full, get dst
             dst = utils.bestDst(creep, resource);
             src = null;
-        } else {
+        } else if (!src && !dst) {
             // Pick new src or dst by distance
             src = utils.bestSrc(creep, resource);
             dst = utils.bestDst(creep, resource);
@@ -85,8 +79,10 @@ class Stock extends Task {
         let result = ERR_NOT_FOUND;
         if (src) {
             result = utils.doSrc(creep, src, resource);
+            if (result == ERR_NOT_ENOUGH_RESOURCES) { src = null }
         } else if (dst) {
             result = utils.doDst(creep, dst, resource);
+            if (result == ERR_NOT_ENOUGH_RESOURCES) { dst = null }
         }
 
         // Update cache

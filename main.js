@@ -184,5 +184,7 @@ module.exports.loop = function() {
             }
         }
         room.memory.visuals = new_visuals;
+
+        utils.showMetrics(room);
     }
 }
