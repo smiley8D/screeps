@@ -49,7 +49,7 @@ module.exports.loop = function() {
 
     let avail_creeps;
 
-    // Compute metrics and assign tasks
+    // Task assignment
     if (Game.time % config.TASK_TICK == 0) {
         // Intra-room
         for (let room_name in Game.rooms) {
@@ -182,6 +182,43 @@ module.exports.loop = function() {
             TASKS[creep.memory.task.name].doTask(creep);
         } else {
             creep.memory.task = new Recycle();
+        }
+    }
+
+    // Update counters
+    for (let room_name in Game.rooms) {
+        let room = Game.rooms[room_name];
+
+        let build = 0;
+        let repair = 0;
+        let upgrade = 0;
+        let harvest = {};
+
+        // Process events
+        let events = room.getEventLog(true);
+        for (let i in events) {
+            let event = events[i];
+            if (event.event == EVENT_BUILD) {
+                build += event.data.energySpent;
+            } else if (event.event == EVENT_REPAIR) {
+                repair += event.data.energySpent;
+            } else if (event.event == EVENT_UPGRADE_CONTROLLER) {
+                upgrade += event.data.energySpent;
+            } else if (event.event == EVENT_HARVEST) {
+                let resource = RESOURCE_ENERGY;
+                let tgt = Game.getObjectById(event.data.targetId );
+                if (tgt.resourceType) { resource = tgt.resourceType }
+                if (!harvest[resource]) { harvest[resource] = 0 }
+                harvest[resource] += event.data.amount;
+            }
+        }
+
+        // Update memory
+        room.memory.metrics.count.build += build;
+        room.memory.metrics.count.repair += repair;
+        room.memory.metrics.count.upgrade += upgrade;
+        for (let resource in harvest) {
+            room.memory.metrics.count.harvest[resource] += harvest[resource];
         }
     }
 

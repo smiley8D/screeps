@@ -320,7 +320,13 @@ utils = {
     // Generate a fresh counts object
     freshCounters: function() {
         let counts = {
-
+            build: 0,
+            repair: 0,
+            upgrade: 0,
+            harvest: {},
+        }
+        for (let resource of RESOURCES_ALL) {
+            counts.harvest[resource] = 0;
         }
         return counts;
     },
