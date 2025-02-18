@@ -46,7 +46,7 @@ class Mine extends Task {
                     if (result == OK || result == ERR_NOT_IN_RANGE) { break }
                 }
             }
-        } else if (creep.store.getFreeCapacity()) {
+        } else if (creep.store.getFreeCapacity() >= 2 * (2 * (creep.memory.size - 1) + 1)) {
             // Space in inventory, mine
             creep.memory.curDst = null;
             result = creep.harvest(target)
