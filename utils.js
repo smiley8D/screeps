@@ -283,8 +283,8 @@ utils = {
         return result;
     },
 
-    // Genereate a fresh metrics object
-    freshMetrics: function() {
+    // Genereate a fresh room metrics object
+    freshRoomMetrics: function() {
         let metrics = {
             resources: {
                 total: {},
@@ -318,7 +318,7 @@ utils = {
     },
 
     // Generate a fresh counts object
-    freshCounters: function() {
+    freshRoomCounters: function() {
         let counts = {
             build: 0,
             repair: 0,
@@ -353,7 +353,7 @@ utils = {
     // Compute metrics for a room and update memory
     roomMetrics: function(room) {
         // Initialize
-        let metrics = utils.freshMetrics();
+        let metrics = utils.freshRoomMetrics();
 
         // Process structures
         for (let structure of room.find(FIND_STRUCTURES, {filter: (s) => s.my || !s.owner})) {
@@ -492,28 +492,63 @@ utils = {
                 last_mov: last_mov,
                 change: change,
                 change_mov: change_mov,
-                count: utils.freshCounters(),
+                count: utils.freshRoomCounters(),
                 count_mov: count_mov,
                 tick: Game.time,
             }
         }
     },
 
-    // Display a room's metrics
-    showMetrics(room) {
-        if (!room.memory.metrics) {return}
-        let metrics = room.memory.metrics;
+    // Compute all metrics
+    globalMetrics: function() {
+        // Reset if needed
+        if (!Memory.metrics) { utils.reset() }
 
-        // Build visuals
-        let text = ["[ Room: " + room.name + " (" + (Game.time - metrics.tick) + ") ]"];
+        // Compute room metrics
+        for (let room_name in Game.rooms) {
+            utils.roomMetrics(Game.rooms[room_name]);
+        }
 
-        text.push("[ Controller ]")
-        text.push("Progress: " + room.controller.progress + " (" + (Math.round(10000*room.controller.progress/room.controller.progressTotal)/100) + "%)");
-        text.push("Rate: " + Math.round(metrics.change_mov.upgrade) + " (" + (Math.round(10000000*metrics.change_mov.upgrade_per)/100000) + "%)")
+        // Compute global metrics
+    },
 
-        // Apply visuals
-        for (let i = 0; i < text.length; i++) {
-            room.visual.text(text[i], 0, 0 + parseInt(i) + 0.5, {align: "left"});
+    // Display metrics visuals
+    showMetrics() {
+        // Room metrics
+        for (let room_name in Game.rooms) {
+            let room = Game.rooms[room_name];
+
+            // Show global metrics
+            if (Memory.metrics) {
+                let metrics = Memory.metrics;
+
+                // Build visuals
+                let text = ["[ Shard: " + Game.shard.name+ " ]"];
+
+                text.push("CPU: " + (Math.round(100*metrics.cpu_mov)/100));
+
+                // Apply visuals
+                for (let i = 0; i < text.length; i++) {
+                    room.visual.text(text[i], 49, 0 + parseInt(i) + 0.5, {align: "right"});
+                }
+            }
+
+            // Shhow room metrics
+            if (room.memory.metrics) {
+                let metrics = room.memory.metrics;
+
+                // Build visuals
+                let text = ["[ Room: " + room.name + " (" + (Game.time - metrics.tick) + ") ]"];
+
+                text.push("[ Controller ]")
+                text.push("Progress: " + room.controller.progress + " (" + (Math.round(10000*room.controller.progress/room.controller.progressTotal)/100) + "%)");
+                text.push("Rate: " + Math.round(metrics.change_mov.upgrade) + " (" + (Math.round(10000000*metrics.change_mov.upgrade_per)/100000) + "%)")
+
+                // Apply visuals
+                for (let i = 0; i < text.length; i++) {
+                    room.visual.text(text[i], 0, 0 + parseInt(i) + 0.5, {align: "left"});
+                }
+            }
         }
     },
 
@@ -526,10 +561,10 @@ utils = {
                 Game.rooms[room_name].memory.metrics = {
                     last: JSON.parse(JSON.stringify(metrics)),
                     last_mov: JSON.parse(JSON.stringify(metrics)),
-                    change: utils.freshMetrics(),
-                    change_mov: utils.freshMetrics(),
-                    count: utils.freshCounters(),
-                    count_mov: utils.freshCounters(),
+                    change: utils.freshRoomMetrics(),
+                    change_mov: utils.freshRoomMetrics(),
+                    count: utils.freshRoomCounters(),
+                    count_mov: utils.freshRoomCounters(),
                     tick: Game.time,
                 }
             } else {

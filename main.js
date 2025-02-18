@@ -223,6 +223,10 @@ module.exports.loop = function() {
         }
     }
 
+    if (Memory.metrics) {
+        Memory.metrics.cpu_mov = Memory.metrics.cpu_mov * (1 - config.MOV_N) + Game.cpu.getUsed() * config.MOV_N;
+    }
+
     // Apply visuals
     for (let room_name in Game.rooms) {
         let room = Game.rooms[room_name];
@@ -244,11 +248,7 @@ module.exports.loop = function() {
         }
         room.memory.visuals = new_visuals;
 
-        utils.showMetrics(room);
     }
 
-    // Update global metrics (just CPU for now)
-    if (Memory.metrics) {
-        Memory.metrics.cpu_mov = Memory.metrics.cpu_mov * (1 - config.MOV_N) + Game.cpu.getUsed() * config.MOV_N;
-    }
+    utils.showMetrics();
 }
