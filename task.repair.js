@@ -45,9 +45,12 @@ class Repair extends Task {
             if (!structure || structure.hitsMax == structure.hits) {
                 // Mixed priority of damage & distance
                 structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits  < 100});
-                if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.1}) }
-                if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.5}) }
-                if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits < o.hitsMax}) }
+                if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) =>
+                    (o.owner == null || o.my) && o.hits / o.hitsMax < ((o.structureType == STRUCTURE_WALL || o.structureType == STRUCTURE_RAMPART) ? 0.1 * config.DEFENSE_PER : 0.1)}) }
+                if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) =>
+                    (o.owner == null || o.my) && o.hits / o.hitsMax < ((o.structureType == STRUCTURE_WALL || o.structureType == STRUCTURE_RAMPART) ? 0.5 * config.DEFENSE_PER : 0.5)}) }
+                if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) =>
+                    (o.owner == null || o.my) && o.hits < ((o.structureType == STRUCTURE_WALL || o.structureType == STRUCTURE_RAMPART) ? o.hitsMax * config.DEFENSE_PER : o.hitsMax)}) }
                 if (structure) {
                     creep.memory.curStructure = structure.id;
                 } else {

@@ -3,6 +3,7 @@ module.exports = {
     TASK_TICK: 10,
     MOV_N: 0.2,
     DMG_THRESHOLD: 0.9,
-    PART_MULT: 1.5,
+    PART_MULT: 2,
+    DEFENSE_PER: 0.01,
     UPGRADE_PER: 0.8
 }

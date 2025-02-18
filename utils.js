@@ -358,12 +358,21 @@ utils = {
         // Process structures
         for (let structure of room.find(FIND_STRUCTURES, {filter: (s) => s.my || !s.owner})) {
             // Process damage
-            if (structure.hitsMax) {
+            if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
                 metrics.hits += structure.hits;
                 metrics.hits_max += structure.hitsMax;
                 if (structure.hits < structure.hitsMax * 0.1) {
                     room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 } else if (structure.hits < structure.hitsMax * 0.5) {
+                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                }
+            } else if (structure.hitsMax && (structure.hits < structure.hitsMax * config.DEFENSE_PER)) {
+                // Configurable wall upgrade threshold
+                metrics.hits += structure.hits;
+                metrics.hits_max += (structure.hitsMax * config.DEFENSE_PER);
+                if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.1) {
+                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                } else if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.5) {
                     room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 }
             }
