@@ -1,5 +1,6 @@
-Task = require("task");
-utils = require("utils");
+const Task = require("task");
+const utils = require("utils");
+const config = require("config");
 
 class Upgrade extends Task {
 
@@ -8,12 +9,8 @@ class Upgrade extends Task {
     }
 
     static getTasks(room) {
-        // Check extraction efficiency is high enough
-        if (((mov_count.resources.total[RESOURCE_ENERGY] / (room.find(FIND_SOURCES_ACTIVE).length)  / config.TASK_TICK)/10) < .8) {
-            return []
-        }
-        let energy = room.memory.metrics.last.resources.free[RESOURCE_ENERGY];
-        let task = new Upgrade(room.name, Math.log(energy));
+        let flow_avail = (change.resources.free[RESOURCE_ENERGY] - change.upgrade) * config.UPGRADE_PER;
+        let task = new Upgrade(room.name, Math.max(flow_avail / 2));
         return [task];
     }
 

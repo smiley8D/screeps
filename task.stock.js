@@ -16,7 +16,7 @@ class Stock extends Task {
         // Create tasks
         let tasks = []
         for (let resource of RESOURCES_ALL) {
-            let parts = Math.max(0, Math.log(room.memory.metrics.last.resources.imbalance[resource] / 1000));
+            let parts = Math.max(0, Math.log(room.memory.metrics.last.resources.imbalance[resource] / 250));
             if (parts > 0) {
                 tasks.push(new Stock(room.name, parts, resource));
             }

@@ -4,4 +4,5 @@ module.exports = {
     MOV_N: 0.2,
     DMG_THRESHOLD: 0.9,
     PART_MULT: 1.5,
+    UPGRADE_PER: 0.8
 }
