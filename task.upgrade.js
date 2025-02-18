@@ -9,6 +9,7 @@ class Upgrade extends Task {
     }
 
     static getTasks(room) {
+        if (!room.memory.metrics) {return []}
         // Temp go by amount of free energy
         let task = new Upgrade(room.name, Math.log(room.memory.metrics.last_mov.resources.free[RESOURCE_ENERGY]));
         return [task];

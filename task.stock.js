@@ -13,6 +13,7 @@ class Stock extends Task {
     }
 
     static getTasks(room) {
+        if (!room.memory.metrics) {return []}
         // Create tasks
         let tasks = []
         for (let resource of RESOURCES_ALL) {

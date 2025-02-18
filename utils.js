@@ -499,10 +499,15 @@ utils = {
 
     // Display a room's metrics
     showMetrics(room) {
+        if (!room.memory.metrics) {return}
         let metrics = room.memory.metrics;
 
         // Build visuals
-        let text = ["Room: " + room.name + " (" + (Game.time - metrics.tick) + ")"];
+        let text = ["[ Room: " + room.name + " (" + (Game.time - metrics.tick) + ") ]"];
+
+        text.push("[ Controller ]")
+        text.push("Progress: " + room.controller.progress + " (" + (Math.round(10000*room.controller.progress/room.controller.progressTotal)/100) + "%)");
+        text.push("Rate: " + Math.round(metrics.change_mov.upgrade) + " (" + (Math.round(10000000*metrics.change_mov.upgrade_per)/100000) + "%)")
 
         // Apply visuals
         for (let i = 0; i < text.length; i++) {
@@ -531,6 +536,9 @@ utils = {
         } else {
             for (let room_name in Game.rooms) {
                 utils.reset(room_name, metrics);
+            }
+            Memory.metrics = {
+                cpu_mov: 0
             }
         }
     },

@@ -8,6 +8,7 @@ class Build extends Task {
     }
 
     static getTasks(room) {
+        if (!room.memory.metrics) {return []}
         let total_build = room.memory.metrics.last.build_max - room.memory.metrics.last.build;
         if (total_build > 0) {
             let task = new Build(room.name, Math.max(1,Math.log(total_build / 1000)));

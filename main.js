@@ -188,6 +188,7 @@ module.exports.loop = function() {
     // Update counters
     for (let room_name in Game.rooms) {
         let room = Game.rooms[room_name];
+        if (!room.memory.metrics) {continue;}
 
         let build = 0;
         let repair = 0;
@@ -225,6 +226,7 @@ module.exports.loop = function() {
     // Apply visuals
     for (let room_name in Game.rooms) {
         let room = Game.rooms[room_name];
+        if (!room.memory.visuals) {continue;}
 
         let new_visuals = []
         for (let i in room.memory.visuals) {
@@ -243,5 +245,10 @@ module.exports.loop = function() {
         room.memory.visuals = new_visuals;
 
         utils.showMetrics(room);
+    }
+
+    // Update global metrics (just CPU for now)
+    if (Memory.metrics) {
+        Memory.metrics.cpu_mov = Memory.metrics.cpu_mov * (1 - config.MOV_N) + Game.cpu.getUsed() * config.MOV_N;
     }
 }
