@@ -9,8 +9,7 @@ class Upgrade extends Task {
 
     static getTasks(room) {
         let energy = room.memory.metrics.last.resources.free[RESOURCE_ENERGY];
-        let task = new Upgrade(room.name, Math.log(energy))
-        console.log(Math.log(energy),energy);
+        let task = new Upgrade(room.name, Math.log(energy));
         return [task];
     }
 

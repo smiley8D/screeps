@@ -54,25 +54,6 @@ class Stock extends Task {
         } else if (dst && creep.store.getUsedCapacity()) {
             // Dst cached & resources available, depo
             src = null;
-        } else if (room.energyAvailable < room.energyCapacityAvailable) {
-            // Spawners not full, prioritize
-            if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
-                // Inventory contains wrong resource, depo
-                for (let cur_resource of RESOURCES_ALL) {
-                    if (creep.store.getUsedCapacity(cur_resource) && cur_resource != RESOURCE_ENERGY) {
-                        dst = utils.findDst(creep, cur_resource);
-                    }
-                }
-                src = null;
-            } else if (creep.store.getUsedCapacity()) {
-                // Energy in inventory, depo
-                dst = utils.findDst(creep, RESOURCE_ENERGY, {containers: false, haulers: false});
-                src = null;
-            } else {
-                // Empty inventory, refill
-                src = utils.findSrc(creep, RESOURCE_ENERGY, {source: creep.body.some((p) => p.type == WORK).length > 0});
-                dst = null;
-            }
         } else if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
             // Inventory contains wrong resource, depo
             for (let cur_resource of RESOURCES_ALL) {
@@ -93,7 +74,7 @@ class Stock extends Task {
             // Pick new src or dst by distance
             src = utils.bestSrc(creep, resource);
             dst = utils.bestDst(creep, resource);
-            if (creep.pos.finePathTo(src).length < creep.pos.findPathTo(dst).length) {
+            if (creep.pos.findPathTo(src).length < creep.pos.findPathTo(dst).length) {
                 dst = null;
             } else {
                 src = null;
@@ -114,12 +95,7 @@ class Stock extends Task {
         if (dst) { creep.memory.curDst = dst.id }
         else { creep.memory.curDst = null }
 
-        if (room.energyAvailable < room.energyCapacityAvailable) {
-            creep.say("📦" + result);
-        } else {
-            creep.say(resource[0] + "📦" + result);
-        }
-        return;
+        creep.say(resource[0] + "📦" + result);
     }
 
 }
