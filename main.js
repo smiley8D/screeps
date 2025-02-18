@@ -191,8 +191,11 @@ module.exports.loop = function() {
         if (!room.memory.metrics) {continue;}
 
         let build = 0;
+        let build_spend = 0;
         let repair = 0;
+        let repair_spend = 0;
         let upgrade = 0;
+        let upgrade_spend = 0;
         let harvest = {};
 
         // Process events
@@ -200,11 +203,14 @@ module.exports.loop = function() {
         for (let i in events) {
             let event = events[i];
             if (event.event == EVENT_BUILD) {
-                build += event.data.energySpent;
+                build += event.data.amount;
+                build_spend += event.data.energySpent;
             } else if (event.event == EVENT_REPAIR) {
-                repair += event.data.energySpent;
+                repair += event.data.amount;
+                repair_spend += event.data.energySpent;
             } else if (event.event == EVENT_UPGRADE_CONTROLLER) {
-                upgrade += event.data.energySpent;
+                upgrade += event.data.amount;
+                upgrade_spend += event.data.energySpent;
             } else if (event.event == EVENT_HARVEST) {
                 let resource = RESOURCE_ENERGY;
                 let tgt = Game.getObjectById(event.data.targetId );
@@ -216,8 +222,11 @@ module.exports.loop = function() {
 
         // Update memory
         room.memory.metrics.count.build += build;
+        room.memory.metrics.count.build_spend += build_spend;
         room.memory.metrics.count.repair += repair;
+        room.memory.metrics.count.repair_spend += repair_spend;
         room.memory.metrics.count.upgrade += upgrade;
+        room.memory.metrics.count.upgrade_spend += upgrade_spend;
         for (let resource in harvest) {
             room.memory.metrics.count.harvest[resource] += harvest[resource];
         }

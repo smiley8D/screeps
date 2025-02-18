@@ -299,10 +299,12 @@ utils = {
             hits: 0,
             hits_max: 0,
             hits_per: 0,
+            damage: 0,
             build: 0,
             build_max: 0,
             build_per: 0,
             upgrade: 0,
+            upgrade_total: 0,
             upgrade_per: 0,
         }
         for (let resource of RESOURCES_ALL) {
@@ -321,8 +323,11 @@ utils = {
     freshRoomCounters: function() {
         let counts = {
             build: 0,
+            build_spend: 0,
             repair: 0,
+            repair_spend: 0,
             upgrade: 0,
+            upgrade_spend: 0,
             harvest: {},
             spawn: 0
         }
@@ -359,20 +364,26 @@ utils = {
         for (let structure of room.find(FIND_STRUCTURES, {filter: (s) => s.my || !s.owner})) {
             // Process damage
             if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
+                metrics.damage += structure.hitsMax - structure.hits
                 metrics.hits += structure.hits;
                 metrics.hits_max += structure.hitsMax;
                 if (structure.hits < structure.hitsMax * 0.1) {
                     room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 } else if (structure.hits < structure.hitsMax * 0.5) {
+                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                } else if (structure.hits < structure.hitsMax) {
                     room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 }
-            } else if (structure.hitsMax && (structure.hits < structure.hitsMax * config.DEFENSE_PER)) {
+            } else if (structure.hitsMax) {
                 // Configurable wall upgrade threshold
-                metrics.hits += structure.hits;
-                metrics.hits_max += (structure.hitsMax * config.DEFENSE_PER);
+                metrics.damage += Math.max(0, (structure.hitsMax * config.DEFENSE_PER) - structure.hits);
+                metrics.hits += Math.min(structure.hits, structure.hitsMax * config.DEFENSE_PER);
+                metrics.hits_max += structure.hitsMax * config.DEFENSE_PER;
                 if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.1) {
                     room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 } else if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.5) {
+                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                } else if (structure.hits < (structure.hitsMax * config.DEFENSE_PER)) {
                     room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 }
             }
@@ -542,16 +553,28 @@ utils = {
                 }
             }
 
-            // Shhow room metrics
+            // Show room metrics
             if (room.memory.metrics) {
                 let metrics = room.memory.metrics;
 
                 // Build visuals
                 let text = ["[ Room: " + room.name + " (" + (Game.time - metrics.tick) + ") ]"];
 
+                // Upgrade/controller info
                 text.push("[ Controller ]")
                 text.push("Progress: " + room.controller.progress + " (" + (Math.round(10000*room.controller.progress/room.controller.progressTotal)/100) + "%)");
-                text.push("Rate: " + Math.round(metrics.change_mov.upgrade) + " (" + (Math.round(10000000*metrics.change_mov.upgrade_per)/100000) + "%)")
+                text.push("Upgrade Rate: " + Math.round(metrics.change_mov.upgrade_total) + " (" + " t)")
+
+                // Repair & build info
+                if (metrics.last.damage) {
+                    text.push("[ Repairs ]");
+                    text.push("Damage: " + metrics.last.damage + " (" + (Math.round(10000*metrics.last.hits/metrics.last.hits_max)/100) + "%)")
+                    text.push("Repair Rate: " + (-1 * metrics.change.damage) + " (" + " t)")
+                }
+                if (metrics.last.build) {
+                    text.push("[ Construction ]");
+                    text.push("Build: " + metrics.last.build + " (" + (Math.round(10000*metrics.last.build_per)/100) + "%)")
+                }
 
                 // Apply visuals
                 for (let i = 0; i < text.length; i++) {
