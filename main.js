@@ -196,7 +196,7 @@ module.exports.loop = function() {
         let harvest = {};
 
         // Process events
-        let events = room.getEventLog(true);
+        let events = room.getEventLog();
         for (let i in events) {
             let event = events[i];
             if (event.event == EVENT_BUILD) {

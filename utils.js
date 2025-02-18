@@ -529,7 +529,7 @@ utils = {
                     change: utils.freshMetrics(),
                     change_mov: utils.freshMetrics(),
                     count: utils.freshCounters(),
-                    mov_count: utils.freshCounters(),
+                    count_mov: utils.freshCounters(),
                     tick: Game.time,
                 }
             } else {
