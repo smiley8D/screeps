@@ -18,6 +18,53 @@ const TASKS = {
 }
 
 module.exports.loop = function() {
+    // Process last tick events
+    for (let room_name in Game.rooms) {
+        let room = Game.rooms[room_name];
+        if (!room.memory.metrics) {continue;}
+
+        let build = 0;
+        let build_spend = 0;
+        let repair = 0;
+        let repair_spend = 0;
+        let upgrade = 0;
+        let upgrade_spend = 0;
+        let harvest = {};
+
+        // Process events
+        let events = room.getEventLog();
+        for (let i in events) {
+            let event = events[i];
+            if (event.event == EVENT_BUILD) {
+                build += event.data.amount;
+                build_spend += event.data.energySpent;
+            } else if (event.event == EVENT_REPAIR) {
+                repair += event.data.amount;
+                repair_spend += event.data.energySpent;
+            } else if (event.event == EVENT_UPGRADE_CONTROLLER) {
+                upgrade += event.data.amount;
+                upgrade_spend += event.data.energySpent;
+            } else if (event.event == EVENT_HARVEST) {
+                let resource = RESOURCE_ENERGY;
+                let tgt = Game.getObjectById(event.data.targetId );
+                if (tgt.resourceType) { resource = tgt.resourceType }
+                if (!harvest[resource]) { harvest[resource] = 0 }
+                harvest[resource] += event.data.amount;
+            }
+        }
+
+        // Update memory
+        room.memory.metrics.count.build += build;
+        room.memory.metrics.count.build_spend += build_spend;
+        room.memory.metrics.count.repair += repair;
+        room.memory.metrics.count.repair_spend += repair_spend;
+        room.memory.metrics.count.upgrade += upgrade;
+        room.memory.metrics.count.upgrade_spend += upgrade_spend;
+        for (let resource in harvest) {
+            room.memory.metrics.count.harvest[resource] += harvest[resource];
+        }
+    }
+
     // Tower defenses
     for (let room_name in Game.rooms) {
         let room = Game.rooms[room_name];
@@ -182,53 +229,6 @@ module.exports.loop = function() {
             TASKS[creep.memory.task.name].doTask(creep);
         } else {
             creep.memory.task = new Recycle();
-        }
-    }
-
-    // Update counters
-    for (let room_name in Game.rooms) {
-        let room = Game.rooms[room_name];
-        if (!room.memory.metrics) {continue;}
-
-        let build = 0;
-        let build_spend = 0;
-        let repair = 0;
-        let repair_spend = 0;
-        let upgrade = 0;
-        let upgrade_spend = 0;
-        let harvest = {};
-
-        // Process events
-        let events = room.getEventLog();
-        for (let i in events) {
-            let event = events[i];
-            if (event.event == EVENT_BUILD) {
-                build += event.data.amount;
-                build_spend += event.data.energySpent;
-            } else if (event.event == EVENT_REPAIR) {
-                repair += event.data.amount;
-                repair_spend += event.data.energySpent;
-            } else if (event.event == EVENT_UPGRADE_CONTROLLER) {
-                upgrade += event.data.amount;
-                upgrade_spend += event.data.energySpent;
-            } else if (event.event == EVENT_HARVEST) {
-                let resource = RESOURCE_ENERGY;
-                let tgt = Game.getObjectById(event.data.targetId );
-                if (tgt.resourceType) { resource = tgt.resourceType }
-                if (!harvest[resource]) { harvest[resource] = 0 }
-                harvest[resource] += event.data.amount;
-            }
-        }
-
-        // Update memory
-        room.memory.metrics.count.build += build;
-        room.memory.metrics.count.build_spend += build_spend;
-        room.memory.metrics.count.repair += repair;
-        room.memory.metrics.count.repair_spend += repair_spend;
-        room.memory.metrics.count.upgrade += upgrade;
-        room.memory.metrics.count.upgrade_spend += upgrade_spend;
-        for (let resource in harvest) {
-            room.memory.metrics.count.harvest[resource] += harvest[resource];
         }
     }
 

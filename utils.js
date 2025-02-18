@@ -501,18 +501,19 @@ utils = {
         if (!room.memory.metrics) { utils.reset(room.name, metrics) }
         else {
             let prev_metrics = room.memory.metrics;
-    
+
             last_mov = utils.doMov(prev_metrics.last_mov, metrics);
             change = utils.doChange(prev_metrics.last, metrics);
             change_mov = utils.doMov(prev_metrics.change_mov, change);
-            count_mov = utils.doMov(prev_metrics.count_mov, prev_metrics.count);
-    
+            let fresh_counters = utils.freshRoomCounters();
+            count_mov = utils.doMov(prev_metrics.count_mov, utils.doChange(fresh_counters,prev_metrics.count));
+
             room.memory.metrics = {
                 last: metrics,
                 last_mov: last_mov,
                 change: change,
                 change_mov: change_mov,
-                count: utils.freshRoomCounters(),
+                count: fresh_counters,
                 count_mov: count_mov,
                 tick: Game.time,
             }
@@ -561,20 +562,50 @@ utils = {
                 let text = ["[ Room: " + room.name + " (" + (Game.time - metrics.tick) + ") ]"];
 
                 // Upgrade/controller info
-                text.push("[ Controller ]")
-                text.push("Progress: " + room.controller.progress + " (" + (Math.round(10000*room.controller.progress/room.controller.progressTotal)/100) + "%)");
-                text.push("Upgrade Rate: " + Math.round(metrics.change_mov.upgrade_total) + " (" + " t)")
+                text.push("RCL " + (room.controller.level + 1) + ": " + (room.controller.progressTotal - room.controller.progress) +
+                    " (" + (Math.round(10000*room.controller.progress/room.controller.progressTotal)/100) + "%) @ " + Math.round(metrics.change_mov.upgrade_total) +
+                    "/t (" + Math.ceil(room.controller.progressTotal / metrics.change_mov.upgrade_total) + " t)")
 
                 // Repair & build info
-                if (metrics.last.damage) {
-                    text.push("[ Repairs ]");
-                    text.push("Damage: " + metrics.last.damage + " (" + (Math.round(10000*metrics.last.hits/metrics.last.hits_max)/100) + "%)")
-                    text.push("Repair Rate: " + (-1 * metrics.change.damage) + " (" + " t)")
+                if (metrics.last.damage) {text.push(
+                    "Repairing: " + metrics.last.damage + " (" + (Math.round(10000*metrics.last.hits/metrics.last.hits_max)/100) + "%) @ " +
+                    Math.round(-1 * metrics.change_mov.damage) + "/t (" + Math.ceil(metrics.last.damage / (-1 * metrics.change_mov.damage)) + " t)"
+                )}
+                if (metrics.last.build) {text.push(
+                    "Building: " + metrics.last.build + " (" + (Math.round(10000*metrics.last.build_per)/100) + "%) @ " +
+                    Math.round(metrics.change_mov.build) + "/t (" + Math.ceil(metrics.last.build_max / metrics.change_mov.build) + " t)"
+                )}
+
+                // Balances
+                for (let resource of RESOURCES_ALL) {
+                    if (metrics.last.resources.free[resource]) {text.push(
+                        resource.charAt(0).toUpperCase() + resource.slice(1) + ": " + metrics.last.resources.free[resource] + " @ " + Math.round(metrics.change_mov.resources.free[resource]) +
+                        "/t" + ((metrics.change_mov.resources.free[resource] < 0) ? " (" + Math.floor(-1*metrics.last.resources.free[resource]/metrics.change_mov.resources.free[resource]) + " t)" : "")
+                    )}
                 }
-                if (metrics.last.build) {
-                    text.push("[ Construction ]");
-                    text.push("Build: " + metrics.last.build + " (" + (Math.round(10000*metrics.last.build_per)/100) + "%)")
-                }
+
+                // Energy flows
+                let inflow_total = metrics.count_mov.harvest[RESOURCE_ENERGY];
+                let outflow_total = metrics.count_mov.upgrade_spend + metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.count_mov.build_spend + metrics.count_mov.spawn;
+                let transfer = metrics.change_mov.resources.total[RESOURCE_ENERGY];
+                if (transfer > 0) {outflow_total += transfer}
+                else {inflow_total -= transfer}
+
+                // In
+                text.push("[ Energy Inflows ]")
+                text.push("Harvested: " + (Math.round(10*metrics.count_mov.harvest[RESOURCE_ENERGY])/10) + " (" + (Math.round(1000*metrics.count_mov.harvest[RESOURCE_ENERGY]/inflow_total)/10)
+                + "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(room.find(FIND_SOURCES).length))/10) + "% eff)");
+                if (transfer < 0) {text.push("Transfer: " + (Math.round(-10*transfer)/10) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + ")")}
+
+                // Out
+                text.push("[ Energy Outflows ]")
+                text.push("Upgrades: " + (Math.round(10*metrics.count_mov.upgrade_spend)/10) + " (" + (Math.round(1000*metrics.count_mov.upgrade_spend/outflow_total)/10)
+                + "%)");
+                text.push("Repairs: " + (Math.round(10*metrics.count_mov.repair_spend)/10) + " (" + (Math.round(1000*metrics.count_mov.repair_spend/outflow_total)/10)
+                + "%)");
+                text.push("Spawns: " + (Math.round(10*metrics.count_mov.spawn)/10) + " (" + (Math.round(1000*metrics.count_mov.spawn/outflow_total)/10)
+                + "%)");
+                if (transfer > 0) {text.push("Transfer: " + (Math.round(10*transfer)/10) + " (" + (Math.round(1000*transfer/outflow_total)/10) + "%)")}
 
                 // Apply visuals
                 for (let i = 0; i < text.length; i++) {
