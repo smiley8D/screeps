@@ -53,9 +53,10 @@ class Stock extends Task {
             for (let cur_resource of RESOURCES_ALL) {
                 if (creep.store.getUsedCapacity(cur_resource) && cur_resource != resource) {
                     dst = utils.findDst(creep, cur_resource);
-                    if (dst) { break }
+                    resource = cur_resource;
                 }
             }
+            console.log(dst.pos)
         } else if (!src && !creep.store.getUsedCapacity()) {
             // Inventory empty, get src
             src = utils.bestSrc(creep, resource);

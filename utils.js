@@ -352,7 +352,7 @@ utils = {
             if (structure.hitsMax) {
                 metrics.hits += structure.hits;
                 metrics.hits_max += structure.hitsMax;
-                if (structure.hits < structure.hitsMax) {
+                if (structure.hits < structure.hitsMax * 0.5) {
                     room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 }
             }

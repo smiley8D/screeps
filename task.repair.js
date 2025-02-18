@@ -28,7 +28,7 @@ class Repair extends Task {
         let result;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
-            creep.memory.curSrc = null;
+            creep.memory.curStructure = null;
             for (let cur_resource of RESOURCES_ALL) {
                 if (creep.store.getUsedCapacity(cur_resource) && cur_resource != RESOURCE_ENERGY) {
                     result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
@@ -44,8 +44,8 @@ class Repair extends Task {
             if (!structure || structure.hitsMax == structure.hits) {
                 // Mixed priority of damage & distance
                 structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits  < 100});
-                structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.1});
-                structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.5});
+                if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.1}) }
+                if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits / o.hitsMax < 0.5}) }
                 if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits < o.hitsMax}) }
                 if (structure) {
                     creep.memory.curStructure = structure.id;
