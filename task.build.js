@@ -10,15 +10,13 @@ class Build extends Task {
     static getTasks(room) {
         let total_build = room.memory.metrics.last.build_max - room.memory.metrics.last.build;
         if (total_build > 0) {
-            let task = new Build(room.name, Math.max(1,Math.log(total_build)));
+            let task = new Build(room.name, Math.max(1,Math.log(total_build / 1000)));
             return [task];
         }
         return [];
     }
 
     static doTask(creep) {
-        creep.say("🔨");
-
         // Move to room
         if (creep.room.name != creep.memory.task.tgt) {
             creep.moveTo(Game.rooms[creep.memory.task.tgt], {visualizePathStyle: {}});
@@ -57,6 +55,8 @@ class Build extends Task {
             // Empty inventory, refill
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY));
         }
+
+        creep.say("🔨" + result);
     }
 
 }

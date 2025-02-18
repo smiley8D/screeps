@@ -8,6 +8,10 @@ class Upgrade extends Task {
     }
 
     static getTasks(room) {
+        // Check extraction efficiency is high enough
+        if (((mov_count.resources.total[RESOURCE_ENERGY] / (room.find(FIND_SOURCES_ACTIVE).length)  / config.TASK_TICK)/10) < .8) {
+            return []
+        }
         let energy = room.memory.metrics.last.resources.free[RESOURCE_ENERGY];
         let task = new Upgrade(room.name, Math.log(energy));
         return [task];

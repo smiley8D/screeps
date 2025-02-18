@@ -9,8 +9,8 @@ const Stock = require("task.stock");
 const Recycle = require("task.recycle");
 
 const TASKS = {
-    "Stock": Stock,
     "Mine": Mine,
+    "Stock": Stock,
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,

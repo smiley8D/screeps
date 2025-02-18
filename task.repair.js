@@ -12,7 +12,7 @@ class Repair extends Task {
     static getTasks(room) {
         let total_dmg = room.memory.metrics.last.hits_max - room.memory.metrics.last.hits;
         if (total_dmg > 0) {
-            let task = new Repair(room.name, Math.max(0,Math.log(total_dmg)));
+            let task = new Repair(room.name, Math.max(0,Math.log(total_dmg / 1000)));
             return [task];
         }
         return [];

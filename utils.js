@@ -483,6 +483,7 @@ utils = {
             mov: mov,
             mov_count: mov_count,
             count: utils.freshMetrics(),
+            tick: Game.time
         }
     },
 
@@ -494,7 +495,7 @@ utils = {
         let mov_count = room.memory.metrics.mov_count;
         let count = room.memory.metrics.count;
         // Build visuals
-        let text = ["Room: " + room.name];
+        let text = ["Room: " + room.name + " (" + (Game.time - room.memory.metrics.tick) + ")"];
 
         if (last.build_max) { text.push(
             "Build: " + (last.build_max - last.build) + " (" + Math.round(change.build) + ") " + (Math.round(1000 * last.build_per)/10) + "% (" + (Math.round(1000 * change.build_per)/10) + "%)"

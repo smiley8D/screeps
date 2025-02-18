@@ -49,7 +49,7 @@ class Mine extends Task {
             }
         } else if (creep.store.getFreeCapacity()) {
             // Space in inventory, mine
-            creep.memory.curDepo = null;
+            creep.memory.curDst = null;
             result = creep.harvest(target)
             if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(target, {visualizePathStyle: {}}) }
             else if (result == OK) { creep.room.memory.metrics.count.resources.total[resource] += mine_amount }
