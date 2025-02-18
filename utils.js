@@ -294,7 +294,6 @@ utils = {
                 fill_max: {},
                 fill_avg: {},
                 imbalance: {},
-                extracted: {},
                 free: {}
             },
             hits: 0,
@@ -304,6 +303,7 @@ utils = {
             build_max: 0,
             build_per: 0,
             upgrade: 0,
+            upgrade_per: 0,
         }
         for (let resource of RESOURCES_ALL) {
             metrics.resources.total[resource] = 0;
@@ -311,27 +311,34 @@ utils = {
             metrics.resources.under[resource] = 0;
             metrics.resources.fill[resource] = 0;
             metrics.resources.fill_max[resource] = 0;
-            metrics.resources.extracted[resource] = 0;
             metrics.resources.imbalance[resource] = 0;
             metrics.resources.free[resource] = 0;
         }
         return metrics;
     },
 
-    doChange: function(prev, cur) {
+    // Generate a fresh counts object
+    freshCounters: function() {
+        let counts = {
+
+        }
+        return counts;
+    },
+
+    doChange: function(prev, cur, ticks=config.TASK_TICK) {
         let result = {};
         for (let i in prev) {
-            if (typeof prev[i] == "object") { result[i] = utils.doChange(prev[i], cur[i])}
-            else { result[i] = (cur[i] - prev[i]) / config.TASK_TICK }
+            if (typeof prev[i] == "object") { result[i] = utils.doChange(prev[i], cur[i], ticks)}
+            else { result[i] = (cur[i] - prev[i]) / ticks }
         }
         return result;
     },
 
-    doMov: function(prev, cur) {
+    doMov: function(prev, cur, ticks=1) {
         let result = {};
         for (let i in prev) {
-            if (typeof prev[i] == "object") { result[i] = utils.doMov(prev[i], cur[i])}
-            else { result[i] = prev[i] * (1 - config.MOV_N) + cur[i] * config.MOV_N }
+            if (typeof prev[i] == "object") { result[i] = utils.doMov(prev[i], cur[i], ticks)}
+            else { result[i] = prev[i] * (1 - config.MOV_N) + (cur[i] / ticks) * config.MOV_N }
         }
         return result;
     },
@@ -376,8 +383,9 @@ utils = {
                     } else {
                         // Non-flagged container/storage, build average
                         for (let resource of RESOURCES_ALL) {
-                            metrics.resources.fill[resource] += structure.store.getUsedCapacity(resource);
-                            metrics.resources.fill_max[resource] += structure.store.getCapacity(resource);
+                            if (metrics.resources.fill[resource] += structure.store.getUsedCapacity(resource)) {
+                                metrics.resources.fill_max[resource] += structure.store.getCapacity(resource);
+                            }
                         }
                     }
                     // Process available resources
@@ -393,10 +401,13 @@ utils = {
                 }
             }
         }
+        if (metrics.hits_max) { metrics.hits_per = metrics.hits / metrics.hits_max }
 
         // Process over/under averages
         for (let resource of RESOURCES_ALL) {
-            metrics.resources.fill_avg[resource] = metrics.resources.fill[resource] / metrics.resources.fill_max[resource];
+            if (metrics.resources.fill[resource]) {
+                metrics.resources.fill_avg[resource] = metrics.resources.fill[resource] / metrics.resources.fill_max[resource];
+            }
         }
         for (let structure of room.find(FIND_STRUCTURES, { filter: (s) => (s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_STORAGE) &&
             !s.pos.lookFor(LOOK_FLAGS).length })) {
@@ -445,81 +456,47 @@ utils = {
             metrics.build += site.progress;
             metrics.build_max += site.progressTotal;
         }
+        if (metrics.build_max) { metrics.build_per = metrics.build / metrics.build_max }
 
         // Process controller
         let controller = room.controller;
-        if (controller.my) {
+        if (controller && controller.my) {
             for (let i = 1; i < controller.level - 1; i++) {
-                metrics.upgrade += CONTROLLER_LEVELS[i];
+                metrics.upgrade_total += CONTROLLER_LEVELS[i];
             }
-            metrics.upgrade += controller.progress;
+            metrics.upgrade_total += controller.progress;
+            metrics.upgrade = controller.progress;
+            metrics.upgrade_per = metrics.upgrade / CONTROLLER_LEVELS[controller.level]
         }
-
-        // Ignore non-present resources
-        for (let resource in metrics.resources.fill_max) {
-            if (!metrics.resources.fill[resource]) {
-                metrics.resources.fill_max[resource] = 0;
-            }
-        }
-
-        // Process percentages
-        if (metrics.build_max) { metrics.build_per = metrics.build / metrics.build_max }
-        if (metrics.hits_max) { metrics.hits_per = metrics.hits / metrics.hits_max }
 
         // Update memory
         if (!room.memory.metrics) { utils.reset(room.name, metrics) }
-        let prev_metrics = room.memory.metrics;
-
-        change = utils.doMov(prev_metrics.change, utils.doChange(prev_metrics.last, metrics));
-        mov = utils.doMov(prev_metrics.mov, metrics);
-        mov_count = utils.doMov(prev_metrics.mov_count, prev_metrics.count);
-
-        room.memory.metrics = {
-            last: metrics,
-            change: change,
-            mov: mov,
-            mov_count: mov_count,
-            count: utils.freshMetrics(),
-            tick: Game.time
+        else {
+            let prev_metrics = room.memory.metrics;
+    
+            last_mov = utils.doMov(prev_metrics.last_mov, metrics);
+            change = utils.doChange(prev_metrics.last, metrics);
+            change_mov = utils.doMov(prev_metrics.change_mov, change);
+            count_mov = utils.doMov(prev_metrics.count_mov, prev_metrics.count);
+    
+            room.memory.metrics = {
+                last: metrics,
+                last_mov: last_mov,
+                change: change,
+                change_mov: change_mov,
+                count: utils.freshCounters(),
+                count_mov: count_mov,
+                tick: Game.time,
+            }
         }
     },
 
     // Display a room's metrics
     showMetrics(room) {
-        let last = room.memory.metrics.last;
-        let change = room.memory.metrics.change;
-        let mov = room.memory.metrics.mov;
-        let mov_count = room.memory.metrics.mov_count;
-        let count = room.memory.metrics.count;
-        // Build visuals
-        let text = ["Room: " + room.name + " (" + (Game.time - room.memory.metrics.tick) + ")"];
+        let metrics = room.memory.metrics;
 
-        if (last.build_max) { text.push(
-            "Build: " + (last.build_max - last.build) + " (" + Math.round(change.build) + ") " + (Math.round(1000 * last.build_per)/10) + "% (" + (Math.round(1000 * change.build_per)/10) + "%)"
-        ) }
-        if (last.hits < last.hits_max) {text.push(
-            "Damage: " + (last.hits_max - last.hits) + " (" + Math.round(-1 * change.hits) + ") " + (Math.round(1000 * last.hits_per)/10) + "% (" + (Math.round(1000 * change.hits_per)/10) + "%)"
-        ) }
-        text.push("Upgrade: " + last.upgrade + " (" + Math.round(1000 * room.controller.progress / room.controller.progressTotal)/10 + "%) " + Math.round(change.upgrade) + " (" + Math.round(1000 * change.upgrade / ((change.resources.free[RESOURCE_ENERGY] - change.upgrade) * config.UPGRADE_PER))/10 + "%)")
-        let overhead = (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK) - change.upgrade - change.resources.total[RESOURCE_ENERGY];
-        text.push("Overhead: " + Math.round(overhead) + " (" + Math.round(1000 * overhead / (mov_count.resources.total[RESOURCE_ENERGY] / config.TASK_TICK))/10 + "%)")
-        for (let resource of RESOURCES_ALL) {
-            if (last.resources.total[resource]) {text.push(
-                resource + ": " + last.resources.total[resource] + " (" + Math.round(change.resources.total[resource]) + ")"
-            )}
-            if (last.resources.total[resource]) {text.push(
-                resource + " free: " + last.resources.free[resource] + " (" + Math.round(change.resources.free[resource]) + ")"
-            )}
-            if (mov_count.resources.total[resource]) {text.push(
-                resource + " extracted: " + Math.round(mov_count.resources.total[resource] / config.TASK_TICK) + " (" + (Math.round(100 * mov_count.resources.total[resource] / (room.find(FIND_SOURCES_ACTIVE).length)  / config.TASK_TICK)/10) + "%)"
-            )}
-            if (last.resources.imbalance[resource]) {text.push(
-                resource + " imbalance: " + Math.round(last.resources.imbalance[resource]) + " (" + Math.round(change.resources.imbalance[resource]) + ")"
-            )}
-        }
-        for (let owner in room.memory.sightings) {text.push(
-            "Last sighting: " + owner + " " + (Game.time - room.memory.sightings[owner])
-        )}
+        // Build visuals
+        let text = ["Room: " + room.name + " (" + (Game.time - metrics.tick) + ")"];
 
         // Apply visuals
         for (let i = 0; i < text.length; i++) {
@@ -535,10 +512,12 @@ utils = {
             if (metrics) {
                 Game.rooms[room_name].memory.metrics = {
                     last: JSON.parse(JSON.stringify(metrics)),
+                    last_mov: JSON.parse(JSON.stringify(metrics)),
                     change: utils.freshMetrics(),
-                    mov: JSON.parse(JSON.stringify(metrics)),
-                    mov_count: utils.freshMetrics(),
-                    count: utils.freshMetrics(),
+                    change_mov: utils.freshMetrics(),
+                    count: utils.freshCounters(),
+                    mov_count: utils.freshCounters(),
+                    tick: Game.time,
                 }
             } else {
                 Game.rooms[room_name].memory.metrics = null;
