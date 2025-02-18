@@ -61,7 +61,11 @@ class Mine extends Task {
             }
         }
 
-        creep.say("⛏️" + result);
+        if (result != OK) {
+            creep.say("⛏️" + result);
+        } else {
+            creep.say("⛏️");
+        }
     }
 
 }

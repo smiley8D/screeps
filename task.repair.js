@@ -64,7 +64,11 @@ class Repair extends Task {
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY));
         }
 
-        creep.say("🔧" + result);
+        if (result != OK) {
+            creep.say("🔧" + result);
+        } else {
+            creep.say("🔧");
+        }
     }
 
 }

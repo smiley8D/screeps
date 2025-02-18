@@ -93,7 +93,11 @@ class Stock extends Task {
         if (dst) { creep.memory.curDst = dst.id }
         else { creep.memory.curDst = null }
 
-        creep.say(resource[0] + "📦" + result);
+        if (result != OK) {
+            creep.say("📦" + resource[0] + result);
+        } else {
+            creep.say("📦" + resource[0]);
+        }
     }
 
 }

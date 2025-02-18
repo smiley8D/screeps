@@ -43,7 +43,11 @@ class Recycle extends Task {
         }
 
         if (creep.memory.task.tgt) {
-            creep.say("♻️" + result);
+            if (result != OK) {
+                creep.say("♻️" + result);
+            } else {
+                creep.say("♻️");
+            };
         }
     }
 

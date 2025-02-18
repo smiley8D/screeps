@@ -361,7 +361,7 @@ utils = {
                 metrics.hits += structure.hits;
                 metrics.hits_max += structure.hitsMax;
                 if (structure.hits < structure.hitsMax * 0.1) {
-                    room.memory.visuals.push(["🔥", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 } else if (structure.hits < structure.hitsMax * 0.5) {
                     room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 }
@@ -461,6 +461,7 @@ utils = {
         for (let site of room.find(FIND_MY_CONSTRUCTION_SITES)) {
             metrics.build += site.progress;
             metrics.build_max += site.progressTotal;
+            room.memory.visuals.push(["🔨"+(Math.round(100*site.progress / site.progressTotal))+"%", site.pos.x, site.pos.y, config.TASK_TICK]);
         }
         if (metrics.build_max) { metrics.build_per = metrics.build / metrics.build_max }
 
@@ -511,7 +512,7 @@ utils = {
 
         // Apply visuals
         for (let i = 0; i < text.length; i++) {
-            room.visual.text(text[i], 0, 0 + parseInt(i), {align: "left"});
+            room.visual.text(text[i], 0, 0 + parseInt(i) + 0.5, {align: "left"});
         }
     },
 
