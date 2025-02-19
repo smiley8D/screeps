@@ -7,6 +7,7 @@ const Build = require("task.build");
 const Upgrade = require("task.upgrade");
 const Stock = require("task.stock");
 const Recycle = require("task.recycle");
+const Scout = require("task.scout");
 
 const TASKS = {
     "Mine": Mine,
@@ -14,7 +15,8 @@ const TASKS = {
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,
-    "Recycle": Recycle
+    "Recycle": Recycle,
+    "Scout": Scout
 }
 
 module.exports.loop = function() {
@@ -208,6 +210,10 @@ module.exports.loop = function() {
                 } else {
                     sorted_tasks.shift();
                 }
+            }
+            console.log()
+            for (let task of tasks.values()) {
+                console.log(task.id,"has",task.parts,task.body.name,"of",Math.ceil(task.wanted));
             }
         }
 
