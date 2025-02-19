@@ -30,7 +30,7 @@ class Recycle extends Task {
         if (creep.store.getFreeCapacity() && creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.room.find(FIND_RUINS)).length) {
             // Space in inventory & decayables, refill
             creep.memory.curDst = null;
-            if (!creep.memory.curSrc) {creep.memory.curSrc = creep.room.findClosestByPath(creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.from.find(FIND_RUINS))) }
+            if (!creep.memory.curSrc) {creep.memory.curSrc = creep.room.findClosestByPath(creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.room.find(FIND_RUINS))) }
             for (let resource of RESOURCES_ALL) {
                 result = utils.doSrc(creep, creep.memory.curSrc, resource);
                 if (result == OK || result == ERR_NOT_IN_RANGE) { break }
