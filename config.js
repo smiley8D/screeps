@@ -7,4 +7,5 @@ module.exports = {
     DEFENSE_PER: 0.01,
     UPGRADE_PER: 0.8,
     MAX_SEARCH_ROOMS: 5,
+    SCOUT_TICK: 60,
 }

@@ -14,8 +14,25 @@ class Scout extends Task {
         for (let room in Game.rooms) {
             for (let direction in Game.map.describeExits(room)) {
                 let exit = Game.map.describeExits(room)[direction];
-                // Only scout unclaimed rooms
-                if (!rooms.has(exit) && (!Game.rooms[exit] || !Game.rooms[exit].controller || !Game.rooms[exit].controller.my)) { rooms.set(exit,new Scout(exit)) }
+                // Avoid duplicates
+                if (rooms.has(exit)) {continue}
+
+                // Scout if metrics outdated
+                let exit_room = Game.rooms[exit];
+                if (!exit_room && (!Memory.rooms[exit] || !Memory.rooms[exit].metrics || Memory.rooms[exit].metrics.tick < (Game.time - config.SCOUT_TICK))) {
+                    rooms.set(exit,new Scout(exit))
+                    continue;
+                }
+
+                // Scout if hostiles recently sighted
+                if (Memory.rooms[exit] && Memory.rooms[exit].sightings) {
+                    for (let player in Memory.rooms[exit].sightings) {
+                        if (Memory.rooms[exit].sightings[player] >= (Game.time - config.SCOUT_TICK)) {
+                            rooms.set(exit,new Scout(exit));
+                            break
+                        }
+                    }
+                }
             }
         }
         return rooms.values();
@@ -26,7 +43,7 @@ class Scout extends Task {
 
         // Move to room
         if (creep.room.name != creep.memory.task.room || creep.pos.x == 0 || creep.pos.y == 0 || creep.pos.x == 49 || creep.pos.y == 49) {
-            result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.room), {visualizePathStyle: {}});
+            result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.room), {reusePath: 50, visualizePathStyle: {}});
         } else {
             result = OK;
         }

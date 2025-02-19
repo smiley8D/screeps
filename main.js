@@ -86,18 +86,18 @@ module.exports.loop = function() {
     // Tower defenses
     for (let room_name in Game.rooms) {
         let room = Game.rooms[room_name];
-        let creeps;
-        if (creeps = room.find(FIND_HOSTILE_CREEPS)) {
+        let enemies;
+        if (enemies = room.find(FIND_HOSTILE_CREEPS).concat(room.find(FIND_HOSTILE_POWER_CREEPS),room.find(FIND_HOSTILE_STRUCTURES),room.find(FIND_HOSTILE_SPAWNS))) {
             for (let tower of room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER})) {
-                let hostile = tower.pos.findClosestByRange(creeps);
+                let hostile = tower.pos.findClosestByRange(enemies);
                 if (hostile) {
                     tower.attack(hostile);
                 }
             }
 
             // Log
-            if (creeps.length) {
-                room.memory.sightings[creeps[0].owner.username] = Game.time;
+            if (enemies.length) {
+                room.memory.sightings[enemies[0].owner.username] = Game.time;
             }
         }
     }

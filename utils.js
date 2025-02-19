@@ -711,28 +711,22 @@ utils = {
     // Clear visuals & metrics
     reset: function(room_name=null, metrics=false, sightings=false, neighbors=false) {
         if (room_name) {
-            console.log("resetting",room_name);
             if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
             let memory = Memory.rooms[room_name];
             memory.visuals = [];
             if (sightings || !memory.sightings) {
                 memory.sightings = {};
-                console.log("resetting sightings");
             }
             if (neighbors || !memory.neighbors) {
                 memory.neighbors = utils.getNearbyRooms([room_name]);
-                console.log("resetting neighbors");
             }
             if (metrics || !memory.metrics) {
                 memory.metrics = null;
-                console.log("resetting metrics");
             }
             if (Game.rooms[room_name]) {
                 utils.roomMetrics(Game.rooms[room_name]);
-                console.log("calculating metrics");
             }
         } else {
-            console.log("resetting",Game.shard.name);
             for (let room_name in Game.rooms) {
                 utils.reset(room_name, metrics, sightings, neighbors);
             }
