@@ -10,21 +10,7 @@ class Recycle extends Task {
     }
 
     static getTasks() {
-        let tasks = []
-        for (let room in Game.rooms) {
-            room = Game.rooms[room];
-
-            // Check room owned
-            if (!room.controller || !room.controller.my) {continue}
-
-            let amount = 0;
-            for (let src of room.find(FIND_DROPPED_RESOURCES).concat(room.find(FIND_TOMBSTONES),room.find(FIND_RUINS))) {
-                if (src.store) {amount += src.store.getUsedCapacity()}
-                else {amount += src.amount}
-            }
-            tasks.push(new Recycle(room.name, Math.max(0,Math.log(amount))));
-        }
-        return tasks;
+        return [];
     }
 
     static doTask(creep) {
