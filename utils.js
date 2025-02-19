@@ -617,13 +617,46 @@ utils = {
         }
     },
 
+    // Get a sorted list of nearby room names
+    getNearbyRooms: function(queue=null, cur=[], dists={}) {
+        let room = queue.shift();
+
+        // Add current room if initializing
+        if (dists[room] == undefined) {dists[room] = 0}
+        let dist = dists[room];
+
+        // Base case
+        if (!room) { return cur }
+
+        // Add self
+        cur.push(room);
+
+        // Queue neighbors if distance ok
+        if (dist < config.MAX_SEARCH_ROOMS) {
+            for (let direction in Game.map.describeExits(room)) {
+                let neighbor = Game.map.describeExits(room)[direction];
+
+                // Queue if not duplicate
+                if (dists[neighbor] == undefined) {
+                    queue.push(neighbor);
+                    dists[neighbor] = dist + 1;
+                }
+            }
+        }
+
+        // Recurse
+        return utils.getNearbyRooms(queue, cur, dists);
+    },
+
     // Clear visuals & metrics
-    reset: function(room_name=null, metrics=null) {
+    reset: function(room_name=null, metrics=null, sightings=false) {
         if (room_name) {
-            Game.rooms[room_name].memory.visuals = [];
-            Game.rooms[room_name].memory.sightings = {};
+            let memory = Game.rooms[room_name].memory;
+            memory.visuals = [];
+            if (sightings) {memory.sightings = {}}
+            memory.neighbors = null;
             if (metrics) {
-                Game.rooms[room_name].memory.metrics = {
+                memory.metrics = {
                     last: JSON.parse(JSON.stringify(metrics)),
                     last_mov: JSON.parse(JSON.stringify(metrics)),
                     change: utils.freshRoomMetrics(),
@@ -633,7 +666,7 @@ utils = {
                     tick: Game.time,
                 }
             } else {
-                Game.rooms[room_name].memory.metrics = null;
+                memory.metrics = null;
             }
         } else {
             for (let room_name in Game.rooms) {

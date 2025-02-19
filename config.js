@@ -5,5 +5,6 @@ module.exports = {
     DMG_THRESHOLD: 0.9,
     PART_MULT: 2,
     DEFENSE_PER: 0.01,
-    UPGRADE_PER: 0.8
+    UPGRADE_PER: 0.8,
+    MAX_SEARCH_ROOMS: 3,
 }
