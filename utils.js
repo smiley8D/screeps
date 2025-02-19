@@ -350,7 +350,7 @@ utils = {
         return counts;
     },
 
-    doChange: function(prev, cur, ticks=config.TASK_TICK) {
+    doChange: function(prev, cur, ticks) {
         let result = {};
         for (let i in prev) {
             if (typeof prev[i] == "object") { result[i] = utils.doChange(prev[i], cur[i], ticks)}
@@ -539,7 +539,7 @@ utils = {
 
         // Get change
         let change;
-        if (prev_metrics) { change = utils.doChange(prev_metrics.last, metrics, Game.tick - prev_metrics.tick)}
+        if (prev_metrics) { change = utils.doChange(prev_metrics.last, metrics, Game.time - prev_metrics.tick)}
         else { change = null }
 
         // Get change_mov
@@ -553,8 +553,8 @@ utils = {
         else { count = null }
 
         // Get count_mov
-        if (prev_metrics && prev_metrics.count_mov) { count_mov = utils.doMov(prev_metrics.count_mov, utils.doChange(count, prev_metrics.count, Game.tick - prev_metrics.tick)) }
-        else if (prev_metrics && prev_metrics.count) {  count_mov = utils.doMov(prev_metrics.count, utils.doChange(count, prev_metrics.count, Game.tick - prev_metrics.tick))}
+        if (prev_metrics && prev_metrics.count_mov) { count_mov = utils.doMov(prev_metrics.count_mov, utils.doChange(count, prev_metrics.count, Game.time - prev_metrics.tick)) }
+        else if (prev_metrics && prev_metrics.count) {  count_mov = utils.doMov(prev_metrics.count, utils.doChange(count, prev_metrics.count, Game.time - prev_metrics.tick))}
         else { count_mov = null }
 
         room.memory.metrics = {
