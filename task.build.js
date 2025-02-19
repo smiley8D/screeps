@@ -7,7 +7,7 @@ class Build extends Task {
         super("Build", room, room, wanted);
     }
 
-    static getTasks(room) {
+    static getTasks() {
         let tasks = []
         for (let room in Game.rooms) {
             room = Game.rooms[room];

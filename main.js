@@ -7,6 +7,7 @@ const Build = require("task.build");
 const Upgrade = require("task.upgrade");
 const Stock = require("task.stock");
 const Recycle = require("task.recycle");
+const Dismantle = require("task.dismantle");
 const Scout = require("task.scout");
 
 const TASKS = {
@@ -16,6 +17,7 @@ const TASKS = {
     "Build": Build,
     "Upgrade": Upgrade,
     "Recycle": Recycle,
+    "Dismantle": Dismantle,
     "Scout": Scout
 }
 
@@ -135,10 +137,10 @@ module.exports.loop = function() {
                 // Mark available
                 spawners.push(spawner);
             } else if (!task ||
-                // Cancel unneeded spawns and mark available
                 task.parts >= task.wanted ||
                 task.workers >= task.max_workers) {
-                spawner.spawning.cancel;
+                // Cancel unneeded spawns and mark available
+                spawner.spawning.cancel();
                 spawners.push(spawner);
             }
         }

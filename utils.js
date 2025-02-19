@@ -380,7 +380,9 @@ utils = {
         // Process structures
         for (let structure of room.find(FIND_STRUCTURES)) {
             // Process damage
-            if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
+            if (structure.pos.lookFor(LOOK_FLAGS,{filter:(f)=>f.color != COLOR_ORANGE}).length > 0) {
+                // Structure to be disassembled, ignore
+            } else if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
                 metrics.damage += structure.hitsMax - structure.hits
                 metrics.hits += structure.hits;
                 metrics.hits_max += structure.hitsMax;
@@ -391,7 +393,7 @@ utils = {
                 } else if (structure.hits < structure.hitsMax) {
                     room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 }
-            } else if (structure.hitsMax) {
+            } else if (structure.hitsMax && (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART)) {
                 // Configurable wall upgrade threshold
                 metrics.damage += Math.max(0, (structure.hitsMax * config.DEFENSE_PER) - structure.hits);
                 metrics.hits += Math.min(structure.hits, structure.hitsMax * config.DEFENSE_PER);
@@ -653,7 +655,7 @@ utils = {
                     if (inflow_total) {text.push("[ Energy Inflows ]")}
                     if (metrics.count_mov.harvest[RESOURCE_ENERGY]) {text.push("Harvested: " + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY])/100) + " (" + (Math.round(1000*metrics.count_mov.harvest[RESOURCE_ENERGY]/inflow_total)/10)
                     + "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(room.find(FIND_SOURCES).length))/10) + "% eff)")}
-                    if (transfer < 0) {text.push("Transfer: " + (Math.round(-100*transfer)/100) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + ")")}
+                    if (transfer < 0) {text.push("Transfer: " + (Math.round(-100*transfer)/100) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + "%)")}
     
                     // Out
                     if (outflow_total) {text.push("[ Energy Outflows ]")}
