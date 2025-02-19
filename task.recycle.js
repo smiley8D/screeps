@@ -1,10 +1,12 @@
-Task = require("task");
-utils = require("utils");
+const Task = require("task");
+const utils = require("utils");
+const Hauler = require("body.hauler");
 
 class Recycle extends Task {
 
     constructor(room=null, wanted=0) {
         super("Recycle", room, wanted);
+        this.body = new Hauler();
     }
 
     static getTasks(room) {
@@ -25,7 +27,7 @@ class Recycle extends Task {
         }
 
         let result;
-        if (creep.store.getFreeCapacity() && creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.from.find(FIND_RUINS)).length) {
+        if (creep.store.getFreeCapacity() && creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.room.find(FIND_RUINS)).length) {
             // Space in inventory & decayables, refill
             creep.memory.curDst = null;
             if (!creep.memory.curSrc) {creep.memory.curSrc = creep.room.findClosestByPath(creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.from.find(FIND_RUINS))) }

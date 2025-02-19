@@ -110,6 +110,7 @@ module.exports.loop = function() {
             let sorted_tasks = [];
             for (let task_name in TASKS) {
                 for (let task of TASKS[task_name].getTasks(room)) {
+                    if (task.wanted <= 0) {continue}
                     if (!avail_creeps.get(task.body.name)) { avail_creeps.set(task.body.name, []) }
                     tasks.set(task.id, task)
                     task.i = sorted_tasks.length;
