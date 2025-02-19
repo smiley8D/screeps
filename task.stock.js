@@ -53,51 +53,48 @@ class Stock extends Task {
             return;
         }
 
-        // Determine next step
-        let src = Game.getObjectById(creep.memory.curSrc);
-        let dst = Game.getObjectById(creep.memory.curDst);
+        let result = ERR_NOT_FOUND;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
             // Inventory contains wrong resource, depo
-            for (let cur_resource of RESOURCES_ALL) {
-                if (creep.store.getUsedCapacity(cur_resource) && cur_resource != resource) {
-                    dst = utils.findDst(creep, cur_resource);
-                    resource = cur_resource;
+            result = utils.doDst(creep, utils.findDst(creep));
+        } else {
+            // Determine next step
+            let src = Game.getObjectById(creep.memory.curSrc);
+            let dst = Game.getObjectById(creep.memory.curDst);
+            if (!src && !creep.store.getUsedCapacity()) {
+                // Inventory empty, get src
+                src = utils.bestSrc(creep, resource);
+                dst = null;
+            } else if (!dst && !creep.store.getFreeCapacity()) {
+                // Inventory full, get dst
+                dst = utils.bestDst(creep, resource);
+                src = null;
+            } else if (!src && !dst) {
+                // Pick new src or dst by distance
+                src = utils.bestSrc(creep, resource);
+                dst = utils.bestDst(creep, resource);
+                if (creep.pos.findPathTo(src).length < creep.pos.findPathTo(dst).length) {
+                    dst = null;
+                } else {
+                    src = null;
                 }
             }
-        } else if (!src && !creep.store.getUsedCapacity()) {
-            // Inventory empty, get src
-            src = utils.bestSrc(creep, resource);
-            dst = null;
-        } else if (!dst && !creep.store.getFreeCapacity()) {
-            // Inventory full, get dst
-            dst = utils.bestDst(creep, resource);
-            src = null;
-        } else if (!src && !dst) {
-            // Pick new src or dst by distance
-            src = utils.bestSrc(creep, resource);
-            dst = utils.bestDst(creep, resource);
-            if (creep.pos.findPathTo(src).length < creep.pos.findPathTo(dst).length) {
-                dst = null;
-            } else {
-                src = null;
+
+            // Execute
+            if (src) {
+                result = utils.doSrc(creep, src, resource);
+                if (result == ERR_NOT_ENOUGH_RESOURCES || result == ERR_FULL) { src = null }
+            } else if (dst) {
+                result = utils.doDst(creep, dst, resource);
+                if (result == ERR_NOT_ENOUGH_RESOURCES || result == ERR_FULL) { dst = null }
             }
-        }
 
-        // Execute
-        let result = ERR_NOT_FOUND;
-        if (src) {
-            result = utils.doSrc(creep, src, resource);
-            if (result == ERR_NOT_ENOUGH_RESOURCES || result == ERR_FULL) { src = null }
-        } else if (dst) {
-            result = utils.doDst(creep, dst, resource);
-            if (result == ERR_NOT_ENOUGH_RESOURCES || result == ERR_FULL) { dst = null }
+            // Update cache
+            if (src) { creep.memory.curSrc = src.id }
+            else { creep.memory.curSrc = null }
+            if (dst) { creep.memory.curDst = dst.id }
+            else { creep.memory.curDst = null }
         }
-
-        // Update cache
-        if (src) { creep.memory.curSrc = src.id }
-        else { creep.memory.curSrc = null }
-        if (dst) { creep.memory.curDst = dst.id }
-        else { creep.memory.curDst = null }
 
         if (result != OK) {
             creep.say("📦" + resource[0] + result);

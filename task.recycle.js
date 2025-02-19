@@ -30,9 +30,6 @@ class Recycle extends Task {
     static doTask(creep) {
         // Move to room if assigned
         if (creep.memory.task.tgt && creep.room.name != creep.memory.task.tgt) {
-            console.log(creep.pos);
-            console.log(creep.memory.task.tgt);
-            console.log(new RoomPosition(25,25,creep.memory.task.tgt));
             let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}});
             if (result != OK) {
                 creep.say("♻️" + result);
@@ -43,23 +40,23 @@ class Recycle extends Task {
         }
 
         let result = ERR_NOT_FOUND;
-        if (creep.store.getFreeCapacity() && creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.room.find(FIND_RUINS)).length) {
-            // Space in inventory & decayables, refill
-            creep.memory.curDst = null;
-            if (!creep.memory.curSrc) {creep.memory.curSrc = creep.pos.findClosestByPath(creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.room.find(FIND_RUINS))) }
-            for (let resource of RESOURCES_ALL) {
-                result = utils.doSrc(creep, Game.getObjectById(creep.memory.curSrc), resource);
-                if (result == OK || result == ERR_NOT_IN_RANGE) { break }
-            }
+
+        // If space available, look for more trash
+        let src;
+        if (creep.store.getFreeCapacity()) {
+            src = utils.findSrc(creep, undefined, {
+                containers: false,
+                sources: false,
+                haulers: false
+            });
+        }
+
+        if (src) {
+            // If trash, pickup
+            result = utils.doSrc(creep, src);
         } else if (creep.store.getUsedCapacity()) {
-            // Cannot pickup more & have stuff to depo
-            creep.memory.curSrc = null;
-            for (let cur_resource of RESOURCES_ALL) {
-                if (creep.store.getUsedCapacity(cur_resource)) {
-                    result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
-                    if (result == OK || result == ERR_NOT_IN_RANGE) { break }
-                }
-            }
+            // Inventory not empty, depo
+            result = utils.doDst(creep, utils.findDst(creep));
         } else if (creep.ticksToLive < 500 && creep.room.find(FIND_MY_SPAWNS)) {
             // Recycle creep
             let spawner = creep.pos.findClosestByRange(FIND_MY_SPAWNS);

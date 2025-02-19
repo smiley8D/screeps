@@ -58,12 +58,7 @@ class Mine extends Task {
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
             // Inventory contains wrong resource, depo
             creep.memory.curSrc = null;
-            for (let cur_resource of RESOURCES_ALL) {
-                if (creep.store.getUsedCapacity(cur_resource) && cur_resource != resource) {
-                    result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
-                    if (result == OK || result == ERR_NOT_IN_RANGE) { break }
-                }
-            }
+            result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
         } else if (creep.store.getFreeCapacity() >= 2 * (2 * (creep.memory.size - 1) + 1)) {
             // Space in inventory, mine
             creep.memory.curDst = null;

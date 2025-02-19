@@ -20,6 +20,9 @@ const TASKS = {
 }
 
 module.exports.loop = function() {
+    // Initialize memory
+    if (!Memory.metrics) {utils.reset()}
+
     // Cleanup memory
     if (Game.time % config.CLEANUP_TICK == 0) {
         for (let creep in Memory.creeps) {
@@ -49,7 +52,8 @@ module.exports.loop = function() {
             let event = events[i];
             if (event.event == EVENT_BUILD) {
                 build += event.data.amount;
-                build_spend += event.data.energySpent;
+                build_spend += event.data.amount;
+                console.log(room.name,build,build_spend,event.data.amount,event.data.energySpent);
             } else if (event.event == EVENT_REPAIR) {
                 repair += event.data.amount;
                 repair_spend += event.data.energySpent;
@@ -242,18 +246,6 @@ module.exports.loop = function() {
     // Do tasks
     for (let creepname in Game.creeps) {
         let creep = Game.creeps[creepname];
-
-        // Avoid enemies
-        let enemy = creep.pos.findClosestByPath(creep.pos.findInRange(creep.room.find(FIND_HOSTILE_CREEPS).concat(creep.room.find(FIND_HOSTILE_STRUCTURES)), 20));
-        if (enemy) {
-            let dir = (4 + creep.pos.getDirectionTo(enemy)) % 8;
-            result = creep.move(dir);
-            if (result != OK) {
-                creep.say("😲" + result);
-            } else {
-                creep.say("😲");
-            }
-        }
 
         // Do task
         if (creep.memory.task && TASKS[creep.memory.task.name]) {

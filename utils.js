@@ -3,7 +3,7 @@ const config = require("config");
 utils = {
 
     // Find the nearest src for a resource
-    findSrc: function(creep, resource=RESOURCE_ENERGY, in_opts={}) {
+    findSrc: function(creep, resource=undefined, in_opts={}) {
         // Setup opts
         let opts = {
             partial: true,
@@ -18,13 +18,13 @@ utils = {
 
         // Check current src
         let src = Game.getObjectById(creep.memory.curSrc);
-        if (src && src.store && src.store.getUsedCapacity(resource)) { return src; }
+        if (src && ((src.resourceType == resource || (src.resourceType && !resource)) || (src.store && src.store.getUsedCapacity(resource)))) { return src; }
 
         // Find new src
         let srcs = [];
         if (opts.trash) {
             // Drops
-            srcs.push(creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (d) => d.resourceType == resource && (opts.partial || d.amount >= creep.store.getFreeCapacity(resource))}));
+            srcs.push(creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (d) => (d.resourceType == resource || !resource) && (opts.partial || d.amount >= creep.store.getFreeCapacity(resource))}));
             // Tombstones
             srcs.push(creep.pos.findClosestByPath(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource) && (opts.partial || t.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
             // Ruin
@@ -63,14 +63,14 @@ utils = {
         }
     },
 
-    // Find the best src for based on room resource distribution
-    bestSrc: function(creep, resource=RESOURCE_ENERGY) {
+    // Find the best src based on room resource distribution
+    bestSrc: function(creep, resource) {
         let src;
 
         // Try decayables
         let srcs = [];
         // Drops
-        srcs.push(creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (d) => d.resourceType == resource}));
+        srcs.push(creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (d) => d.resourceType == resource || !resource}));
         // Tombstones
         srcs.push(creep.pos.findClosestByPath(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource)}));
         // Ruin
@@ -127,9 +127,11 @@ utils = {
     },
 
     // Withdraw from a src
-    doSrc: function(creep, src, resource=RESOURCE_ENERGY) {
+    doSrc: function(creep, src, resource=undefined) {
+        let result;
+
         // Try withdraw
-        let result = creep.withdraw(src, resource);
+        if (resource) {result = creep.withdraw(src, resource) }
 
         // Try pickup
         if (result == ERR_INVALID_TARGET) { result = creep.pickup(src) }
@@ -143,8 +145,61 @@ utils = {
         return result;
     },
 
+    // Find the nearest dst based on room resource distribution
+    findDst: function(creep, resource=undefined, in_opts=null) {
+        // Setup opts
+        let opts = {
+            partial: true,
+            containers: true,
+            haulers: true,
+            spawners: true
+        }
+        for (let opt in in_opts) {
+            opts[opt] = in_opts[opt];
+        }
+
+        // Check current dst
+        let dst = Game.getObjectById(creep.memory.curDst);
+        if (dst && dst.store && dst.store.getFreeCapacity(resource)) { return dst; }
+
+        // Find new dst
+        let dsts = []
+        // Containers
+        if (opts.containers) {
+            dsts.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) =>
+            ((s.structureType == STRUCTURE_STORAGE && s.my) || s.structureType == STRUCTURE_CONTAINER) &&
+            (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource)))}));
+        }
+        // Haulers
+        if (opts.haulers) {
+            dsts.push();
+        }
+        // Spawners
+        if (opts.spawners && (resource == RESOURCE_ENERGY || (!resoruce && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
+            dsts.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my &&
+                (s.structureType == STRUCTURE_SPAWN || s.structureType == STRUCTURE_EXTENSION) &&
+                (s.store.getFreeCapacity(RESOURCE_ENERGY) && (opts.partial || s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getUsedCapacity(RESOURCE_ENERGY)))}));
+        }
+
+        // Find valid dst
+        let valid_dsts = [];
+        for (let i in dsts) {
+            if (dsts[i]) { valid_dsts.push(dsts[i]) }
+        }
+        dst = creep.pos.findClosestByPath(valid_dsts);
+
+        // Update cache
+        if (dst) {
+            creep.memory.curDst = dst.id;
+            return dst;
+        } else {
+            creep.memory.curDst = null;
+            return;
+        }
+    },
+
     // Find the best dst based on room resource distribution
-    bestDst: function(creep, resource=RESOURCE_ENERGY) {
+    bestDst: function(creep, resource=undefined) {
         let dst;
 
         // Try spawn containers
@@ -219,63 +274,19 @@ utils = {
         return dst;
     },
 
-    // Find the nearest dst for a resource.
-    findDst: function(creep, resource=RESOURCE_ENERGY, in_opts=null) {
-        // Setup opts
-        let opts = {
-            partial: true,
-            containers: true,
-            haulers: true,
-            spawners: true
-        }
-        for (let opt in in_opts) {
-            opts[opt] = in_opts[opt];
-        }
-
-        // Check current dst
-        let dst = Game.getObjectById(creep.memory.curDst);
-        if (dst && dst.store && dst.store.getFreeCapacity(resource)) { return dst; }
-
-        // Find new dst
-        let dsts = []
-        // Containers
-        if (opts.containers) {
-            dsts.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) =>
-            ((s.structureType == STRUCTURE_STORAGE && s.my) || s.structureType == STRUCTURE_CONTAINER) &&
-            (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource)))}));
-        }
-        // Haulers
-        if (opts.haulers) {
-            dsts.push();
-        }
-        // Spawners
-        if (opts.spawners) {
-            dsts.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my &&
-                (s.structureType == STRUCTURE_SPAWN || s.structureType == STRUCTURE_EXTENSION) &&
-                (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource)))}));
-        }
-
-        // Find valid dst
-        let valid_dsts = [];
-        for (let i in dsts) {
-            if (dsts[i]) { valid_dsts.push(dsts[i]) }
-        }
-        dst = creep.pos.findClosestByPath(valid_dsts);
-
-        // Update cache
-        if (dst) {
-            creep.memory.curDst = dst.id;
-            return dst;
-        } else {
-            creep.memory.curDst = null;
-            return;
-        }
-    },
-
     // Deposit to a dst
-    doDst: function(creep, dst, resource=RESOURCE_ENERGY) {
-        // Try transfer
-        let result = creep.transfer(dst, resource);
+    doDst: function(creep, dst, resource=undefined) {
+        let result;
+        if (!resource) {
+            // Try any present resources
+            for (let resource of RESOURCES_ALL) {
+                if (creep.store.getUsedCapacity(resource)) { result = creep.transfer(dst, resource)}
+                if (result == OK || result == ERR_NOT_IN_RANGE) { break }
+            }
+        } else {
+            // Try transfer of defined resource
+            result = creep.transfer(dst, resource);
+        }
 
         // Move in range
         if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(dst, {visualizePathStyle: {stroke: "#1e90ff"}}) }
@@ -549,7 +560,8 @@ utils = {
                 // Build visuals
                 let text = ["[ Shard: " + Game.shard.name+ " ]"];
 
-                text.push("CPU: " + (Math.round(100*metrics.cpu_mov)/100));
+                text.push("CPU: " + (Math.round(100*metrics.cpu_mov)/100) + " (" + (Math.round(1000*metrics.cpu_mov/Game.cpu.limit)/10) + "%)");
+                text.push("Bucket: " + Game.cpu.bucket + " (" + (Math.round(1000*Game.cpu.bucket/10000)/10) + "%)")
 
                 // Apply visuals
                 for (let i = 0; i < text.length; i++) {
@@ -593,7 +605,7 @@ utils = {
 
                 // Energy flows
                 let inflow_total = metrics.count_mov.harvest[RESOURCE_ENERGY];
-                let outflow_total = metrics.count_mov.upgrade_spend + metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.count_mov.build_spend + metrics.count_mov.spawn;
+                let outflow_total = metrics.count_mov.upgrade_spend + metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.count_mov.spawn;
                 let transfer = metrics.change_mov.resources.total[RESOURCE_ENERGY];
                 if (transfer > 0) {outflow_total += transfer}
                 else {inflow_total -= transfer}
@@ -679,7 +691,7 @@ utils = {
                 utils.reset(room_name, metrics);
             }
             for (let room_name in Memory.rooms) {
-                if (Game.rooms.includes(room_name)) {continue}
+                if (Game.rooms[room_name]) {continue}
                 utils.reset(room_name, metrics);
             }
             Memory.metrics = {

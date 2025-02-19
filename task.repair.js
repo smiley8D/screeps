@@ -42,12 +42,7 @@ class Repair extends Task {
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
             creep.memory.curStructure = null;
-            for (let cur_resource of RESOURCES_ALL) {
-                if (creep.store.getUsedCapacity(cur_resource) && cur_resource != RESOURCE_ENERGY) {
-                    result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
-                    if (result == OK || result == ERR_NOT_IN_RANGE) { break }
-                }
-            }
+            result = utils.doDst(creep, utils.findDst(creep));
         } else if (creep.store.getUsedCapacity()) {
             // Energy in inventory, repair
             creep.memory.curSrc = null;
@@ -76,7 +71,7 @@ class Repair extends Task {
         } else {
             // Empty inventory, refill
             creep.memory.curStructure = null;
-            result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY));
+            result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
         }
 
         if (result != OK) {
