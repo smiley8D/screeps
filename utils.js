@@ -577,10 +577,12 @@ utils = {
                 )}
 
                 // Balances
+                text.push("[ Resources ]");
                 for (let resource of RESOURCES_ALL) {
                     if (metrics.last.resources.free[resource]) {text.push(
                         resource.charAt(0).toUpperCase() + resource.slice(1) + ": " + metrics.last.resources.free[resource] + " @ " + Math.round(metrics.change_mov.resources.free[resource]) +
-                        "/t" + ((metrics.change_mov.resources.free[resource] < 0) ? " (" + Math.floor(-1*metrics.last.resources.free[resource]/metrics.change_mov.resources.free[resource]) + " t)" : "")
+                        "/t" + ((metrics.change_mov.resources.free[resource] < 0) ? " (" + Math.floor(-1*metrics.last.resources.free[resource]/metrics.change_mov.resources.free[resource]) + " t)" : "") +
+                        ((metrics.last.resources.imbalance[resource] > 500) ? " (" + Math.round(metrics.last.resources.imbalance[resource]) + " i)" : "")
                     )}
                 }
 
