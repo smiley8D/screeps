@@ -24,8 +24,12 @@ class Scout extends Task {
     static doTask(creep) {
         let result = ERR_NOT_FOUND;
 
-        // Move to room center
-        result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}});
+        // Move to room
+        if (creep.room.name != creep.memory.task.room || creep.pos.x == 0 || creep.pos.y == 0 || creep.pos.x == 49 || creep.pos.y == 49) {
+            result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.room), {visualizePathStyle: {}});
+        } else {
+            result = OK;
+        }
 
         if (result != OK) {
             creep.say("📡" + result);

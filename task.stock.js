@@ -44,7 +44,7 @@ class Stock extends Task {
 
         // Move to room
         if (creep.room.name != creep.memory.task.room) {
-            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}})
+            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.room), {visualizePathStyle: {}})
             if (result != OK) {
                 creep.say("📦" + resource[0] + result);
             } else {
