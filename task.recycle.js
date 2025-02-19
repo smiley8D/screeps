@@ -71,9 +71,9 @@ class Recycle extends Task {
             return;
         }
 
-        if (result != OK) {
+        if (result != OK && result != ERR_NOT_FOUND) {
             creep.say("♻️" + result);
-        } else {
+        } else if (result != ERR_NOT_FOUND) {
             creep.say("♻️");
         }
     }

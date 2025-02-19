@@ -128,7 +128,7 @@ utils = {
 
     // Withdraw from a src
     doSrc: function(creep, src, resource=undefined) {
-        let result;
+        let result = ERR_NOT_FOUND;
 
         // Try withdraw
         if (resource) {result = creep.withdraw(src, resource) }
