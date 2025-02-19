@@ -15,7 +15,7 @@ class Recycle extends Task {
             if (src.store) {amount += src.store.getUsedCapacity()}
             else {amount += src.amount}
         }
-        let task = new Recycle(room, Math.max(0,Math.log(amount)));
+        let task = new Recycle(room.name, Math.max(0,Math.log(amount)));
         return [task];
     }
 
