@@ -175,7 +175,7 @@ utils = {
             dsts.push();
         }
         // Spawners
-        if (opts.spawners && (resource == RESOURCE_ENERGY || (!resoruce && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
+        if (opts.spawners && (resource == RESOURCE_ENERGY || (!resource && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
             dsts.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my &&
                 (s.structureType == STRUCTURE_SPAWN || s.structureType == STRUCTURE_EXTENSION) &&
                 (s.store.getFreeCapacity(RESOURCE_ENERGY) && (opts.partial || s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getUsedCapacity(RESOURCE_ENERGY)))}));
