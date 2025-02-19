@@ -6,5 +6,5 @@ module.exports = {
     PART_MULT: 2,
     DEFENSE_PER: 0.01,
     UPGRADE_PER: 0.8,
-    MAX_SEARCH_ROOMS: 3,
+    MAX_SEARCH_ROOMS: 5,
 }
