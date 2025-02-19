@@ -512,25 +512,33 @@ utils = {
         }
 
         // Update memory
-        if (!room.memory.metrics) { utils.reset(room.name, metrics) }
-        else {
-            let prev_metrics = room.memory.metrics;
-
-            last_mov = utils.doMov(prev_metrics.last_mov, metrics);
-            change = utils.doChange(prev_metrics.last, metrics);
-            change_mov = utils.doMov(prev_metrics.change_mov, change);
-            let fresh_counters = utils.freshRoomCounters();
-            count_mov = utils.doMov(prev_metrics.count_mov, utils.doChange(fresh_counters,prev_metrics.count));
-
+        if (!room.memory.metrics) {
             room.memory.metrics = {
-                last: metrics,
-                last_mov: last_mov,
-                change: change,
-                change_mov: change_mov,
-                count: fresh_counters,
-                count_mov: count_mov,
+                last: JSON.parse(JSON.stringify(metrics)),
+                last_mov: JSON.parse(JSON.stringify(metrics)),
+                change: utils.freshRoomMetrics(),
+                change_mov: utils.freshRoomMetrics(),
+                count: utils.freshRoomCounters(),
+                count_mov: utils.freshRoomCounters(),
                 tick: Game.time,
             }
+        }
+        let prev_metrics = room.memory.metrics;
+
+        last_mov = utils.doMov(prev_metrics.last_mov, metrics);
+        change = utils.doChange(prev_metrics.last, metrics);
+        change_mov = utils.doMov(prev_metrics.change_mov, change);
+        let fresh_counters = utils.freshRoomCounters();
+        count_mov = utils.doMov(prev_metrics.count_mov, utils.doChange(fresh_counters,prev_metrics.count));
+
+        room.memory.metrics = {
+            last: metrics,
+            last_mov: last_mov,
+            change: change,
+            change_mov: change_mov,
+            count: fresh_counters,
+            count_mov: count_mov,
+            tick: Game.time,
         }
     },
 
@@ -666,33 +674,23 @@ utils = {
     },
 
     // Clear visuals & metrics
-    reset: function(room_name=null, metrics=null, sightings=false, neighbors=false) {
+    reset: function(room_name=null, metrics=false, sightings=false, neighbors=false) {
         if (room_name) {
+            console.log("resetting",room_name);
             if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
             let memory = Memory.rooms[room_name];
             memory.visuals = [];
             if (sightings || !memory.sightings) {memory.sightings = {}}
             if (neighbors || !memory.neighbors) {memory.neighbors = utils.getNearbyRooms([room_name])}
-            if (metrics) {
-                memory.metrics = {
-                    last: JSON.parse(JSON.stringify(metrics)),
-                    last_mov: JSON.parse(JSON.stringify(metrics)),
-                    change: utils.freshRoomMetrics(),
-                    change_mov: utils.freshRoomMetrics(),
-                    count: utils.freshRoomCounters(),
-                    count_mov: utils.freshRoomCounters(),
-                    tick: Game.time,
-                }
-            } else {
-                utils.roomMetrics(room_name);
-            }
+            if (metrics || !memory.metrics) {memory.metrics = null}
+            if (Game.rooms[room_name]) {utils.roomMetrics(Game.rooms[room_name])}
         } else {
             for (let room_name in Game.rooms) {
-                utils.reset(room_name, metrics);
+                utils.reset(room_name);
             }
             for (let room_name in Memory.rooms) {
                 if (Game.rooms[room_name]) {continue}
-                utils.reset(room_name, metrics);
+                utils.reset(room_name);
             }
             Memory.metrics = {
                 cpu_mov: 0

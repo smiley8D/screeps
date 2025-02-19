@@ -34,9 +34,8 @@ module.exports.loop = function() {
 
     // Process last tick events
     for (let room_name in Game.rooms) {
-        if (!Memory.rooms[room_name]) {utils.reset(room_name)}
         let room = Game.rooms[room_name];
-        if (!room.memory.metrics) {continue}
+        if (!room.memory.metrics) {utils.reset(room_name)}
 
         let build = 0;
         let build_spend = 0;
@@ -52,8 +51,8 @@ module.exports.loop = function() {
             let event = events[i];
             if (event.event == EVENT_BUILD) {
                 build += event.data.amount;
+                // Docs say this should be energySpent, but this field doesn't exist
                 build_spend += event.data.amount;
-                console.log(room.name,build,build_spend,event.data.amount,event.data.energySpent);
             } else if (event.event == EVENT_REPAIR) {
                 repair += event.data.amount;
                 repair_spend += event.data.energySpent;
