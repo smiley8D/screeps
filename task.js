@@ -2,7 +2,7 @@ Body = require("body");
 
 class Task {
 
-    constructor(name, tgt, wanted, max_workers=4, room=null) {
+    constructor(name, tgt, wanted, max_workers=8) {
         // Body of assignable workers
         this.body = new Body();
 
@@ -26,9 +26,6 @@ class Task {
 
         // Target of task
         this.tgt = tgt;
-
-        // Attached room
-        this.room = room;
     }
 
     // Generate list of tasks for a given room
@@ -40,7 +37,6 @@ class Task {
             id: this.id,
             name: this.name,
             tgt: this.tgt,
-            room: this.room,
         }
     }
 

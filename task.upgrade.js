@@ -5,13 +5,13 @@ const config = require("config");
 class Upgrade extends Task {
 
     constructor(room, wanted) {
-        super("Upgrade", room, wanted, 8);
+        super("Upgrade", room, wanted);
     }
 
     static getTasks(room) {
         if (!room.memory.metrics) {return []}
         // Temp go by amount of free energy
-        let task = new Upgrade(room.name, Math.log(room.memory.metrics.last_mov.resources.free[RESOURCE_ENERGY]));
+        let task = new Upgrade(room.name, Math.log(room.memory.metrics.last_mov.resources.free[RESOURCE_ENERGY]) / config.PART_MULT);
         return [task];
     }
 
