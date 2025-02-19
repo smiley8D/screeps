@@ -60,7 +60,9 @@ class Stock extends Task {
         } else {
             // Determine next step
             let src = Game.getObjectById(creep.memory.curSrc);
+            if (src && src.store && !src.store.getUsedCapacity(resource)) { src = null }
             let dst = Game.getObjectById(creep.memory.curDst);
+            if (dst && dst.store && !dst.store.getFreeCapacity(resource)) { dst = null }
             if (!src && !creep.store.getUsedCapacity()) {
                 // Inventory empty, get src
                 src = utils.bestSrc(creep, resource);
