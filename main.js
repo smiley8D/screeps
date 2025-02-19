@@ -249,7 +249,7 @@ module.exports.loop = function() {
         // Do task
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             TASKS[creep.memory.task.name].doTask(creep);
-        } else {
+        } else if (creep.memory.body) {
             creep.memory.task = new Recycle().compress();
         }
     }

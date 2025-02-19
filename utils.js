@@ -81,7 +81,7 @@ utils = {
         let flagged_srcs = []
         for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getUsedCapacity(resource) &&
             (s.structureType == STRUCTURE_CONTAINER || s.structureType == STRUCTURE_STORAGE) &&
-            s.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_GREY).length})) {
+            s.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_GREY || f.color == COLOR_ORANGE).length})) {
             let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
             if (fill > cur) {
                 flagged_srcs = [structure]
@@ -414,7 +414,7 @@ utils = {
 
                 // Find imbalance
                 if (structure.structureType == STRUCTURE_CONTAINER || structure.structureType == STRUCTURE_STORAGE) {
-                    if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_GREY).length) {
+                    if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_GREY || f.color == COLOR_ORANGE).length) {
                         // Flagged as empty
                         if (structure.store.getUsedCapacity()) { room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
                         for (let resource of RESOURCES_ALL) {
