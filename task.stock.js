@@ -6,19 +6,24 @@ Hauler = require("body.hauler");
 class Stock extends Task {
 
     constructor(room, wanted, resource) {
-        super("Stock", room + ":" + resource, wanted);
+        super("Stock", room + ":" + resource, room, wanted);
         this.body = new Hauler();
-        this.room = room;
         this.resource = resource;
     }
 
-    static getTasks(room) {
-        if (!room.memory.metrics) {return []}
-        // Create tasks
+    static getTasks() {
         let tasks = []
-        for (let resource of RESOURCES_ALL) {
-            let parts = Math.max(0, Math.log(room.memory.metrics.last.resources.imbalance[resource]));
-            tasks.push(new Stock(room.name, parts, resource));
+        for (let room in Game.rooms) {
+            room = Game.rooms[room];
+
+            // Check room owned
+            if (!room.controller || !room.controller.my) {continue}
+
+            if (!room.memory.metrics) {continue}
+            for (let resource of RESOURCES_ALL) {
+                let parts = Math.max(0, Math.log(room.memory.metrics.last.resources.imbalance[resource]));
+                tasks.push(new Stock(room.name, parts, resource));
+            }
         }
         return tasks;
     }
@@ -35,12 +40,16 @@ class Stock extends Task {
     }
 
     static doTask(creep) {
-        let room = Game.rooms[creep.memory.task.room];
         let resource = creep.memory.task.resource;
 
         // Move to room
-        if (creep.room != room) {
-            creep.moveTo(room, {visualizePathStyle: {}});
+        if (creep.room != creep.memory.task.tgt) {
+            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}})
+            if (result != OK) {
+                creep.say("📦" + resource[0] + result);
+            } else {
+                creep.say("📦" + resource[0]);
+            }
             return;
         }
 
@@ -55,7 +64,6 @@ class Stock extends Task {
                     resource = cur_resource;
                 }
             }
-            console.log(dst.pos)
         } else if (!src && !creep.store.getUsedCapacity()) {
             // Inventory empty, get src
             src = utils.bestSrc(creep, resource);

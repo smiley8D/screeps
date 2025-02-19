@@ -5,14 +5,22 @@ const config = require("config");
 class Upgrade extends Task {
 
     constructor(room, wanted) {
-        super("Upgrade", room, wanted);
+        super("Upgrade", room, room, wanted);
     }
 
-    static getTasks(room) {
-        if (!room.memory.metrics) {return []}
-        // Temp go by amount of free energy
-        let task = new Upgrade(room.name, Math.log(room.memory.metrics.last_mov.resources.free[RESOURCE_ENERGY]) / config.PART_MULT);
-        return [task];
+    static getTasks() {
+        let tasks = [];
+        for (let room in Game.rooms) {
+            room = Game.rooms[room];
+
+            // Check room owned
+            if (!room.controller || !room.controller.my) {continue}
+
+            if (!room.memory.metrics) {continue}
+            if (!room.controller.my) {continue}
+            tasks.push(new Upgrade(room.name, Math.log(room.memory.metrics.last_mov.resources.free[RESOURCE_ENERGY]) / config.PART_MULT));
+        }
+        return tasks;
     }
 
     static doTask(creep) {

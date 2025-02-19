@@ -6,23 +6,35 @@ Task = require("task");
 class Repair extends Task {
 
     constructor(room, wanted) {
-        super("Repair", room, wanted);
+        super("Repair", room, room, wanted);
     }
 
-    static getTasks(room) {
-        if (!room.memory.metrics) {return []}
-        let total_dmg = room.memory.metrics.last.hits_max - room.memory.metrics.last.hits;
-        if (total_dmg > 0) {
-            let task = new Repair(room.name, Math.max(1,Math.log(total_dmg / 1000)));
-            return [task];
+    static getTasks() {
+        let tasks = []
+        for (let room in Game.rooms) {
+            room = Game.rooms[room];
+
+            // Check room owned
+            if (!room.controller || !room.controller.my) {continue}
+
+            if (!room.memory.metrics) {continue}
+            let total_dmg = room.memory.metrics.last.hits_max - room.memory.metrics.last.hits;
+            if (total_dmg > 0) {
+                tasks.push(new Repair(room.name, Math.max(1,Math.log(total_dmg / 1000))));
+            }
         }
-        return [];
+        return tasks;
     }
 
     static doTask(creep) {
         // Move to room
-        if (creep.room.name != creep.memory.task.tgt) {
-            creep.moveTo(Game.rooms[creep.memory.task.tgt], {visualizePathStyle: {}});
+        if (creep.room != creep.memory.task.tgt) {
+            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}})
+            if (result != OK) {
+                creep.say("🔧" + result);
+            } else {
+                creep.say("🔧");
+            }
             return;
         }
 

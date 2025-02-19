@@ -4,23 +4,35 @@ utils = require("utils");
 class Build extends Task {
 
     constructor(room, wanted) {
-        super("Build", room, wanted);
+        super("Build", room, room, wanted);
     }
 
     static getTasks(room) {
-        if (!room.memory.metrics) {return []}
-        let total_build = room.memory.metrics.last.build_max - room.memory.metrics.last.build;
-        if (total_build > 0) {
-            let task = new Build(room.name, Math.max(1,Math.log(total_build / 1000)));
-            return [task];
+        let tasks = []
+        for (let room in Game.rooms) {
+            room = Game.rooms[room];
+            
+            // Check room owned
+            if (!room.controller || !room.controller.my) {continue}
+
+            if (!room.memory.metrics) {continue}
+            let total_build = room.memory.metrics.last.build_max - room.memory.metrics.last.build;
+            if (total_build > 0) {
+                tasks.push(new Build(room.name, Math.max(1,Math.log(total_build / 1000))));
+            }
         }
-        return [];
+        return tasks;
     }
 
     static doTask(creep) {
         // Move to room
-        if (creep.room.name != creep.memory.task.tgt) {
-            creep.moveTo(Game.rooms[creep.memory.task.tgt], {visualizePathStyle: {}});
+        if (creep.room != creep.memory.task.tgt) {
+            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}})
+            if (result != OK) {
+                creep.say("🔨" + result);
+            } else {
+                creep.say("🔨");
+            }
             return;
         }
 

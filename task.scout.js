@@ -5,15 +5,17 @@ const ScoutBody = require("body.scout");
 class Scout extends Task {
 
     constructor(room) {
-        super("Scout", room, 1 / config.PART_MULT, 1);
+        super("Scout", room, room, 1 / config.PART_MULT, 1);
         this.body = new ScoutBody();
     }
 
-    static getTasks(room) {
+    static getTasks() {
         let rooms = new Map();
         for (let room in Game.rooms) {
-            for (let exit of Game.map.describeExits(room)) {
-                if (!Game.rooms[exit] && !rooms.has(exit)) { room.set(exit,newScout(exit)) }
+            for (let direction in Game.map.describeExits(room)) {
+                let exit = Game.map.describeExits(room)[direction];
+                // Only scout unclaimed rooms
+                if (!Game.rooms[exit] && !rooms.has(exit) && (!Game.rooms[exit] || !Game.rooms[exit].controller || !Game.rooms[exit].controller.my)) { rooms.set(exit,new Scout(exit)) }
             }
         }
         return rooms.values();
@@ -21,7 +23,7 @@ class Scout extends Task {
 
     static doTask(creep) {
         // Move to room
-        result = creep.moveTo(RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}});
+        let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}});
 
         if (result != OK) {
             creep.say("📡" + result);

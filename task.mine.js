@@ -6,32 +6,50 @@ const config = require("config");
 
 class Mine extends Task {
 
-    constructor(pos, wanted, spots) {
-        super("Mine", pos, wanted, spots);
+    constructor(source, room, wanted, spots) {
+        super("Mine", source, room, wanted, spots);
         this.body = new Miner();
     }
 
-    static getTasks(room) {
-        // Find mineables
+    static getTasks() {
         let tasks = []
-        for (let source of room.find(FIND_SOURCES).concat(room.find(FIND_MINERALS, {filter: (m) => m.pos.lookFor(LOOK_STRUCTURES).length }))) {
-            // Calculate parking spots
-            let spots = 0;
-            for (let x = source.pos.x-1; x <= source.pos.x+1; x++) {
-                for (let y = source.pos.y-1; y <= source.pos.y+1; y++) {
-                    if (source.room.getTerrain().get(x,y) == 0) { spots++; }
-                }
-            }
+        for (let room in Game.rooms) {
+            room = Game.rooms[room];
 
-            // Determine wanted
-            let wanted = 4 / config.PART_MULT;
-            if (source.mineralType ) { wanted = Math.max(0, Math.log(source.mineralAmount)) }
-            tasks.push(new Mine(source.id, wanted, spots));
+            // Check room owned
+            if (!room.controller || !room.controller.my) {continue}
+
+            // Find mineables
+            for (let source of room.find(FIND_SOURCES).concat(room.find(FIND_MINERALS, {filter: (m) => m.pos.lookFor(LOOK_STRUCTURES).length }))) {
+                // Calculate parking spots
+                let spots = 0;
+                for (let x = source.pos.x-1; x <= source.pos.x+1; x++) {
+                    for (let y = source.pos.y-1; y <= source.pos.y+1; y++) {
+                        if (source.room.getTerrain().get(x,y) == 0) { spots++; }
+                    }
+                }
+
+                // Determine wanted
+                let wanted = 4 / config.PART_MULT;
+                if (source.mineralType ) { wanted = Math.max(0, Math.log(source.mineralAmount)) }
+                tasks.push(new Mine(source.id, room.name, wanted, spots));
+            }
         }
         return tasks;
     }
 
     static doTask(creep) {
+        // Move to room
+        if (creep.room.name != creep.memory.task.room) {
+            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.room), {visualizePathStyle: {}});
+            if (result != OK) {
+                creep.say("⛏️" + result);
+            } else {
+                creep.say("⛏️");
+            }
+            return;
+        }
+
         let target = Game.getObjectById(creep.memory.task.tgt);
         let resource = RESOURCE_ENERGY;
         if (target.mineralType) { resource = target.mineralType }

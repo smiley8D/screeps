@@ -5,34 +5,49 @@ const Hauler = require("body.hauler");
 class Recycle extends Task {
 
     constructor(room=null, wanted=0) {
-        super("Recycle", room, wanted);
+        super("Recycle", room, room, wanted);
         this.body = new Hauler();
     }
 
-    static getTasks(room) {
-        let amount = 0;
-        for (let src of room.find(FIND_DROPPED_RESOURCES).concat(room.find(FIND_TOMBSTONES),room.find(FIND_RUINS))) {
-            if (src.store) {amount += src.store.getUsedCapacity()}
-            else {amount += src.amount}
+    static getTasks() {
+        let tasks = []
+        for (let room in Game.rooms) {
+            room = Game.rooms[room];
+
+            // Check room owned
+            if (!room.controller || !room.controller.my) {continue}
+
+            let amount = 0;
+            for (let src of room.find(FIND_DROPPED_RESOURCES).concat(room.find(FIND_TOMBSTONES),room.find(FIND_RUINS))) {
+                if (src.store) {amount += src.store.getUsedCapacity()}
+                else {amount += src.amount}
+            }
+            tasks.push(new Recycle(room.name, Math.max(0,Math.log(amount))));
         }
-        let task = new Recycle(room.name, Math.max(0,Math.log(amount)));
-        return [task];
+        return tasks;
     }
 
     static doTask(creep) {
         // Move to room if assigned
         if (creep.memory.task.tgt && creep.room.name != creep.memory.task.tgt) {
-            creep.moveTo(Game.rooms[creep.memory.task.tgt], {visualizePathStyle: {}});
+            console.log(creep.memory.task.tgt)
+            console.log(new RoomPosition(25,25,creep.memory.task.tgt))
+            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}})
+            if (result != OK) {
+                creep.say("♻️" + result);
+            } else {
+                creep.say("♻️");
+            }
             return;
         }
 
-        let result;
+        let result = ERR_NOT_FOUND;
         if (creep.store.getFreeCapacity() && creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.room.find(FIND_RUINS)).length) {
             // Space in inventory & decayables, refill
             creep.memory.curDst = null;
-            if (!creep.memory.curSrc) {creep.memory.curSrc = creep.room.findClosestByPath(creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.room.find(FIND_RUINS))) }
+            if (!creep.memory.curSrc) {creep.memory.curSrc = creep.pos.findClosestByPath(creep.room.find(FIND_DROPPED_RESOURCES).concat(creep.room.find(FIND_TOMBSTONES),creep.room.find(FIND_RUINS))) }
             for (let resource of RESOURCES_ALL) {
-                result = utils.doSrc(creep, creep.memory.curSrc, resource);
+                result = utils.doSrc(creep, Game.getObjectById(creep.memory.curSrc), resource);
                 if (result == OK || result == ERR_NOT_IN_RANGE) { break }
             }
         } else if (creep.store.getUsedCapacity()) {
@@ -44,17 +59,17 @@ class Recycle extends Task {
                     if (result == OK || result == ERR_NOT_IN_RANGE) { break }
                 }
             }
-        } else if (creep.ticksToLive < 500 && creep.pos.find(FIND_MY_SPAWNS)) {
+        } else if (creep.ticksToLive < 500 && creep.room.find(FIND_MY_SPAWNS)) {
+            // Recycle creep
+            let spawner = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
+            if (spawner) { result = spawner.recycleCreep(creep) }
+            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(spawner, {visualizePathStyle: {stroke: "#dc0000"}})}
+        } else {
             // Move to graveyard
             let graveyard = creep.pos.findClosestByRange(FIND_FLAGS, { filter: (f) => f.color == COLOR_GREY && f.pos.lookFor(LOOK_STRUCTURES).length == 0});
             if (graveyard) {
                 result = creep.moveTo(graveyard, {visualizePathStyle: {}});
             }
-        } else {
-            // Recycle creep
-            let spawner = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
-            result = spawner.recycleCreep(creep);
-            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(spawner, {visualizePathStyle: {stroke: "#dc0000"}})}
         }
 
         if (result != OK) {

@@ -357,6 +357,9 @@ utils = {
 
     // Compute metrics for a room and update memory
     roomMetrics: function(room) {
+        // Check can collect metrics
+        if (!room.memory) { return }
+
         // Initialize
         let metrics = utils.freshRoomMetrics();
 
@@ -649,12 +652,13 @@ utils = {
     },
 
     // Clear visuals & metrics
-    reset: function(room_name=null, metrics=null, sightings=false) {
+    reset: function(room_name=null, metrics=null, sightings=false, neighbors=false) {
         if (room_name) {
-            let memory = Game.rooms[room_name].memory;
+            if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
+            let memory = Memory.rooms[room_name];
             memory.visuals = [];
-            if (sightings) {memory.sightings = {}}
-            memory.neighbors = null;
+            if (sightings || !memory.sightings) {memory.sightings = {}}
+            if (neighbors || !memory.neighbors) {memory.neighbors = utils.getNearbyRooms([room_name])}
             if (metrics) {
                 memory.metrics = {
                     last: JSON.parse(JSON.stringify(metrics)),
@@ -666,10 +670,14 @@ utils = {
                     tick: Game.time,
                 }
             } else {
-                memory.metrics = null;
+                utils.roomMetrics(room_name);
             }
         } else {
             for (let room_name in Game.rooms) {
+                utils.reset(room_name, metrics);
+            }
+            for (let room_name in Memory.rooms) {
+                if (Game.rooms.includes(room_name)) {continue}
                 utils.reset(room_name, metrics);
             }
             Memory.metrics = {
