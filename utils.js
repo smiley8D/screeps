@@ -317,6 +317,8 @@ utils = {
             upgrade: 0,
             upgrade_total: 0,
             upgrade_per: 0,
+            creeps: 0,
+            creeps_cost: 0
         }
         for (let resource of RESOURCES_ALL) {
             metrics.resources.total[resource] = 0;
@@ -352,16 +354,17 @@ utils = {
         let result = {};
         for (let i in prev) {
             if (typeof prev[i] == "object") { result[i] = utils.doChange(prev[i], cur[i], ticks)}
-            else { result[i] = (cur[i] - prev[i]) / ticks }
+            else if (ticks > 0) { result[i] = (cur[i] - prev[i]) / ticks }
+            else { result[i] = 0 }
         }
         return result;
     },
 
-    doMov: function(prev, cur, ticks=1) {
+    doMov: function(prev, cur) {
         let result = {};
         for (let i in prev) {
-            if (typeof prev[i] == "object") { result[i] = utils.doMov(prev[i], cur[i], ticks)}
-            else { result[i] = prev[i] * (1 - config.MOV_N) + (cur[i] / ticks) * config.MOV_N }
+            if (typeof prev[i] == "object") { result[i] = utils.doMov(prev[i], cur[i])}
+            else { result[i] = prev[i] * (1 - config.MOV_N) + cur[i] * config.MOV_N }
         }
         return result;
     },
@@ -375,7 +378,7 @@ utils = {
         let metrics = utils.freshRoomMetrics();
 
         // Process structures
-        for (let structure of room.find(FIND_STRUCTURES, {filter: (s) => s.my || !s.owner})) {
+        for (let structure of room.find(FIND_STRUCTURES)) {
             // Process damage
             if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
                 metrics.damage += structure.hitsMax - structure.hits
@@ -485,7 +488,19 @@ utils = {
         }
 
         // Process creeps
-        for (let creep of room.find(FIND_MY_CREEPS)) {
+        for (let creep of room.find(FIND_CREEPS)) {
+            // Update costs
+            metrics.creeps++;
+            if (creep.memory && creep.memorycost) {
+                // Cost cached, use that
+                metrics.creeps_cost += (creep.memory.cost / 1500)
+            }
+            else {
+                // Cost not cached, calculate
+                for (let i in creep.body) {
+                    metrics.creeps_cost += (BODYPART_COST[creep.body[i].type] / 1500);
+                }
+            }
             for (let resource of RESOURCES_ALL) {
                 metrics.resources.total[resource] += creep.store.getUsedCapacity(resource);
                 metrics.resources.free[resource] += creep.store.getUsedCapacity(resource);
@@ -493,7 +508,7 @@ utils = {
         }
 
         // Process construction sites
-        for (let site of room.find(FIND_MY_CONSTRUCTION_SITES)) {
+        for (let site of room.find(FIND_CONSTRUCTION_SITES)) {
             metrics.build += site.progress;
             metrics.build_max += site.progressTotal;
             room.memory.visuals.push(["🔨"+(Math.round(100*site.progress / site.progressTotal))+"%", site.pos.x, site.pos.y, config.TASK_TICK]);
@@ -502,7 +517,7 @@ utils = {
 
         // Process controller
         let controller = room.controller;
-        if (controller && controller.my) {
+        if (controller) {
             for (let i = 1; i < controller.level - 1; i++) {
                 metrics.upgrade_total += CONTROLLER_LEVELS[i];
             }
@@ -512,31 +527,42 @@ utils = {
         }
 
         // Update memory
-        if (!room.memory.metrics) {
-            room.memory.metrics = {
-                last: JSON.parse(JSON.stringify(metrics)),
-                last_mov: JSON.parse(JSON.stringify(metrics)),
-                change: utils.freshRoomMetrics(),
-                change_mov: utils.freshRoomMetrics(),
-                count: utils.freshRoomCounters(),
-                count_mov: utils.freshRoomCounters(),
-                tick: Game.time,
-            }
-        }
         let prev_metrics = room.memory.metrics;
 
-        last_mov = utils.doMov(prev_metrics.last_mov, metrics);
-        change = utils.doChange(prev_metrics.last, metrics);
-        change_mov = utils.doMov(prev_metrics.change_mov, change);
-        let fresh_counters = utils.freshRoomCounters();
-        count_mov = utils.doMov(prev_metrics.count_mov, utils.doChange(fresh_counters,prev_metrics.count));
+        // Last will be set to current metrics
+        let last = metrics;
+
+        // Get new last_mov
+        let last_mov;
+        if (prev_metrics) { last_mov = utils.doMov(prev_metrics.last_mov, last) }
+        else { last_mov = last }
+
+        // Get change
+        let change;
+        if (prev_metrics) { change = utils.doChange(prev_metrics.last, metrics, Game.tick - prev_metrics.tick)}
+        else { change = null }
+
+        // Get change_mov
+        let change_mov;
+        if (prev_metrics && prev_metrics.change_mov) { change_mov = utils.doMov(prev_metrics.change_mov, change)}
+        else if (prev_metrics) { change_mov = change }
+
+        // Get count
+        let count;
+        if (prev_metrics) { count = utils.freshRoomCounters() }
+        else { count = null }
+
+        // Get count_mov
+        if (prev_metrics && prev_metrics.count_mov) { count_mov = utils.doMov(prev_metrics.count_mov, utils.doChange(count, prev_metrics.count, Game.tick - prev_metrics.tick)) }
+        else if (prev_metrics && prev_metrics.count) {  count_mov = utils.doMov(prev_metrics.count, utils.doChange(count, prev_metrics.count, Game.tick - prev_metrics.tick))}
+        else { count_mov = null }
 
         room.memory.metrics = {
-            last: metrics,
+            last: last,
             last_mov: last_mov,
             change: change,
             change_mov: change_mov,
-            count: fresh_counters,
+            count: count,
             count_mov: count_mov,
             tick: Game.time,
         }
@@ -573,12 +599,12 @@ utils = {
 
                 // Apply visuals
                 for (let i = 0; i < text.length; i++) {
-                    room.visual.text(text[i], 49, 0 + parseInt(i) + 0.5, {align: "right"});
+                    room.visual.text(text[i], 49, parseInt(i) + 0.5, {align: "right"});
                 }
             }
 
             // Show room metrics
-            if (room.memory.metrics) {
+            if (room.memory.metrics && room.memory.metrics.change_mov && room.memory.metrics.count_mov) {
                 let metrics = room.memory.metrics;
 
                 // Build visuals
@@ -602,42 +628,53 @@ utils = {
                 )}
 
                 // Balances
-                text.push("[ Resources ]");
+                let header = false;
                 for (let resource of RESOURCES_ALL) {
-                    if (metrics.last.resources.free[resource]) {text.push(
-                        resource.charAt(0).toUpperCase() + resource.slice(1) + ": " + metrics.last.resources.free[resource] + " @ " + Math.round(metrics.change_mov.resources.free[resource]) +
+                    if (metrics.last.resources.free[resource]) {
+                        if (!header) {
+                            text.push("[ Resources ]");
+                            header = true;
+                        }
+                        text.push(resource.charAt(0).toUpperCase() + resource.slice(1) + ": " + metrics.last.resources.free[resource] + " @ " + (Math.round(100*metrics.change_mov.resources.free[resource])/100) +
                         "/t" + ((metrics.change_mov.resources.free[resource] < 0) ? " (" + Math.floor(-1*metrics.last.resources.free[resource]/metrics.change_mov.resources.free[resource]) + " t)" : "") +
-                        ((metrics.last.resources.imbalance[resource] > 500) ? " (" + Math.round(metrics.last.resources.imbalance[resource]) + " i)" : "")
-                    )}
+                        ((metrics.last.resources.imbalance[resource] > 500) ? " (" + Math.round(metrics.last.resources.imbalance[resource]) + " i)" : ""))
+                    }
                 }
 
                 // Energy flows
-                let inflow_total = metrics.count_mov.harvest[RESOURCE_ENERGY];
-                let outflow_total = metrics.count_mov.upgrade_spend + metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.count_mov.spawn;
-                let transfer = metrics.change_mov.resources.total[RESOURCE_ENERGY];
-                if (transfer > 0) {outflow_total += transfer}
-                else {inflow_total -= transfer}
-
-                // In
-                text.push("[ Energy Inflows ]")
-                text.push("Harvested: " + (Math.round(10*metrics.count_mov.harvest[RESOURCE_ENERGY])/10) + " (" + (Math.round(1000*metrics.count_mov.harvest[RESOURCE_ENERGY]/inflow_total)/10)
-                + "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(room.find(FIND_SOURCES).length))/10) + "% eff)");
-                if (transfer < 0) {text.push("Transfer: " + (Math.round(-10*transfer)/10) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + ")")}
-
-                // Out
-                text.push("[ Energy Outflows ]")
-                text.push("Upgrades: " + (Math.round(10*metrics.count_mov.upgrade_spend)/10) + " (" + (Math.round(1000*metrics.count_mov.upgrade_spend/outflow_total)/10)
-                + "%)");
-                text.push("Repairs: " + (Math.round(10*metrics.count_mov.repair_spend)/10) + " (" + (Math.round(1000*metrics.count_mov.repair_spend/outflow_total)/10)
-                + "%)");
-                text.push("Spawns: " + (Math.round(10*metrics.count_mov.spawn)/10) + " (" + (Math.round(1000*metrics.count_mov.spawn/outflow_total)/10)
-                + "%)");
-                if (transfer > 0) {text.push("Transfer: " + (Math.round(10*transfer)/10) + " (" + (Math.round(1000*transfer/outflow_total)/10) + "%)")}
+                if (metrics.last.resources.total[RESOURCE_ENERGY]) {
+                    let inflow_total = metrics.count_mov.harvest[RESOURCE_ENERGY];
+                    let outflow_total = metrics.count_mov.upgrade_spend + metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.count_mov.spawn;
+                    let transfer = metrics.change_mov.resources.total[RESOURCE_ENERGY];
+                    if (transfer > 0) {outflow_total += transfer}
+                    else {inflow_total -= transfer}
+    
+                    // In
+                    text.push("[ Energy Inflows ]")
+                    text.push("Harvested: " + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY])/100) + " (" + (Math.round(1000*metrics.count_mov.harvest[RESOURCE_ENERGY]/inflow_total)/10)
+                    + "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(room.find(FIND_SOURCES).length))/10) + "% eff)");
+                    if (transfer < 0) {text.push("Transfer: " + (Math.round(-100*transfer)/100) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + ")")}
+    
+                    // Out
+                    text.push("[ Energy Outflows ]")
+                    text.push("Upgrades: " + (Math.round(100*metrics.count_mov.upgrade_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.upgrade_spend/outflow_total)/10)
+                    + "%)");
+                    text.push("Repairs: " + (Math.round(100*metrics.count_mov.repair_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.repair_spend/outflow_total)/10)
+                    + "%)");
+                    text.push("Spawns: " + (Math.round(100*metrics.count_mov.spawn)/100) + " (" + (Math.round(1000*metrics.count_mov.spawn/outflow_total)/10)
+                    + "%)");
+                    text.push("Creeps: " + (Math.round(100*metrics.last_mov.creeps_cost)/100) + " (" + (Math.round(1000*metrics.last_mov.creeps_cost/outflow_total)/10)
+                    + "%)");
+                    if (transfer > 0) {text.push("Transfer: " + (Math.round(100*transfer)/100) + " (" + (Math.round(1000*transfer/outflow_total)/10) + "%)")}
+                }
 
                 // Apply visuals
                 for (let i = 0; i < text.length; i++) {
-                    room.visual.text(text[i], 0, 0 + parseInt(i) + 0.5, {align: "left"});
+                    room.visual.text(text[i], 0, parseInt(i) + 0.5, {align: "left"});
                 }
+            } else {
+                // Show indicator that metrics are loading
+                room.visual.text("[ Room: " + room.name + " metrics loading... ]", 0, 0.5, {align: "left"});
             }
         }
     },
@@ -680,17 +717,30 @@ utils = {
             if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
             let memory = Memory.rooms[room_name];
             memory.visuals = [];
-            if (sightings || !memory.sightings) {memory.sightings = {}}
-            if (neighbors || !memory.neighbors) {memory.neighbors = utils.getNearbyRooms([room_name])}
-            if (metrics || !memory.metrics) {memory.metrics = null}
-            if (Game.rooms[room_name]) {utils.roomMetrics(Game.rooms[room_name])}
+            if (sightings || !memory.sightings) {
+                memory.sightings = {};
+                console.log("resetting sightings");
+            }
+            if (neighbors || !memory.neighbors) {
+                memory.neighbors = utils.getNearbyRooms([room_name]);
+                console.log("resetting neighbors");
+            }
+            if (metrics || !memory.metrics) {
+                memory.metrics = null;
+                console.log("resetting metrics");
+            }
+            if (Game.rooms[room_name]) {
+                utils.roomMetrics(Game.rooms[room_name]);
+                console.log("calculating metrics");
+            }
         } else {
+            console.log("resetting",Game.shard.name);
             for (let room_name in Game.rooms) {
-                utils.reset(room_name);
+                utils.reset(room_name, metrics, sightings, neighbors);
             }
             for (let room_name in Memory.rooms) {
                 if (Game.rooms[room_name]) {continue}
-                utils.reset(room_name);
+                utils.reset(room_name, metrics, sightings, neighbors);
             }
             Memory.metrics = {
                 cpu_mov: 0

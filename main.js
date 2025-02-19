@@ -36,6 +36,7 @@ module.exports.loop = function() {
     for (let room_name in Game.rooms) {
         let room = Game.rooms[room_name];
         if (!room.memory.metrics) {utils.reset(room_name)}
+        if (!room.memory.metrics.count) {continue}
 
         let build = 0;
         let build_spend = 0;
@@ -178,7 +179,6 @@ module.exports.loop = function() {
         }
 
         // Assign creeps
-        task_loop:
         while (sorted_tasks.length > 0 && sorted_tasks[0].parts < sorted_tasks[0].wanted) {
             let task = sorted_tasks[0];
 
