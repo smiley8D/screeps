@@ -71,6 +71,7 @@ class Recycle extends Task {
             if (graveyard) {
                 result = creep.moveTo(graveyard, {visualizePathStyle: {}});
             }
+            return;
         }
 
         if (result != OK) {
