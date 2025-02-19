@@ -233,7 +233,7 @@ module.exports.loop = function() {
         for (let room of avail_creeps.values()) {
             for (let body of room.values()) {
                 for (let creep of body) {
-                    creep.memory.task = new Recycle(creep.ticksToLive < 500 || creep.room.energyAvailable < creep.room.energyCapacityAvailable * 0.5).compress();
+                    creep.memory.task = new Recycle().compress();
                 }
             }
         }
@@ -243,11 +243,23 @@ module.exports.loop = function() {
     for (let creepname in Game.creeps) {
         let creep = Game.creeps[creepname];
 
+        // Avoid enemies
+        let enemy = creep.pos.findClosestByPath(creep.pos.findInRange(creep.room.find(FIND_HOSTILE_CREEPS).concat(creep.room.find(FIND_HOSTILE_STRUCTURES)), 20));
+        if (enemy) {
+            let dir = (4 + creep.pos.getDirectionTo(enemy)) % 8;
+            result = creep.move(dir);
+            if (result != OK) {
+                creep.say("😲" + result);
+            } else {
+                creep.say("😲");
+            }
+        }
+
         // Do task
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             TASKS[creep.memory.task.name].doTask(creep);
         } else {
-            creep.memory.task = new Recycle();
+            creep.memory.task = new Recycle().compress();
         }
     }
 

@@ -564,10 +564,12 @@ utils = {
                 // Build visuals
                 let text = ["[ Room: " + room.name + " (" + (Game.time - metrics.tick) + ") ]"];
 
-                // Upgrade/controller info
-                text.push("RCL " + (room.controller.level + 1) + ": " + (room.controller.progressTotal - room.controller.progress) +
-                    " (" + (Math.round(10000*room.controller.progress/room.controller.progressTotal)/100) + "%) @ " + Math.round(metrics.change_mov.upgrade_total) +
-                    "/t (" + Math.ceil(room.controller.progressTotal / metrics.change_mov.upgrade_total) + " t)")
+                if (room.controller) {
+                    // Upgrade/controller info
+                    text.push("RCL " + (room.controller.level + 1) + ": " + (room.controller.progressTotal - room.controller.progress) +
+                        " (" + (Math.round(10000*room.controller.progress/room.controller.progressTotal)/100) + "%) @ " + Math.round(metrics.change_mov.upgrade_total) +
+                        "/t (" + Math.ceil(room.controller.progressTotal / metrics.change_mov.upgrade_total) + " t)")
+                }
 
                 // Repair & build info
                 if (metrics.last.damage) {text.push(

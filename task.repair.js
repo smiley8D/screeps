@@ -28,7 +28,7 @@ class Repair extends Task {
 
     static doTask(creep) {
         // Move to room
-        if (creep.room != creep.memory.task.tgt) {
+        if (creep.room.name != creep.memory.task.tgt) {
             let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}})
             if (result != OK) {
                 creep.say("🔧" + result);

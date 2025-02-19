@@ -15,15 +15,17 @@ class Scout extends Task {
             for (let direction in Game.map.describeExits(room)) {
                 let exit = Game.map.describeExits(room)[direction];
                 // Only scout unclaimed rooms
-                if (!Game.rooms[exit] && !rooms.has(exit) && (!Game.rooms[exit] || !Game.rooms[exit].controller || !Game.rooms[exit].controller.my)) { rooms.set(exit,new Scout(exit)) }
+                if (!rooms.has(exit) && (!Game.rooms[exit] || !Game.rooms[exit].controller || !Game.rooms[exit].controller.my)) { rooms.set(exit,new Scout(exit)) }
             }
         }
         return rooms.values();
     }
 
     static doTask(creep) {
-        // Move to room
-        let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}});
+        let result = ERR_NOT_FOUND;
+
+        // Move to room center
+        result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}});
 
         if (result != OK) {
             creep.say("📡" + result);

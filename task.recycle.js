@@ -4,7 +4,7 @@ const Hauler = require("body.hauler");
 
 class Recycle extends Task {
 
-    constructor(room=null, wanted=0) {
+    constructor(room=false, wanted=0) {
         super("Recycle", room, room, wanted);
         this.body = new Hauler();
     }
@@ -30,9 +30,10 @@ class Recycle extends Task {
     static doTask(creep) {
         // Move to room if assigned
         if (creep.memory.task.tgt && creep.room.name != creep.memory.task.tgt) {
-            console.log(creep.memory.task.tgt)
-            console.log(new RoomPosition(25,25,creep.memory.task.tgt))
-            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}})
+            console.log(creep.pos);
+            console.log(creep.memory.task.tgt);
+            console.log(new RoomPosition(25,25,creep.memory.task.tgt));
+            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.tgt), {visualizePathStyle: {}});
             if (result != OK) {
                 creep.say("♻️" + result);
             } else {
