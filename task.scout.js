@@ -4,13 +4,28 @@ const ScoutBody = require("body.scout");
 
 class Scout extends Task {
 
-    constructor(room) {
-        super("Scout", room, room, 1 / config.PART_MULT, 1);
+    constructor(room, wanted) {
+        super("Scout", room, room, wanted / config.PART_MULT);
         this.body = new ScoutBody();
     }
 
     static getTasks() {
         let rooms = new Map();
+        for (let room in Memory.rooms) {
+            if (!Memory.rooms[room].sightings) {continue}
+            let sightings = Memory.rooms[room].sightings;
+
+            // Avoid duplicates
+            if (rooms.has(room)) {continue}
+
+            // Scout if hostiles recently sighted
+            for (let player in sightings) {
+                if (sightings[player] >= (Game.time - config.SCOUT_TICK)) {
+                    rooms.set(exit,new Scout(room, 2));
+                    break
+                }
+            }
+        }
         for (let room in Game.rooms) {
             for (let direction in Game.map.describeExits(room)) {
                 let exit = Game.map.describeExits(room)[direction];
@@ -20,18 +35,8 @@ class Scout extends Task {
                 // Scout if metrics outdated
                 let exit_room = Game.rooms[exit];
                 if (!exit_room && (!Memory.rooms[exit] || !Memory.rooms[exit].metrics || Memory.rooms[exit].metrics.tick < (Game.time - config.SCOUT_TICK))) {
-                    rooms.set(exit,new Scout(exit))
+                    rooms.set(exit,new Scout(exit, 1))
                     continue;
-                }
-
-                // Scout if hostiles recently sighted
-                if (Memory.rooms[exit] && Memory.rooms[exit].sightings) {
-                    for (let player in Memory.rooms[exit].sightings) {
-                        if (Memory.rooms[exit].sightings[player] >= (Game.time - config.SCOUT_TICK)) {
-                            rooms.set(exit,new Scout(exit));
-                            break
-                        }
-                    }
                 }
             }
         }

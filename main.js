@@ -102,11 +102,13 @@ module.exports.loop = function() {
         }
     }
 
+    // Update metrics
+    if (Game.time % config.METRIC_TICK == 0) {
+        utils.globalMetrics();
+    }
+
     // Assign tasks
     if (Game.time % config.TASK_TICK == 0) {
-        // Update metrics
-        utils.globalMetrics();
-    
         // Generate tasks
         let tasks = new Map();
         let sorted_tasks = [];
@@ -234,6 +236,22 @@ module.exports.loop = function() {
             }
         }
 
+        // Create visuals
+        let room_tasks = {}
+        for (let task of tasks.values()) {
+            if (!room_tasks[task.room]) {room_tasks[task.room] = []}
+            room_tasks[task.room].push(task);
+        }
+        for (let room in room_tasks) {
+            let i = 0;
+            for (; i < room_tasks[room].length; i++) {
+                let task = room_tasks[room][i];
+                visuals = Memory.rooms[room].visuals;
+                visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted)+" ("+task.workers+")", 0, 48.5-i, config.TASK_TICK, {align: "left"}]);
+            }
+            visuals.push(["[ Tasks: " + room_tasks[room].length + " ]", 0, 48.5-i, config.TASK_TICK, {align: "left"}]);
+        }
+
         // Recycle idle
         for (let room of avail_creeps.values()) {
             for (let body of room.values()) {
@@ -263,24 +281,25 @@ module.exports.loop = function() {
 
     // Paint visuals
     utils.showMetrics();
-    for (let room_name in Game.rooms) {
-        let room = Game.rooms[room_name];
-        if (!room.memory.visuals) {continue;}
+    for (let room_name in Memory.rooms) {
+        let visuals = Memory.rooms[room_name].visuals;
+        if (!visuals) {continue;}
+        let visual = new RoomVisual(room_name);
 
         let new_visuals = []
-        for (let i in room.memory.visuals) {
-            let [text, x, y, ticks, opts] = room.memory.visuals[i];
+        for (let i in visuals) {
+            let [text, x, y, ticks, opts] = visuals[i];
             if (ticks) {
                 if (typeof text == "object") {
                     for (let i = 0; i < text.length; i++) {
-                        room.visual.text(text[i], x, y + parseInt(i), opts);
+                        visual.text(text[i], x, y + parseInt(i), opts);
                     }
                 } else {
-                    room.visual.text(text, x, y, opts);
+                    visual.text(text, x, y, opts);
                 }
                 new_visuals.push([text, x, y, ticks-1, opts]);
             }
         }
-        room.memory.visuals = new_visuals;
+        Memory.rooms[room_name].visuals = new_visuals;
     }
 }

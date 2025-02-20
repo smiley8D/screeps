@@ -14,12 +14,14 @@ class Body {
         let i = 1;
         let body = this.base;
         let name = this.name + "-" + Game.time;
-        for (; i < limit * config.PART_MULT || limit == true; i++) {
-            let result = spawner.spawnCreep(body.concat(this.add), name, {dryRun: true});
-            if (result == OK) {
-                body = body.concat(this.add)
-            } else {
-                break;
+        if (this.add) {
+            for (; i < limit * config.PART_MULT || limit == true; i++) {
+                let result = spawner.spawnCreep(body.concat(this.add), name, {dryRun: true});
+                if (result == OK) {
+                    body = body.concat(this.add)
+                } else {
+                    break;
+                }
             }
         }
 

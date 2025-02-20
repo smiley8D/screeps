@@ -316,9 +316,9 @@ utils = {
             build_per: 0,
             upgrade: 0,
             upgrade_total: 0,
-            upgrade_per: 0,
+            level: 0,
             creeps: 0,
-            creeps_cost: 0
+            creeps_cost: 0,
         }
         for (let resource of RESOURCES_ALL) {
             metrics.resources.total[resource] = 0;
@@ -348,6 +348,25 @@ utils = {
             counts.harvest[resource] = 0;
         }
         return counts;
+    },
+
+    // Survey a visible room for map information
+    doSurvey: function(room) {
+        let survey = {
+            sources: room.find(FIND_SOURCES).length,
+            minerals: {},
+            deposits: {},
+            tick: Game.time
+        }
+        // Survey minerals
+        for (let mineral of room.find(FIND_MINERALS)) {
+            survey.minerals[mineral.mineralType] = mineral.density;
+        }
+        // Survey deposits
+        for (let deposit of room.find(FIND_DEPOSITS)) {
+            survey.deposits[deposit.depositType] = deposit.ticksToDecay;
+        }
+        return survey;
     },
 
     doChange: function(prev, cur, ticks) {
@@ -525,7 +544,7 @@ utils = {
             }
             metrics.upgrade_total += controller.progress;
             metrics.upgrade = controller.progress;
-            metrics.upgrade_per = metrics.upgrade / CONTROLLER_LEVELS[controller.level]
+            metrics.level = controller.level;
         }
 
         // Update memory
@@ -548,6 +567,7 @@ utils = {
         let change_mov;
         if (prev_metrics && prev_metrics.change_mov) { change_mov = utils.doMov(prev_metrics.change_mov, change)}
         else if (prev_metrics) { change_mov = change }
+        else { change_mov = null }
 
         // Get count
         let count;
@@ -559,7 +579,7 @@ utils = {
         else if (prev_metrics && prev_metrics.count) {  count_mov = utils.doMov(prev_metrics.count, utils.doChange(count, prev_metrics.count, Game.time - prev_metrics.tick))}
         else { count_mov = null }
 
-        room.memory.metrics = {
+        return {
             last: last,
             last_mov: last_mov,
             change: change,
@@ -575,9 +595,15 @@ utils = {
         // Reset if needed
         if (!Memory.metrics) { utils.reset() }
 
-        // Compute room metrics
         for (let room_name in Game.rooms) {
-            utils.roomMetrics(Game.rooms[room_name]);
+            // Compute room metrics
+            if (!Memory.rooms[room_name]) { Memory.rooms[room_name] = {}}
+            Memory.rooms[room_name].metrics = utils.roomMetrics(Game.rooms[room_name]);
+
+            // Survey if needed
+            if (!Memory.rooms[room_name].survey || Memory.rooms[room_name].survey.tick < (Game.time - config.SURVEY_TICK)) {
+                Memory.rooms[room_name].survey = utils.doSurvey(Game.rooms[room_name]);
+            }
         }
 
         // Compute global metrics
@@ -585,13 +611,22 @@ utils = {
 
     // Display metrics visuals
     showMetrics() {
+        // Scouting information on world map (in alpha so disabled for now)
+        for (let room_name in Memory.rooms) {
+            if (!Memory.rooms[room_name].metrics || !Memory.rooms[room_name].metrics.tick) {continue}
+            let time = Game.time - Memory.rooms[room_name].metrics.tick;
+            if (Game.rooms[room_name]) { time = 0 }
+            Game.map.visual.text(time, new RoomPosition(25,25,room_name))
+        }
+
         // Room metrics
-        for (let room_name in Game.rooms) {
-            let room = Game.rooms[room_name];
+        for (let room_name in Memory.rooms) {
+            let metrics;
+            let visual = new RoomVisual(room_name);
 
             // Show global metrics
-            if (Memory.metrics) {
-                let metrics = Memory.metrics;
+            metrics = Memory.metrics;
+            if (metrics) {
 
                 // Build visuals
                 let text = ["[ Shard: " + Game.shard.name+ " ]"];
@@ -601,23 +636,23 @@ utils = {
 
                 // Apply visuals
                 for (let i = 0; i < text.length; i++) {
-                    room.visual.text(text[i], 49, parseInt(i) + 0.5, {align: "right"});
+                    visual.text(text[i], 49, i + 0.5, {align: "right"});
                 }
             }
 
             // Show room metrics
-            if (room.memory.metrics && room.memory.metrics.change_mov && room.memory.metrics.count_mov) {
-                let metrics = room.memory.metrics;
+            metrics = Memory.rooms[room_name].metrics;
+            let survey = Memory.rooms[room_name].survey;
+            if (metrics && metrics.change_mov && metrics.count_mov) {
 
                 // Build visuals
-                let text = ["[ Room: " + room.name + " (" + (Game.time - metrics.tick) + ") ]"];
+                let text = ["[ Room: " + room_name + " (" + (Game.time - metrics.tick) + ") ]"];
 
-                if (room.controller) {
-                    // Upgrade/controller info
-                    text.push("RCL " + (room.controller.level + 1) + ": " + (room.controller.progressTotal - room.controller.progress) +
-                        " (" + (Math.round(10000*room.controller.progress/room.controller.progressTotal)/100) + "%) @ " + Math.round(metrics.change_mov.upgrade_total) +
-                        "/t (" + Math.ceil(room.controller.progressTotal / metrics.change_mov.upgrade_total) + " t)")
-                }
+                // Upgrade/controller info
+                let progress_total = CONTROLLER_LEVELS[metrics.last.level];
+                text.push("RCL " + (metrics.last.level) + ": " + (progress_total - metrics.last.upgrade) +
+                    " (" + (Math.round(10000*metrics.last.upgrade/progress_total)/100) + "%) @ " + Math.round(metrics.change_mov.upgrade_total) +
+                    "/t (" + Math.ceil((progress_total- metrics.last.upgrade) / metrics.change_mov.upgrade_total) + " t)");
 
                 // Repair & build info
                 if (metrics.last.damage) {text.push(
@@ -650,11 +685,16 @@ utils = {
                     let transfer = metrics.change_mov.resources.total[RESOURCE_ENERGY];
                     if (transfer > 0) {outflow_total += transfer}
                     else {inflow_total -= transfer}
-    
+
                     // In
                     if (inflow_total) {text.push("[ Energy Inflows ]")}
+                    if (survey) {
+
+                    } else {
+
+                    }
                     if (metrics.count_mov.harvest[RESOURCE_ENERGY]) {text.push("Harvested: " + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY])/100) + " (" + (Math.round(1000*metrics.count_mov.harvest[RESOURCE_ENERGY]/inflow_total)/10)
-                    + "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(room.find(FIND_SOURCES).length))/10) + "% eff)")}
+                    + ((survey) ? "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(survey.sources))/10) + "% eff)" : "%)"))}
                     if (transfer < 0) {text.push("Transfer: " + (Math.round(-100*transfer)/100) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + "%)")}
     
                     // Out
@@ -668,11 +708,11 @@ utils = {
 
                 // Apply visuals
                 for (let i = 0; i < text.length; i++) {
-                    room.visual.text(text[i], 0, parseInt(i) + 0.5, {align: "left"});
+                    visual.text(text[i], 0, i + 0.5, {align: "left"});
                 }
             } else {
                 // Show indicator that metrics are loading
-                room.visual.text("[ Room: " + room.name + " metrics loading... ]", 0, 0.5, {align: "left"});
+                visual.text("[ Room: " + room_name + " ]", 0, 0.5, {align: "left"});
             }
         }
     },
@@ -709,7 +749,7 @@ utils = {
     },
 
     // Clear visuals & metrics
-    reset: function(room_name=null, metrics=false, sightings=false, neighbors=false) {
+    reset: function(room_name=null, metrics=false, sightings=false, neighbors=false, survey=false) {
         if (room_name) {
             if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
             let memory = Memory.rooms[room_name];
@@ -720,19 +760,21 @@ utils = {
             if (neighbors || !memory.neighbors) {
                 memory.neighbors = utils.getNearbyRooms([room_name]);
             }
+            if (survey || !memory.survey) {
+                memory.survery = null;
+                if (Game.rooms[room_name]) { memory.survey = utils.doSurvey(Game.rooms[room_name]) }
+            }
             if (metrics || !memory.metrics) {
                 memory.metrics = null;
-            }
-            if (Game.rooms[room_name]) {
-                utils.roomMetrics(Game.rooms[room_name]);
+                if (Game.rooms[room_name]) { memory.metrics = utils.roomMetrics(Game.rooms[room_name]) }
             }
         } else {
             for (let room_name in Game.rooms) {
-                utils.reset(room_name, metrics, sightings, neighbors);
+                utils.reset(room_name, metrics, sightings, neighbors, survey);
             }
             for (let room_name in Memory.rooms) {
                 if (Game.rooms[room_name]) {continue}
-                utils.reset(room_name, metrics, sightings, neighbors);
+                utils.reset(room_name, metrics, sightings, neighbors, survey);
             }
             Memory.metrics = {
                 cpu_mov: 0

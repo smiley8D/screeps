@@ -1,6 +1,8 @@
 module.exports = {
     CLEANUP_TICK: 50,
     TASK_TICK: 10,
+    METRIC_TICK: 10,
+    SURVEY_TICK: 500,
     MOV_N: 0.2,
     DMG_THRESHOLD: 0.9,
     PART_MULT: 2,

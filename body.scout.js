@@ -5,7 +5,7 @@ class Scout extends Body {
     constructor() {
         super();
         this.base = [MOVE];
-        this.add = [MOVE];
+        this.add = null;
 
         this.name = "Scout";
     }
