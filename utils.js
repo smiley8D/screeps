@@ -16,19 +16,15 @@ utils = {
             opts[opt] = in_opts[opt];
         }
 
-        // Check current src
-        let src = Game.getObjectById(creep.memory.curSrc);
-        if (src && ((src.resourceType == resource || (src.resourceType && !resource)) || (src.store && src.store.getUsedCapacity(resource)))) { return src; }
-
         // Find new src
         let srcs = [];
         if (opts.trash) {
             // Drops
             srcs.push(creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (d) => (d.resourceType == resource || !resource) && (opts.partial || d.amount >= creep.store.getFreeCapacity(resource))}));
             // Tombstones
-            srcs.push(creep.pos.findClosestByPath(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource) && (opts.partial || t.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
+            srcs.push(creep.pos.findClosestByPath(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource) && (opts.partial || t.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource))}));
             // Ruin
-            srcs.push(creep.pos.findClosestByPath(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource) && (opts.partial || r.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
+            srcs.push(creep.pos.findClosestByPath(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource) && (opts.partial || r.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource))}));
         }
         // Containers
         if (opts.containers) {
@@ -51,7 +47,7 @@ utils = {
         for (let i in srcs) {
             if (srcs[i]) { valid_srcs.push(srcs[i]) }
         }
-        src = creep.pos.findClosestByPath(valid_srcs);
+        let src = creep.pos.findClosestByPath(valid_srcs);
 
         // Update cache
         if (src) {
