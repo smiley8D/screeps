@@ -1,14 +1,15 @@
 const utils = require("utils");
 const config = require("config");
 
-const Mine = require("task.mine");
-const Repair = require("task.repair");
 const Build = require("task.build");
-const Upgrade = require("task.upgrade");
-const Stock = require("task.stock");
-const Recycle = require("task.recycle");
+const Claim = require("task.claim");
 const Dismantle = require("task.dismantle");
+const Mine = require("task.mine");
+const Recycle = require("task.recycle");
+const Repair = require("task.repair");
 const Scout = require("task.scout");
+const Stock = require("task.stock");
+const Upgrade = require("task.upgrade");
 
 const TASKS = {
     "Mine": Mine,
@@ -16,6 +17,7 @@ const TASKS = {
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,
+    "Claim": Claim,
     "Recycle": Recycle,
     "Dismantle": Dismantle,
     "Scout": Scout
@@ -262,7 +264,7 @@ module.exports.loop = function() {
         }
     }
 
-    // Do tasks
+    // Order creeps
     for (let creepname in Game.creeps) {
         let creep = Game.creeps[creepname];
 
@@ -271,6 +273,13 @@ module.exports.loop = function() {
             TASKS[creep.memory.task.name].doTask(creep);
         } else if (creep.memory.body) {
             creep.memory.task = new Recycle().compress();
+        }
+
+        // Contact handling
+
+        // Move to correct room
+        if (creep.memory.room && (creep.memory.room != creep.room || creep.pos.x % 49 == 0 || creep.pos.y % 49 == 0)) {
+            creep.moveTo(new RoomPosition(25, 25, creep.memory.room));
         }
     }
 

@@ -16,12 +16,8 @@ class Recycle extends Task {
     static doTask(creep) {
         // Move to room if assigned
         if (creep.memory.task.room && creep.room.name != creep.memory.task.room) {
-            let result = creep.moveTo(new RoomPosition(25,25,creep.memory.task.room), {visualizePathStyle: {}});
-            if (result != OK) {
-                creep.say("♻️" + result);
-            } else {
-                creep.say("♻️");
-            }
+            creep.memory.room = creep.memory.task.room;
+            creep.say("♻️" + creep.memory.task.room);
             return;
         }
 
