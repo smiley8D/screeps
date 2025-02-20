@@ -6,12 +6,16 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/screeps": "^3.3.8",
     "grunt": "^1.6.1",
     "grunt-cli": "^1.5.0",
     "grunt-contrib-clean": "^2.0.1",
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-uglify": "^5.2.2",
     "grunt-screeps": "^1.5.0",
-    "time-grunt": "^1.4.0"
+    "grunt-sync": "^0.8.2",
+    "grunt-ts": "^6.0.0-beta.22",
+    "time-grunt": "^1.4.0",
+    "typescript": "^5.7.3"
   }
 }

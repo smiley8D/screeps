@@ -278,7 +278,7 @@ module.exports.loop = function() {
         // Contact handling
 
         // Move to correct room
-        if (creep.memory.room && (creep.memory.room != creep.room || creep.pos.x % 49 == 0 || creep.pos.y % 49 == 0)) {
+        if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 == 0 || creep.pos.y % 49 == 0)) {
             creep.moveTo(new RoomPosition(25, 25, creep.memory.room));
         }
     }

@@ -17,21 +17,24 @@ class Mine extends Task {
             room = Game.rooms[room];
 
             // Check room owned
-            if (!room.controller || !room.controller.my) {continue}
+            if (!room.controller || !room.controller.my) { continue }
 
             // Find mineables
-            for (let source of room.find(FIND_SOURCES).concat(room.find(FIND_MINERALS, {filter: (m) => m.pos.lookFor(LOOK_STRUCTURES).length }))) {
+            for (let source of room.find(FIND_SOURCES).concat(room.find(FIND_MINERALS, { filter: (m) => m.pos.lookFor(LOOK_STRUCTURES).length }))) {
                 // Calculate parking spots
                 let spots = 0;
-                for (let x = source.pos.x-1; x <= source.pos.x+1; x++) {
-                    for (let y = source.pos.y-1; y <= source.pos.y+1; y++) {
-                        if (source.room.getTerrain().get(x,y) == 0) { spots++; }
+                for (let x = source.pos.x - 1; x <= source.pos.x + 1; x++) {
+                    for (let y = source.pos.y - 1; y <= source.pos.y + 1; y++) {
+                        if (source.room.getTerrain().get(x, y) == 0) { spots++; }
                     }
                 }
 
                 // Determine wanted
                 let wanted = 4 / config.PART_MULT;
-                if (source.mineralType ) { wanted = Math.max(0, Math.log(source.mineralAmount)) }
+                if (source.mineralType) {
+                    wanted = Math.max(0, Math.log(source.mineralAmount));
+                    spots = 1;
+                }
                 tasks.push(new Mine(source.id, room.name, wanted, spots));
             }
         }
@@ -59,7 +62,7 @@ class Mine extends Task {
             // Space in inventory, mine
             creep.memory.curDst = null;
             result = creep.harvest(target)
-            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(target, {visualizePathStyle: {}}) }
+            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(target, { visualizePathStyle: {} }) }
         } else {
             // Full inventory, depo
             for (let cur_resource of RESOURCES_ALL) {
