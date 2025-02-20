@@ -21,7 +21,7 @@ class Scout extends Task {
             // Scout if hostiles recently sighted
             for (let player in sightings) {
                 if (sightings[player] >= (Game.time - config.SCOUT_TICK)) {
-                    rooms.set(exit,new Scout(room, 2));
+                    rooms.set(room,new Scout(room, 2));
                     break
                 }
             }
