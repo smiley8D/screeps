@@ -20,13 +20,10 @@ class Upgrade extends Task {
             if (!room.controller.my) {continue}
             if (!room.memory.metrics.last_mov.resources[RESOURCE_ENERGY]) {continue}
 
-            // Get flows
+            // Determine workers
             let metrics = room.memory.metrics;
-            let outflow_no_upgrade = metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.last_mov.creeps_cost;
-            let transfer = metrics.change_mov.resources[RESOURCE_ENERGY].total;
-            if (transfer > 0) {outflow_no_upgrade += transfer}
-
-            tasks.push(new Upgrade(room.name, outflow_no_upgrade*.8));
+            let avail = metrics.change_mov.resources[RESOURCE_ENERGY].total + metrics.count_mov.upgrade_spend;
+            tasks.push(new Upgrade(room.name, avail*.8));
         }
         return tasks;
     }
