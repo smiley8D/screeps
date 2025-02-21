@@ -31,7 +31,7 @@ class Scout extends Task {
             // Get rooms in range that need scanning
             let found_rooms = utils.searchNearbyRooms([spawner.room.name],
                 (r) => !rooms.has(r) && (flagged_rooms.has(r) || !Memory.rooms[r] || !Memory.rooms[r].metrics || (Memory.rooms[r].metrics.tick < (Game.time - config.SCOUT_TICK) ||
-                (Memory.rooms[r].sightings && Object.values(Memory.rooms[r].sightings).some((t) => t >= Game.time - config.SCOUT_TICK)))),
+                (Memory.rooms[r].sightings && Object.keys(Memory.rooms[r].sightings).some((k) => k != 'Invader' && Memory.rooms[r].sightings[k] >= Memory.rooms[r].metrics.tick / 5)))),
                 30,0);
             
             for (let i in found_rooms) {
