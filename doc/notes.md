@@ -53,6 +53,9 @@
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1
 
+## Scouting notes
+- CPU when searching ~30 range from 1 spawn: ~1
+
 ## Flags
 
 - Grey-Grey: Graveyard, place for unassigned creeps to gather out of the way
