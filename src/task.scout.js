@@ -10,7 +10,8 @@ class Scout extends Task {
         this.body = new ScoutBody();
         this.max_workers = 1;
         this.emoji = '📡';
-        this.max_search = 50;
+        // this.max_search = 50;
+        this.search_rooms = [room, spawn_room];
     }
 
     static getTasks() {
@@ -25,20 +26,20 @@ class Scout extends Task {
             if (flag.color == COLOR_BLUE) { flagged_rooms.set(flag.pos.roomName,flag) }
         }
 
-        // Check for rooms that need a refresh
-        for (let room in Memory.rooms) {
-            let metrics = Memory.rooms[room].metrics;
-            let sightings = Memory.rooms[room].sightings;
+        // // Check for rooms that need a refresh
+        // for (let room in Memory.rooms) {
+        //     let metrics = Memory.rooms[room].metrics;
+        //     let sightings = Memory.rooms[room].sightings;
 
 
-        }
+        // }
 
-        // Check neighbors
-        for (let room in Game.rooms) {
-            for (let dir in Game.map.describeExits(room)) {
-                let exit = Game.map.describeExits(room)[exit]
-            }
-        }
+        // // Check neighbors
+        // for (let room in Game.rooms) {
+        //     for (let dir in Game.map.describeExits(room)) {
+        //         let exit = Game.map.describeExits(room)[exit]
+        //     }
+        // }
 
         for (let spawner in Game.spawns) {
             spawner = Game.spawns[spawner];

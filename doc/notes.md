@@ -31,6 +31,7 @@
     - better integrates w/ current task assignment system
     - could possibly prioritize which paths to try first based on relative location to spawns, or even just most recent utilized spawn
     - searching would theoretically happen significantly less often
+- issue to consider w/ both, at far ranges I'm very unlikely to try new rooms bc I currently need to have something in the room when tasking is done, previous efforts using memory caused massive performance hit
 
 ## Flags
 
