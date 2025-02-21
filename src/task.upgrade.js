@@ -22,7 +22,7 @@ class Upgrade extends Task {
 
             // Determine workers
             let metrics = room.memory.metrics;
-            let avail = metrics.change_mov.resources[RESOURCE_ENERGY].total + metrics.count_mov.upgrade_spend;
+            let avail = metrics.change_mov.resources[RESOURCE_ENERGY].total + metrics.count_mov.upgrade_spend + metrics.count_mov.spawn - metrics.last_mov.creeps_cost;
             tasks.push(new Upgrade(room.name, avail*.8));
         }
         return tasks;
