@@ -153,6 +153,7 @@ module.exports.loop = function() {
                 task.workers >= task.max_workers) {
                 if (!avail_spawns.has(spawner.room.name)) {avail_spawns.set(spawner.room.name,[])}
                 let spawners = avail_spawns.get(spawner.room.name);
+                if (spawner.room.memory.metrics && spawner.room.memory.metrics.count && creep.memory.cost) { spawner.room.memory.metrics.count.spawn -= creep.memory.cost }
                 // Cancel unneeded spawns and mark available
                 spawner.spawning.cancel();
                 spawners.push(spawner);

@@ -35,7 +35,7 @@ class Body {
         if (result === OK) {
             // Update cost metrics
             if (spawner.room.memory.metrics && spawner.room.memory.metrics.count) { spawner.room.memory.metrics.count.spawn += cost }
-            console.log("Spawning " + name + " size " + i + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name,cost,limit);
+            console.log("Spawning " + name + " size " + i + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name);
             return [name, i];
         }
         return [null, null];
