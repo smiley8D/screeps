@@ -20,7 +20,7 @@ const TASKS = {
     "Claim": Claim,
     "Recycle": Recycle,
     "Dismantle": Dismantle,
-    "Scout": Scout
+    // "Scout": Scout
 }
 
 module.exports.loop = function() {
@@ -112,13 +112,11 @@ module.exports.loop = function() {
         }
     }
 
-    // Update metrics
-    if (Game.time % config.METRIC_TICK === 0 && Game.cpu.bucket == 10000) {
+    // Heavy lifting activities
+    if (Game.time % config.HEAVY_TICK === 0 && Game.cpu.bucket == 10000) {
+        // Update metrics
         utils.globalMetrics();
-    }
 
-    // Assign tasks
-    if (Game.time % config.TASK_TICK === 0 && Game.cpu.bucket == 10000) {
         // Generate tasks
         let tasks = new Map();
         let sorted_tasks = [];
@@ -271,6 +269,7 @@ module.exports.loop = function() {
             for (let body of room.values()) {
                 for (let creep of body) {
                     creep.memory.task = new Recycle().compress();
+                    creep.memory.room = null;
                 }
             }
         }

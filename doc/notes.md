@@ -2,7 +2,6 @@
 
 - Performance
     - Look into switching to raw memory, compressing repeated keys
-    - Automatically decrease metrics & tasking frequency? Base on bucket usage?
 - Calculate replacement time from distance to nearest spawn
     - Store creep's spawn and calculate current linear distance?
 - Metrics on survey
@@ -29,6 +28,9 @@
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%
 - Modify current method to just cache results
+- Track last attempt time (reset when creep actually reaches) to avoid spamming unreachable places
+- See above on room cost function to try better routing
+- Research path caching, possibly integrate w/ efforts like GTFOTR to reduce path finding attempts
 
 ## Logistics notes
 - All logistically-relevant creeps have a primary purpose, they perform logistics in whatever fashion most quickly serves that purpose
