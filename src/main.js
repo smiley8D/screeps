@@ -261,9 +261,9 @@ module.exports.loop = function() {
             for (; i < room_tasks[room].length; i++) {
                 let task = room_tasks[room][i];
                 visuals = Memory.rooms[room].visuals;
-                visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted)+" ("+task.workers+")", 0, 48.5-i, config.TASK_TICK, {align: "left"}]);
+                visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted)+" ("+task.workers+")", 0, 48.5-i, Game.time, {align: "left"}]);
             }
-            visuals.push(["[ Tasks: " + room_tasks[room].length + " ]", 0, 48.5-i, config.TASK_TICK, {align: "left"}]);
+            visuals.push(["[ Tasks: " + room_tasks[room].length + " ]", 0, 48.5-i, Game.time, {align: "left"}]);
         }
 
         // Recycle idle
@@ -316,7 +316,7 @@ module.exports.loop = function() {
         let new_visuals = []
         for (let i in visuals) {
             let [text, x, y, ticks, opts] = visuals[i];
-            if (ticks) {
+            if (Memory.rooms[room_name].metrics && ticks >= Memory.rooms[room_name].metrics.tick) {
                 if (typeof text === "object") {
                     for (let i = 0; i < text.length; i++) {
                         visual.text(text[i], x, y + parseInt(i), opts);
@@ -324,7 +324,7 @@ module.exports.loop = function() {
                 } else {
                     visual.text(text, x, y, opts);
                 }
-                new_visuals.push([text, x, y, ticks-1, opts]);
+                new_visuals.push([text, x, y, ticks, opts]);
             }
         }
         Memory.rooms[room_name].visuals = new_visuals;

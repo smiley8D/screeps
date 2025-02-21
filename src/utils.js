@@ -404,11 +404,11 @@ utils = {
                 metrics.hits += structure.hits;
                 metrics.hits_max += structure.hitsMax;
                 if (structure.hits < structure.hitsMax * 0.1) {
-                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
                 } else if (structure.hits < structure.hitsMax * 0.5) {
-                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
                 } else if (structure.hits < structure.hitsMax) {
-                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, Game.time]);
                 }
             } else if (structure.hitsMax && (structure.structureType === STRUCTURE_WALL || structure.structureType === STRUCTURE_RAMPART)) {
                 // Configurable wall upgrade threshold
@@ -416,11 +416,11 @@ utils = {
                 metrics.hits += Math.min(structure.hits, structure.hitsMax * config.DEFENSE_PER);
                 metrics.hits_max += structure.hitsMax * config.DEFENSE_PER;
                 if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.1) {
-                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, Game.time]);
                 } else if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.5) {
-                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, Game.time]);
                 } else if (structure.hits < (structure.hitsMax * config.DEFENSE_PER)) {
-                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, Game.time]);
                 }
             }
 
@@ -443,13 +443,13 @@ utils = {
                 if (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_STORAGE) {
                     if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => f.color === COLOR_GREY || f.color === COLOR_ORANGE).length) {
                         // Flagged as empty
-                        if (structure.store.getUsedCapacity()) { room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
+                        if (structure.store.getUsedCapacity()) { room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, Game.time]) }
                         for (let resource of resources) {
                             metrics.resources[resource].over += structure.store.getUsedCapacity(resource);
                         }
                     } else if (structure.pos.lookFor(LOOK_FLAGS).filter((f) => utils.flag_resource[f.color]).length) {
                         // Flagged as fill
-                        if (structure.store.getFreeCapacity(utils.flag_resource[structure.pos.lookFor(LOOK_FLAGS)[0].color])) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
+                        if (structure.store.getFreeCapacity(utils.flag_resource[structure.pos.lookFor(LOOK_FLAGS)[0].color])) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]) }
                         metrics.resources[utils.flag_resource[structure.pos.lookFor(LOOK_FLAGS)[0].color]].under += structure.store.getFreeCapacity(utils.flag_resource[structure.pos.lookFor(LOOK_FLAGS)[0].color]);
                     } else {
                         // Non-flagged container/storage, build average
@@ -467,7 +467,7 @@ utils = {
                     // Not a container or storage, always fill
                     for (let resource of resources) {
                         metrics.resources[resource].under += structure.store.getFreeCapacity(resource);
-                        if (structure.store.getFreeCapacity(resource)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
+                        if (structure.store.getFreeCapacity(resource)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]) }
                     }
                 }
             }
@@ -486,10 +486,10 @@ utils = {
                 let diff = structure.store.getCapacity(resource) * ((structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)) - metrics.resources[resource].fill_avg);
                 if (diff > 0) {
                     metrics.resources[resource].over += diff;
-                    room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, Game.time]);
                 } else if (diff < 0) {
                     metrics.resources[resource].under -= diff;
-                    room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]);
+                    room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]);
                 }
             }
         }
@@ -551,7 +551,7 @@ utils = {
         for (let site of room.find(FIND_CONSTRUCTION_SITES)) {
             metrics.build += site.progress;
             metrics.build_max += site.progressTotal;
-            room.memory.visuals.push(["🔨"+(Math.round(100*site.progress / site.progressTotal))+"%", site.pos.x, site.pos.y, config.TASK_TICK]);
+            room.memory.visuals.push(["🔨"+(Math.round(100*site.progress / site.progressTotal))+"%", site.pos.x, site.pos.y, Game.time]);
         }
         if (metrics.build_max) { metrics.build_per = metrics.build / metrics.build_max }
 
