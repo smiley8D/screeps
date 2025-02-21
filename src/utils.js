@@ -760,7 +760,6 @@ utils = {
             src = room;
         }
         let dist = dists[room][0];
-        // console.log(room,dist,src);
 
         // Run callback
         if (func) {

@@ -125,7 +125,6 @@ module.exports.loop = function() {
         for (let task_name in TASKS) {
             for (let task of TASKS[task_name].getTasks()) {
                 if (task.wanted <= 0) {continue}
-                if (tasks.has(task.id)) {console.log("Duplicate task:",task.id)}
                 tasks.set(task.id, task)
                 task.i = sorted_tasks.length;
                 sorted_tasks.push(task);
@@ -180,7 +179,7 @@ module.exports.loop = function() {
                 // Mark available
                 if (!avail_creeps.has(creep.memory.body)) {avail_creeps.set(creep.memory.body,new Map())}
                 let creeps = avail_creeps.get(creep.memory.body);
-                if (!creeps.get(creep.room.name)) { creeps.set(creep.room.name, []) }
+                if (!creeps.has(creep.room.name)) { creeps.set(creep.room.name, []) }
                 creep.memory.task = null;
                 creeps.get(creep.room.name).push(creep);
             }
@@ -196,11 +195,10 @@ module.exports.loop = function() {
                 continue;
             }
 
-            // console.log(task.id,"wants",task.wanted-task.parts,task.body.name);
             // Try creeps and spawners in range of search rooms
             let creep;
             let size;
-            let room = utils.searchNearbyRooms(task.search_rooms, task.max_search, (r,d) => avail_spawns.get(r) || (avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(r)), 'first');
+            let room = utils.searchNearbyRooms(task.search_rooms.slice(0), task.max_search, ((r,d) => avail_spawns.has(r) || (avail_creeps.has(task.body.name) && avail_creeps.get(task.body.name).has(r))), 'first');
             if (room && avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(room)) {
                 // Assign available creep
                 creep = avail_creeps.get(task.body.name).get(room).pop();
