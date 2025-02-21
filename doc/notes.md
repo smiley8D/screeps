@@ -1,41 +1,54 @@
 ## TODO
 
-- Improve caching/src & dst finding
-    - Use a clear and consistent approach to caching/cleaning cache for srcs and dsts
-    - Consider a Task.assign method to blast away cache on first assignment, including target room
-- Logistics
-    - See above on improved caching, hopefully would offer improved performance
-    - Multi-room logistics
-        - Allow findSrc & findDst to search nearby rooms? Probably just look at storage.
-        - Automated room resupply? Would it even be needed if above point is added?
-    - Flag-based approach still seems ideal, easily to manually control and add automation later
-- Tasking
-    - Investigate viability of current tasking system (especially logistics)
-        - Performance hit of constant rerouting/assignment
-        - Is there meat here that isn't needed? Should this be that dynamic? (it does add flexibility and resilience, but also offset by complexity)
-        - Consider fixed paths intead? Possibly build roads along them automatically?
-- Automated building
-- Memory usage is a problem and not sustainable
+- Performance
     - Look into switching to raw memory, compressing repeated keys
-    - VERY HIGH PRIORITY, this is currently eating ~7 CPU / tick
+    - Automatically decrease metrics & tasking frequency? Base on bucket usage?
 - Calculate replacement time from distance to nearest spawn
     - Store creep's spawn and calculate current linear distance?
-- Check if creep could up replaced w/ larger size
-    - Deliberate oversize seemed to mitigate this, reintroduce, but maybe cap below total size of task?
-- Re-add spawn cost flow, use it for calculating totals, keep creep flow for info
 - Metrics on survey
 - Metrics on last sighted (including in game map), add other events?
+- Spawn reserves/failsafe procotols
+    - Some system should already be in to spawn haulers w/ work part if no other creeps
+    - Maintain a reserve, determine when it should be used (ex. no more spawn energy + trying to spawn an energy stocker?)
+    - can have tasks flag if they are allowed to eat reserve, and/or create specific boot-up task? (could double as pioneers and reuse logic for new/underdeveloped rooms, specialize in 0 to 1)
+- Often dramatic difference in energy change & transfers, probably to do with counters being slightly off, look in to
+- Creep behaviors
+    - Consider/test GTFOTR again
+    - Combat stance (aggressive, neutral, avoid?), add to room cost function
+    - Room traversing (already in)
+- Diplomacy (integrate w/ behaviors)
+    - Player stance (ally, neutral, enemy?)
+    - Ignore neutrals in neutral territory, engage in owned
+    - Always engage enemies
+    - Ignore allies in all territory
+    - Switch neutral to enemy if attacked (consider territory?)
+    - Switch ally to enemy if attacked a sufficient amount (probably using a moving average) (consider territory?)
+    - Configurable no scouting of allies? Would be nice to set
+    - Per-room overrides? Ex some rooms always treat everyone/someones hostiles, etc.
 
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%
-- 1st method: iterate through spawns, search outward for rooms that need scouting
-    - This works decent enough w/ just 1 spawn but probably collapses completely w/ more
-    - Would prefer to not check every in range room every task update
-- 2nd method: iterate through rooms in memory (possibly create a sorted queue by last tick?), check rooms that need scouting, can break early bc ordered
-    - better integrates w/ current task assignment system
-    - could possibly prioritize which paths to try first based on relative location to spawns, or even just most recent utilized spawn
-    - searching would theoretically happen significantly less often
-- issue to consider w/ both, at far ranges I'm very unlikely to try new rooms bc I currently need to have something in the room when tasking is done, previous efforts using memory caused massive performance hit
+- Modify current method to just cache results
+
+## Logistics notes
+- All logistically-relevant creeps have a primary purpose, they perform logistics in whatever fashion most quickly serves that purpose
+- For most creeps, this is "i need resource x now" or (ex miners) "i need room to dump x resource now"
+- Stock is more complicated bc it tries to balance out resources, and it's current focus is ~50% split between sourcing and depoing
+- Modify findSrc/Dst to search by rooms, grabbing first w/ avail resource or avail space, moving there, then running like normal
+    - Would be really killer if could combine possible srcs/dsts from all adjacent rooms and search like that
+- Modify bestSrc/Dst to search by room, grabbing by highest % filled w/ resource or lowest % filled (depending on search)?
+    - this sounds complicated and possibly not ideal, need to rethink
+- Add ability for all src/dsts methods to interact w/ haulers, especially those on flags
+- Flag changes, keep as separate task but match appearance of stock (use flagname as tgt)
+    - Recognize if no container, then be the container
+    - If container, assign as log of amount filled (if flag empty) or amount missing (if flag resource)
+    - This is diff from stock, it has a primary task and uses the findSrc/Dst for fastest fulfillment
+    - Flags can be basis for auto building
+        - eventually a container should be placed there (see above behavior for assigned creep(s))
+        - eventually roads mapped from there
+        - spawn/storage positions picked to minimize total distance between all logi flags?
+    - Since I'll have tasks dedicated to flags, I shouldn't need to give them special treatment in bestSrc/Dst
+        - This means tash should have a higher priority which would be good
 
 ## Flags
 

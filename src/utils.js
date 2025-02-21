@@ -764,24 +764,43 @@ utils = {
         }
     },
 
-    // Search nearby rooms for a match with a callback
-    searchNearbyRooms: function(queue, check=null, limit=config.MAX_ROOM_SEARCH, amount=1, dists={}, cur=[]) {
+    // Search nearby rooms
+    //
+    // queue: Room name search queue. Sets starting room(s). Must be list of strings.
+    // limit: Maximum distance to search from a starting room.
+    // func: Optional callback function to use on room names. Behavior depends on method. Should accept room name and dist.
+    // method: Action to take should a callback succeed:
+    //  'first': Return name that passes. Because BFS, this will be the closest passable name.
+    //  'best': Recurse to limit and return the name the had the highest return value. Will not count null results.
+    //  'check': Recurse to limit and return a list of names that passed.
+    //  null: Return all rooms in limit. Func should also be null.
+    // dists can optionally be passed in to track src of room
+    searchNearbyRooms: function(queue, limit=config.MAX_ROOM_SEARCH, func=null, method=null, dists={}, cur=null, cur_best=null, src=null) {
+        // Initialize
+        if (cur === null && (method === 'check' || method === null)) { cur = [] }
+
         let room = queue.shift();
 
-        // Base case, goal met
-        if (cur.length === amount && amount === 1) { return cur[0] }
-        else if (cur.length === amount && amount > 0) { return cur }
+        // Queue exhausted, return cur
+        if (!room) { return cur }
 
-        // Add current room if initializing
-        if (dists[room] === undefined) {dists[room] = 0}
-        let dist = dists[room];
+        // Add current dist and set src if missing
+        if (dists[room] === undefined) {
+            dists[room] = [0,room];
+            src = room;
+        }
+        let dist = dists[room][0];
+        // console.log(room,dist,src);
 
-        // Base case, not found
-        if (!room && amount == 1) { return null }
-        else if (!room) { return cur }
-
-        // Check if room matches or no check function provided
-        if (check === null || check(room)) { cur.push(room) }
+        // Run callback
+        if (func) {
+            let result = func(room, dist);
+            if (method === 'first' && result) { return room }
+            if (method === 'best' && (cur_best === null || (result != null && result > cur_best))) { cur = room; cur_best = result }
+            if (method === 'check' && result) { cur.push(room) }
+        } else {
+            cur.push(room)
+        }
 
         // Queue neighbors if distance ok
         if (dist < limit) {
@@ -791,13 +810,13 @@ utils = {
                 // Queue if not duplicate
                 if (dists[neighbor] == undefined) {
                     queue.push(neighbor);
-                    dists[neighbor] = dist + 1;
+                    dists[neighbor] = [dist + 1,src];
                 }
             }
         }
 
         // Recurse
-        return utils.searchNearbyRooms(queue, check, limit, amount, dists, cur);
+        return utils.searchNearbyRooms(queue, limit, func, method, dists, cur, cur_best, src);
     },
 
     // Clear visuals & metrics

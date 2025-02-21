@@ -20,7 +20,7 @@ const TASKS = {
     "Claim": Claim,
     "Recycle": Recycle,
     "Dismantle": Dismantle,
-    // "Scout": Scout
+    "Scout": Scout
 }
 
 module.exports.loop = function() {
@@ -113,12 +113,12 @@ module.exports.loop = function() {
     }
 
     // Update metrics
-    if (Game.time % config.METRIC_TICK === 0) {
+    if (Game.time % config.METRIC_TICK === 0 && Game.cpu.bucket == 10000) {
         utils.globalMetrics();
     }
 
     // Assign tasks
-    if (Game.time % config.TASK_TICK === 0) {
+    if (Game.time % config.TASK_TICK === 0 && Game.cpu.bucket == 10000) {
         // Generate tasks
         let tasks = new Map();
         let sorted_tasks = [];
@@ -205,26 +205,23 @@ module.exports.loop = function() {
                 continue;
             }
 
-            // Try creeps and spawners in same or adjacent rooms
+            // console.log(task.id,"wants",task.wanted-task.parts,task.body.name);
+            // Try creeps and spawners in range of search rooms
             let creep;
             let size;
-            for (let i in task.search_rooms) {
-                let search_room = task.search_rooms[i];
-                let room = utils.searchNearbyRooms([search_room], (r) => avail_spawns.get(r) || (avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(r)), task.max_search);
-                if (room && avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(room)) {
-                    // Assign available creep
-                    creep = avail_creeps.get(task.body.name).get(room).pop();
-                    size = creep.memory.size;
-                    creep.memory.task = task.compress();
-                    if (avail_creeps.get(task.body.name).get(room).length === 0) {avail_creeps.get(task.body.name).delete(room)}
-                    if (avail_creeps.get(task.body.name).size === 0) {avail_creeps.delete(task.body.name)}
-                } else if (avail_spawns.get(room)) {
-                    // Use available spawner
-                    let spawner = avail_spawns.get(room).pop();
-                    if (avail_spawns.get(room).length === 0) {avail_spawns.delete(room)}
-                    [creep, size] = task.body.spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
-                }
-                if (creep) { break }
+            let room = utils.searchNearbyRooms(task.search_rooms, task.max_search, (r,d) => avail_spawns.get(r) || (avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(r)), 'first');
+            if (room && avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(room)) {
+                // Assign available creep
+                creep = avail_creeps.get(task.body.name).get(room).pop();
+                size = creep.memory.size;
+                creep.memory.task = task.compress();
+                if (avail_creeps.get(task.body.name).get(room).length === 0) {avail_creeps.get(task.body.name).delete(room)}
+                if (avail_creeps.get(task.body.name).size === 0) {avail_creeps.delete(task.body.name)}
+            } else if (avail_spawns.get(room)) {
+                // Use available spawner
+                let spawner = avail_spawns.get(room).pop();
+                if (avail_spawns.get(room).length === 0) {avail_spawns.delete(room)}
+                [creep, size] = task.body.spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
             }
 
             // Update task fullfillment
