@@ -20,8 +20,8 @@ class Stock extends Task {
             if (!room.controller || !room.controller.my) {continue}
 
             if (!room.memory.metrics) {continue}
-            for (let resource of RESOURCES_ALL) {
-                let parts = Math.max(0, Math.log(room.memory.metrics.last.resources.imbalance[resource]));
+            for (let resource in room.memory.metrics.last.resources) {
+                let parts = Math.max(0, Math.log(room.memory.metrics.last.resources[resource].imbalance));
                 tasks.push(new Stock(room.name, parts, resource));
             }
         }
@@ -81,10 +81,10 @@ class Stock extends Task {
             // Execute
             if (src) {
                 result = utils.doSrc(creep, src, resource);
-                if (result == ERR_NOT_ENOUGH_RESOURCES || result == ERR_FULL) { src = null }
+                if (result === ERR_NOT_ENOUGH_RESOURCES || result === ERR_FULL) { src = null }
             } else if (dst) {
                 result = utils.doDst(creep, dst, resource);
-                if (result == ERR_NOT_ENOUGH_RESOURCES || result == ERR_FULL) { dst = null }
+                if (result === ERR_NOT_ENOUGH_RESOURCES || result === ERR_FULL) { dst = null }
             }
 
             // Update cache

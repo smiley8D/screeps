@@ -6,6 +6,7 @@ class Upgrade extends Task {
 
     constructor(room, wanted) {
         super("Upgrade", room, room, wanted);
+        this.max_workers = 1;
     }
 
     static getTasks() {
@@ -18,7 +19,8 @@ class Upgrade extends Task {
 
             if (!room.memory.metrics) {continue}
             if (!room.controller.my) {continue}
-            tasks.push(new Upgrade(room.name, Math.log(room.memory.metrics.last_mov.resources.free[RESOURCE_ENERGY]) / config.PART_MULT));
+            if (!room.memory.metrics.last_mov.resources[RESOURCE_ENERGY]) {continue}
+            tasks.push(new Upgrade(room.name, Math.log(room.memory.metrics.last_mov.resources[RESOURCE_ENERGY].free)));
         }
         return tasks;
     }
@@ -42,8 +44,8 @@ class Upgrade extends Task {
             // Energy in inventory, upgrade and move closer
             creep.memory.curSrc = null;
             result = creep.upgradeController(controller);
-            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {}})  }
-            else if (result == OK) { creep.moveTo(controller, {visualizePathStyle: {}}) }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {}})  }
+            else if (result === OK) { creep.moveTo(controller, {visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);

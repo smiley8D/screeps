@@ -1,8 +1,8 @@
-Body = require("body");
+const Body = require("body");
 
 class Task {
 
-    constructor(name, tgt, room, wanted, max_workers=8) {
+    constructor(name, tgt, room, wanted) {
         // Body of assignable workers
         this.body = new Body();
 
@@ -18,17 +18,25 @@ class Task {
         // Room of task
         this.room = room;
 
+        // Rooms from which to search for available spawners and creeps
+        this.search_rooms = [room];
+
         // Number of workers assigned
         this.workers = 0;
 
         // Maximum number of allowed workers
-        this.max_workers = max_workers;
+        this.max_workers = 8;
 
         // Total size of parts assigned
         this.parts = 0;
 
         // Total parts wanted
         this.wanted = wanted;
+
+        // Speech bubble for assigned creeps
+        this.emoji = null;
+
+        this.max_search = 1;
     }
 
     // Generate list of tasks
@@ -40,7 +48,8 @@ class Task {
             id: this.id,
             name: this.name,
             tgt: this.tgt,
-            room: this.room
+            room: this.room,
+            emoji: this.emoji
         }
     }
 

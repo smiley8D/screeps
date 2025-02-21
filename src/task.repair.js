@@ -37,36 +37,36 @@ class Repair extends Task {
         let result;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
-            creep.memory.curStructure = null;
+            creep.memory.curTgt = null;
             result = utils.doDst(creep, utils.findDst(creep));
         } else if (creep.store.getUsedCapacity()) {
             // Energy in inventory, repair
             creep.memory.curSrc = null;
 
             // Get structure
-            let structure = Game.getObjectById(creep.memory.curStructure);
-            if (!structure || structure.hitsMax == structure.hits) {
+            let structure = Game.getObjectById(creep.memory.curTgt);
+            if (!structure || structure.hitsMax === structure.hits) {
                 // Mixed priority of damage & distance
-                structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (o.owner == null || o.my) && o.hits  < 100});
+                structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) => (!o.owner || o.my) && o.hits  < 100});
                 if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) =>
-                    (o.owner == null || o.my) && o.hits / o.hitsMax < ((o.structureType == STRUCTURE_WALL || o.structureType == STRUCTURE_RAMPART) ? 0.1 * config.DEFENSE_PER : 0.1)}) }
+                    (!o.owner || o.my) && o.hits / o.hitsMax < ((o.structureType === STRUCTURE_WALL || o.structureType === STRUCTURE_RAMPART) ? 0.1 * config.DEFENSE_PER : 0.1)}) }
                 if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) =>
-                    (o.owner == null || o.my) && o.hits / o.hitsMax < ((o.structureType == STRUCTURE_WALL || o.structureType == STRUCTURE_RAMPART) ? 0.5 * config.DEFENSE_PER : 0.5)}) }
+                    (!o.owner || o.my) && o.hits / o.hitsMax < ((o.structureType === STRUCTURE_WALL || o.structureType === STRUCTURE_RAMPART) ? 0.5 * config.DEFENSE_PER : 0.5)}) }
                 if (!structure) { structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter:(o) =>
-                    (o.owner == null || o.my) && o.hits < ((o.structureType == STRUCTURE_WALL || o.structureType == STRUCTURE_RAMPART) ? o.hitsMax * config.DEFENSE_PER : o.hitsMax)}) }
+                    (!o.owner || o.my) && o.hits < ((o.structureType === STRUCTURE_WALL || o.structureType === STRUCTURE_RAMPART) ? o.hitsMax * config.DEFENSE_PER : o.hitsMax)}) }
                 if (structure) {
-                    creep.memory.curStructure = structure.id;
+                    creep.memory.curTgt = structure.id;
                 } else {
-                    creep.memory.curStructure = null;
+                    creep.memory.curTgt = null;
                 }
             }
 
             // Attempt repair
             result = creep.repair(structure);
-            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
-            creep.memory.curStructure = null;
+            creep.memory.curTgt = null;
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
         }
 

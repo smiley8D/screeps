@@ -5,7 +5,7 @@ const Claimer = require("body.claimer");
 class Claim extends Task {
 
     constructor(room, wanted) {
-        super("Claim", room, room, wanted / config.PART_MULT);
+        super("Claim", room, room, wanted);
         this.body = new Claimer();
     }
 
@@ -37,8 +37,8 @@ class Claim extends Task {
         // Claim controller
         let controller = Game.rooms[creep.memory.task.room].controller;
         let result = creep.claimController(controller);
-        if (result == ERR_GCL_NOT_ENOUGH) { result = creep.reserveController(controller) }
-        if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {stroke: "#991eff"}}) }
+        if (result === ERR_GCL_NOT_ENOUGH) { result = creep.reserveController(controller) }
+        if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {stroke: "#991eff"}}) }
 
         if (result != OK) {
             creep.say("🚩" + result);

@@ -17,7 +17,7 @@ class Dismantle extends Task {
             if (flag.room) {
                 // Can get detailed information
                 let structures = flag.pos.lookFor(LOOK_STRUCTURES);
-                if (structures.length == 0) {
+                if (structures.length === 0) {
                     // Site no longer exists, remove flag
                     flag.remove();
                 } else {
@@ -57,7 +57,7 @@ class Dismantle extends Task {
 
             // Attempt dismantle
             result = creep.dismantle(structure);
-            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
         } else {
             // Full inventory, depo
             result = utils.doDst(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);

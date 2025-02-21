@@ -42,22 +42,22 @@ class Build extends Task {
             creep.memory.curSrc = null;
 
             // Get structure
-            let structure = Game.getObjectById(creep.memory.curStructure);
+            let structure = Game.getObjectById(creep.memory.curTgt);
             if (!structure) {
                 structure = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
                 if (structure) {
-                    creep.memory.curStructure = structure.id;
+                    creep.memory.curTgt = structure.id;
                 } else {
-                    creep.memory.curStructure = null;
+                    creep.memory.curTgt = null;
                 }
             }
 
             // Attempt build
             result = creep.build(structure);
-            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
-            creep.memory.curStructure = null;
+            creep.memory.curTgt = null;
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
         }
 

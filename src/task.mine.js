@@ -7,8 +7,9 @@ const config = require("config");
 class Mine extends Task {
 
     constructor(source, room, wanted, spots) {
-        super("Mine", source, room, wanted, spots);
+        super("Mine", source, room, wanted);
         this.body = new Miner();
+        this.max_workers = spots;
     }
 
     static getTasks() {
@@ -25,13 +26,13 @@ class Mine extends Task {
                 let spots = 0;
                 for (let x = source.pos.x - 1; x <= source.pos.x + 1; x++) {
                     for (let y = source.pos.y - 1; y <= source.pos.y + 1; y++) {
-                        if (source.room.getTerrain().get(x, y) == 0) { spots++; }
+                        if (source.room.getTerrain().get(x, y) === 0) { spots++; }
                     }
                 }
 
-                // Determine wanted
-                let wanted = 4 / config.PART_MULT;
-                if (source.mineralType) {
+                // Determine wanted - HARDCODED TO MATCH SOURCE MAX RATE FOR NOW
+                let wanted = 6;
+                if (source instanceof Mineral) {
                     wanted = Math.max(0, Math.log(source.mineralAmount));
                     spots = 1;
                 }
@@ -56,19 +57,18 @@ class Mine extends Task {
         let result;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
             // Inventory contains wrong resource, depo
-            creep.memory.curSrc = null;
             result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
         } else if (creep.store.getFreeCapacity() >= 2 * (2 * (creep.memory.size - 1) + 1)) {
             // Space in inventory, mine
             creep.memory.curDst = null;
             result = creep.harvest(target)
-            if (result == ERR_NOT_IN_RANGE) { result = creep.moveTo(target, { visualizePathStyle: {} }) }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(target, { visualizePathStyle: {} }) }
         } else {
             // Full inventory, depo
             for (let cur_resource of RESOURCES_ALL) {
                 if (creep.store.getUsedCapacity(cur_resource)) {
                     result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
-                    if (result == OK || result == ERR_NOT_IN_RANGE) { break }
+                    if (result === OK || result === ERR_NOT_IN_RANGE) { break }
                 }
             }
         }

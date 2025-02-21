@@ -5,7 +5,7 @@ class Miner extends Body {
     constructor() {
         super();
         this.base = [WORK,CARRY,MOVE];
-        this.add = [WORK,WORK];
+        this.add = [WORK];
 
         this.name = "Miner";
     }

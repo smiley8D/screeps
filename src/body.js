@@ -9,15 +9,15 @@ class Body {
         this.name = "Worker";
     }
 
-    spawn(spawner, task, limit=true) {
+    spawn(spawner, task, limit=null) {
         // Get maximum affordable size
         let i = 1;
         let body = this.base;
         let name = this.name + "-" + Game.time;
         if (this.add) {
-            for (; i < limit * config.PART_MULT || limit == true; i++) {
+            for (; i < limit || limit === null; i++) {
                 let result = spawner.spawnCreep(body.concat(this.add), name, {dryRun: true});
-                if (result == OK) {
+                if (result === OK) {
                     body = body.concat(this.add)
                 } else {
                     break;
@@ -31,11 +31,11 @@ class Body {
             cost += BODYPART_COST[body[i]];
         }
 
-        let result = spawner.spawnCreep(body, name, {memory: {task: task.compress(), body: this.name, size: i, cost: cost}});
-        if (result == OK) {
+        let result = spawner.spawnCreep(body, name, {memory: {task: task.compress(), room: task.room, body: this.name, size: i, cost: cost}});
+        if (result === OK) {
             // Update cost metrics
-            if (spawner.room.memory.metrics) { spawner.room.memory.metrics.count.spawn += cost }
-            console.log("Spawning " + name + " size " + i + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name);
+            if (spawner.room.memory.metrics && spawner.room.memory.metrics.count) { spawner.room.memory.metrics.count.spawn += cost }
+            console.log("Spawning " + name + " size " + i + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name,cost,limit);
             return [name, i];
         }
         return [null, null];

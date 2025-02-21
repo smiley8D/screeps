@@ -1,58 +1,57 @@
 const Task = require("task");
 const config = require("config");
+const utils = require("utils");
 const ScoutBody = require("body.scout");
 
 class Scout extends Task {
 
-    constructor(room, wanted) {
-        super("Scout", room, room, wanted / config.PART_MULT);
+    constructor(room, spawn_room) {
+        super("Scout", room, room, 1);
         this.body = new ScoutBody();
+        this.max_workers = 1;
+        this.emoji = '📡';
+        this.search_rooms = [room, spawn_room];
     }
 
     static getTasks() {
         let rooms = new Map();
-        for (let room in Memory.rooms) {
-            if (!Memory.rooms[room].sightings) {continue}
-            let sightings = Memory.rooms[room].sightings;
+        let flagged_rooms = new Map();
+        // Add scout flags
+        for (let flag in Game.flags) {
+            flag = Game.flags[flag];
 
-            // Avoid duplicates
-            if (rooms.has(room)) {continue}
+            // Only match scout flags
+            if (flag.color == COLOR_BLUE) { flagged_rooms.set(flag.pos.roomName,flag) }
+        }
 
-            // Scout if hostiles recently sighted
-            for (let player in sightings) {
-                if (sightings[player] >= (Game.time - config.SCOUT_TICK)) {
-                    rooms.set(room,new Scout(room, 2));
-                    break
-                }
+        // Check all spawners
+        for (let spawner in Game.spawns) {
+            spawner = Game.spawns[spawner];
+
+            // Get rooms in range that need scanning
+            let found_rooms = utils.searchNearbyRooms([spawner.room.name],
+                (r) => !rooms.has(r) && (flagged_rooms.has(r) || !Memory.rooms[r] || !Memory.rooms[r].metrics || (Memory.rooms[r].metrics.tick < (Game.time - config.SCOUT_TICK) ||
+                (Memory.rooms[r].sightings && Object.values(Memory.rooms[r].sightings).some((t) => t >= Game.time - config.SCOUT_TICK)))),
+                30,0);
+            
+            for (let i in found_rooms) {
+                if (!rooms.has(found_rooms[i])) { rooms.set(found_rooms[i], new Scout(found_rooms[i], spawner.room.name)) }
             }
         }
-        for (let room in Game.rooms) {
-            for (let direction in Game.map.describeExits(room)) {
-                let exit = Game.map.describeExits(room)[direction];
-                // Avoid duplicates
-                if (rooms.has(exit)) {continue}
 
-                // Scout if metrics outdated
-                let exit_room = Game.rooms[exit];
-                if (!exit_room && (!Memory.rooms[exit] || !Memory.rooms[exit].metrics || Memory.rooms[exit].metrics.tick < (Game.time - config.SCOUT_TICK))) {
-                    rooms.set(exit,new Scout(exit, 1))
-                    continue;
-                }
-            }
-        }
         return rooms.values();
     }
 
     static doTask(creep) {
-        // Move to room
-        if (creep.room.name != creep.memory.task.room) {
-            creep.memory.room = creep.memory.task.room;
-            creep.say("📡" + creep.memory.task.room);
-            return;
-        }
-
-        creep.say("📡");
+    // Move to room
+    if (creep.room.name != creep.memory.task.tgt) {
+        creep.memory.room = creep.memory.task.tgt;
+        creep.say("📡" + creep.memory.task.tgt);
+        return;
     }
+
+    creep.say("📡");
+}
 
 }
 

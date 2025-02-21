@@ -28,10 +28,17 @@ module.exports.loop = function() {
     if (!Memory.metrics) {utils.reset()}
 
     // Cleanup memory
-    if (Game.time % config.CLEANUP_TICK == 0) {
+    if (Game.time % config.CLEANUP_TICK === 0) {
+        // Cleanup dead creeps
         for (let creep in Memory.creeps) {
             if (!Game.creeps[creep]) {
                 delete Memory.creeps[creep];
+            }
+        }
+        // Cleanup unvisited rooms metrics
+        for (let room in Memory.rooms) {
+            if (Memory.rooms[room].metrics && Memory.rooms[room].metrics.tick < (Game.time - (config.SCOUT_TICK * 2))) {
+                delete Memory.rooms[room].metrics;
             }
         }
     }
@@ -54,17 +61,17 @@ module.exports.loop = function() {
         let events = room.getEventLog();
         for (let i in events) {
             let event = events[i];
-            if (event.event == EVENT_BUILD) {
+            if (event.event === EVENT_BUILD) {
                 build += event.data.amount;
                 // Docs say this should be energySpent, but this field doesn't exist
                 build_spend += event.data.amount;
-            } else if (event.event == EVENT_REPAIR) {
+            } else if (event.event === EVENT_REPAIR) {
                 repair += event.data.amount;
                 repair_spend += event.data.energySpent;
-            } else if (event.event == EVENT_UPGRADE_CONTROLLER) {
+            } else if (event.event === EVENT_UPGRADE_CONTROLLER) {
                 upgrade += event.data.amount;
                 upgrade_spend += event.data.energySpent;
-            } else if (event.event == EVENT_HARVEST) {
+            } else if (event.event === EVENT_HARVEST) {
                 let resource = RESOURCE_ENERGY;
                 let tgt = Game.getObjectById(event.data.targetId );
                 if (tgt.resourceType) { resource = tgt.resourceType }
@@ -81,6 +88,7 @@ module.exports.loop = function() {
         room.memory.metrics.count.upgrade += upgrade;
         room.memory.metrics.count.upgrade_spend += upgrade_spend;
         for (let resource in harvest) {
+            if (!room.memory.metrics.count.harvest[resource]) { room.memory.metrics.count.harvest[resource] = 0 }
             room.memory.metrics.count.harvest[resource] += harvest[resource];
         }
     }
@@ -90,7 +98,7 @@ module.exports.loop = function() {
         let room = Game.rooms[room_name];
         let enemies;
         if (enemies = room.find(FIND_HOSTILE_CREEPS).concat(room.find(FIND_HOSTILE_POWER_CREEPS),room.find(FIND_HOSTILE_STRUCTURES),room.find(FIND_HOSTILE_SPAWNS))) {
-            for (let tower of room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType == STRUCTURE_TOWER})) {
+            for (let tower of room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType === STRUCTURE_TOWER})) {
                 let hostile = tower.pos.findClosestByRange(enemies);
                 if (hostile) {
                     tower.attack(hostile);
@@ -105,12 +113,12 @@ module.exports.loop = function() {
     }
 
     // Update metrics
-    if (Game.time % config.METRIC_TICK == 0) {
+    if (Game.time % config.METRIC_TICK === 0) {
         utils.globalMetrics();
     }
 
     // Assign tasks
-    if (Game.time % config.TASK_TICK == 0) {
+    if (Game.time % config.TASK_TICK === 0) {
         // Generate tasks
         let tasks = new Map();
         let sorted_tasks = [];
@@ -129,8 +137,6 @@ module.exports.loop = function() {
         let avail_spawns = new Map();
         for (let spawner in Game.spawns) {
             spawner = Game.spawns[spawner];
-            if (!avail_spawns.has(spawner.room.name)) {avail_spawns.set(spawner.room.name,[])}
-            let spawners = avail_spawns.get(spawner.room.name);
 
             // Check if spawning
             let creep;
@@ -138,11 +144,15 @@ module.exports.loop = function() {
             if (spawner.spawning) { creep = Game.creeps[spawner.spawning.name] }
             if (creep) { task = tasks.get(creep.memory.task.id) }
             if (!creep) {
+                if (!avail_spawns.has(spawner.room.name)) {avail_spawns.set(spawner.room.name,[])}
+                let spawners = avail_spawns.get(spawner.room.name);
                 // Mark available
                 spawners.push(spawner);
             } else if (!task ||
                 task.parts >= task.wanted ||
                 task.workers >= task.max_workers) {
+                if (!avail_spawns.has(spawner.room.name)) {avail_spawns.set(spawner.room.name,[])}
+                let spawners = avail_spawns.get(spawner.room.name);
                 // Cancel unneeded spawns and mark available
                 spawner.spawning.cancel();
                 spawners.push(spawner);
@@ -153,8 +163,6 @@ module.exports.loop = function() {
         let avail_creeps = new Map();
         for (let creep in Game.creeps) {
             creep = Game.creeps[creep];
-            if (!avail_creeps.has(creep.room.name)) {avail_creeps.set(creep.room.name,new Map())}
-            let creeps = avail_creeps.get(creep.room.name);
 
             if (creep.ticksToLive > 100 && creep.memory.task && tasks.has(creep.memory.task.id) &&
             tasks.get(creep.memory.task.id).parts < tasks.get(creep.memory.task.id).wanted &&
@@ -178,14 +186,16 @@ module.exports.loop = function() {
                 }
             } else if (creep.memory.body && creep.ticksToLive > 100) {
                 // Mark available
-                if (!creeps.get(creep.memory.body)) { creeps.set(creep.memory.body, []) }
+                if (!avail_creeps.has(creep.memory.body)) {avail_creeps.set(creep.memory.body,new Map())}
+                let creeps = avail_creeps.get(creep.memory.body);
+                if (!creeps.get(creep.room.name)) { creeps.set(creep.room.name, []) }
                 creep.memory.task = null;
-                creeps.get(creep.memory.body).push(creep);
+                creeps.get(creep.room.name).push(creep);
             }
         }
 
         // Assign creeps
-        while (sorted_tasks.length > 0 && sorted_tasks[0].parts < sorted_tasks[0].wanted) {
+        while (sorted_tasks.length > 0 && sorted_tasks[0].parts < sorted_tasks[0].wanted && (avail_spawns.size || avail_creeps.size)) {
             let task = sorted_tasks[0];
 
             // Skip if already at max_workers
@@ -194,44 +204,48 @@ module.exports.loop = function() {
                 continue;
             }
 
-            // Try creeps and spawners by distance
+            // Try creeps and spawners in same or adjacent rooms
             let creep;
             let size;
-            for (let i in Memory.rooms[task.room].neighbors) {
-                room = Memory.rooms[task.room].neighbors[i];
-
-                // Try creep
-                if (avail_creeps.get(room) && avail_creeps.get(room).get(task.body.name)) {
-                    creep = avail_creeps.get(room).get(task.body.name).pop();
-                }
-                if (creep) {
-                    creep.memory.task = task.compress();
+            for (let i in task.search_rooms) {
+                let search_room = task.search_rooms[i];
+                let room = utils.searchNearbyRooms([search_room], (r) => avail_spawns.get(r) || (avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(r)), task.max_search);
+                if (room && avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(room)) {
+                    // Assign available creep
+                    creep = avail_creeps.get(task.body.name).get(room).pop();
                     size = creep.memory.size;
-                    break;
-                }
-
-                // Try spawner
-                if (avail_spawns.get(room)) {
+                    creep.memory.task = task.compress();
+                    if (avail_creeps.get(task.body.name).get(room).length === 0) {avail_creeps.get(task.body.name).delete(room)}
+                    if (avail_creeps.get(task.body.name).size === 0) {avail_creeps.delete(task.body.name)}
+                } else if (avail_spawns.get(room)) {
+                    // Use available spawner
                     let spawner = avail_spawns.get(room).pop();
-                    if (spawner) {
-                        [creep, size] = task.body.spawn(spawner, task, task.wanted - task.parts);
-                    }
+                    if (avail_spawns.get(room).length === 0) {avail_spawns.delete(room)}
+                    [creep, size] = task.body.spawn(spawner, task, task.wanted - task.parts);
                 }
-                if (creep) { break };
+                if (creep) { break }
             }
 
             // Update task fullfillment
             if (creep) {
+                if (creep.memory) {
+                    creep.memory.curSrc = null;
+                    creep.memory.curDst = null;
+                    creep.memory.room = null;
+                    creep.memory.curTgt = null;
+                }
                 task.parts += size;
                 task.workers++;
-                for (let i = 0; i < sorted_tasks.length - 1; i++) {
-                    // Compare to next task
-                    let next_task = sorted_tasks[i+1];
-                    if ((task.parts / task.wanted) <= (next_task.parts / next_task.wanted)) { break; }
-
-                    // Swap with next task
-                    sorted_tasks[i] = next_task;
-                    sorted_tasks[i+1] = task;
+                if (avail_creeps.size || avail_spawns.size) {
+                    for (let i = 0; i < sorted_tasks.length - 1; i++) {
+                        // Compare to next task
+                        let next_task = sorted_tasks[i+1];
+                        if ((task.parts / task.wanted) <= (next_task.parts / next_task.wanted)) { break; }
+    
+                        // Swap with next task
+                        sorted_tasks[i] = next_task;
+                        sorted_tasks[i+1] = task;
+                    }
                 }
             } else {
                 sorted_tasks.shift();
@@ -268,18 +282,24 @@ module.exports.loop = function() {
     for (let creepname in Game.creeps) {
         let creep = Game.creeps[creepname];
 
+        // Contact handling
+
+        // Room navigation
+        if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 === 0 || creep.pos.y % 49 === 0)) {
+            creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {resusePath: 50, visualizePathStyle: {}});
+            if (creep.memory.task && creep.memory.task.emoji) {
+                creep.say(creep.memory.task.emoji + creep.memory.room);
+            } else {
+                creep.say("⛵" + creep.memory.room);
+            }
+            continue;
+        }
+ 
         // Do task
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             TASKS[creep.memory.task.name].doTask(creep);
         } else if (creep.memory.body) {
             creep.memory.task = new Recycle().compress();
-        }
-
-        // Contact handling
-
-        // Move to correct room
-        if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 == 0 || creep.pos.y % 49 == 0)) {
-            creep.moveTo(new RoomPosition(25, 25, creep.memory.room));
         }
     }
 
@@ -299,7 +319,7 @@ module.exports.loop = function() {
         for (let i in visuals) {
             let [text, x, y, ticks, opts] = visuals[i];
             if (ticks) {
-                if (typeof text == "object") {
+                if (typeof text === "object") {
                     for (let i = 0; i < text.length; i++) {
                         visual.text(text[i], x, y + parseInt(i), opts);
                     }
