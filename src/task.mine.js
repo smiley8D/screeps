@@ -6,6 +6,8 @@ const config = require("config");
 
 class Mine extends Task {
 
+    static emoji = '⛏️';
+
     constructor(source, room, wanted, spots) {
         super("Mine", source, room, wanted);
         this.body = new Miner();
@@ -73,11 +75,7 @@ class Mine extends Task {
             }
         }
 
-        if (result != OK) {
-            creep.say("⛏️" + result);
-        } else {
-            creep.say("⛏️");
-        }
+        return result;
     }
 
 }

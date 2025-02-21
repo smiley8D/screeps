@@ -5,6 +5,8 @@ Task = require("task");
 
 class Repair extends Task {
 
+    static emoji = '🔧';
+
     constructor(room, wanted) {
         super("Repair", room, room, wanted);
     }
@@ -70,11 +72,7 @@ class Repair extends Task {
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
         }
 
-        if (result != OK) {
-            creep.say("🔧" + result);
-        } else {
-            creep.say("🔧");
-        }
+        return result;
     }
 
 }

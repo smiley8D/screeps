@@ -2,6 +2,9 @@ const Body = require("body");
 
 class Task {
 
+    // Speech bubble for assigned creeps
+    static emoji = '❔';
+
     constructor(name, tgt, room, wanted) {
         // Body of assignable workers
         this.body = new Body();
@@ -33,10 +36,10 @@ class Task {
         // Total parts wanted
         this.wanted = wanted;
 
-        // Speech bubble for assigned creeps
-        this.emoji = null;
-
         this.max_search = 1;
+
+        // Optional additional details for result bubble
+        this.detail = '';
     }
 
     // Generate list of tasks
@@ -49,7 +52,7 @@ class Task {
             name: this.name,
             tgt: this.tgt,
             room: this.room,
-            emoji: this.emoji
+            detail: this.detail
         }
     }
 

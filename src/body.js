@@ -31,7 +31,7 @@ class Body {
             cost += BODYPART_COST[body[i]];
         }
 
-        let result = spawner.spawnCreep(body, name, {memory: {task: task.compress(), room: task.room, body: this.name, size: i, cost: cost}});
+        let result = spawner.spawnCreep(body, name, {memory: {task: task.compress(), body: this.name, size: i, cost: cost}});
         if (result === OK) {
             // Update cost metrics
             if (spawner.room.memory.metrics && spawner.room.memory.metrics.count) { spawner.room.memory.metrics.count.spawn += cost }

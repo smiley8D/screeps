@@ -5,11 +5,12 @@ const ScoutBody = require("body.scout");
 
 class Scout extends Task {
 
+    static emoji = '📡';
+
     constructor(room, spawn_room) {
         super("Scout", room, room, 1);
         this.body = new ScoutBody();
         this.max_workers = 1;
-        this.emoji = '📡';
         // this.max_search = 50;
         this.search_rooms = [room, spawn_room];
     }
@@ -49,15 +50,13 @@ class Scout extends Task {
     }
 
     static doTask(creep) {
-    // Move to room
-    if (creep.room.name != creep.memory.task.tgt) {
-        creep.memory.room = creep.memory.task.tgt;
-        creep.say("📡" + creep.memory.task.tgt);
-        return;
+        // Move to room
+        if (creep.room.name != creep.memory.task.tgt) {
+            creep.memory.room = creep.memory.task.tgt;
+            creep.say("📡" + creep.memory.task.tgt);
+            return;
+        }
     }
-
-    creep.say("📡");
-}
 
 }
 

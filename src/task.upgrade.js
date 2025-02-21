@@ -4,6 +4,8 @@ const config = require("config");
 
 class Upgrade extends Task {
 
+    static emoji = '⬆️';
+
     constructor(room, wanted) {
         super("Upgrade", room, room, wanted);
     }
@@ -20,10 +22,8 @@ class Upgrade extends Task {
             if (!room.controller.my) {continue}
             if (!room.memory.metrics.last_mov.resources[RESOURCE_ENERGY]) {continue}
 
-            // Determine workers
-            let metrics = room.memory.metrics;
-            let avail = metrics.change_mov.resources[RESOURCE_ENERGY].total + metrics.count_mov.upgrade_spend + metrics.count_mov.spawn - metrics.last_mov.creeps_cost;
-            tasks.push(new Upgrade(room.name, avail*.8));
+            // Create tasks
+            tasks.push(new Upgrade(room.name, 10*(room.memory.metrics.last_mov.resources[RESOURCE_ENERGY].free/100000)));
         }
         return tasks;
     }
@@ -54,11 +54,7 @@ class Upgrade extends Task {
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
         }
 
-        if (result != OK) {
-            creep.say("⬆️" + result);
-        } else {
-            creep.say("⬆️");
-        };
+        return result;
     }
 
 }

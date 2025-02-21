@@ -3,6 +3,8 @@ utils = require("utils");
 
 class Build extends Task {
 
+    static emoji = '🔨';
+
     constructor(room, wanted) {
         super("Build", room, room, wanted);
     }
@@ -61,11 +63,7 @@ class Build extends Task {
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
         }
 
-        if (result != OK) {
-            creep.say("🔨" + result);
-        } else {
-            creep.say("🔨");
-        };
+        return result;
     }
 
 }

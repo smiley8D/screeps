@@ -5,10 +5,13 @@ Hauler = require("body.hauler");
 
 class Stock extends Task {
 
+    static emoji = '📦';
+
     constructor(room, wanted, resource) {
         super("Stock", room + ":" + resource, room, wanted);
         this.body = new Hauler();
         this.resource = resource;
+        this.detail = resource[0];
     }
 
     static getTasks() {
@@ -35,6 +38,7 @@ class Stock extends Task {
             name: this.name,
             tgt: this.tgt,
             room: this.room,
+            detail: this.detail,
             resource: this.resource
         }
     }
@@ -94,11 +98,7 @@ class Stock extends Task {
             else { creep.memory.curDst = null }
         }
 
-        if (result != OK) {
-            creep.say("📦" + resource[0] + result);
-        } else {
-            creep.say("📦" + resource[0]);
-        }
+        return result;
     }
 
 }

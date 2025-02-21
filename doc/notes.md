@@ -24,6 +24,9 @@
     - Switch ally to enemy if attacked a sufficient amount (probably using a moving average) (consider territory?)
     - Configurable no scouting of allies? Would be nice to set
     - Per-room overrides? Ex some rooms always treat everyone/someones hostiles, etc.
+- Task return values
+    - Have creep loop handle speech bubbles, use return value
+    - If return value is a valid room name, do room routing
 
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%
@@ -33,6 +36,7 @@
 - Research path caching, possibly integrate w/ efforts like GTFOTR to reduce path finding attempts
 
 ## Logistics notes
+- Link and terminal handling, rn grouped w/ things like towers
 - All logistically-relevant creeps have a primary purpose, they perform logistics in whatever fashion most quickly serves that purpose
 - For most creeps, this is "i need resource x now" or (ex miners) "i need room to dump x resource now"
 - Stock is more complicated bc it tries to balance out resources, and it's current focus is ~50% split between sourcing and depoing

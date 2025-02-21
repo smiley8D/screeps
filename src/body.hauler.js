@@ -4,8 +4,8 @@ class Hauler extends Body {
 
     constructor() {
         super();
-        this.base = [CARRY,MOVE];
-        this.add = [CARRY,MOVE];
+        this.base = [CARRY,CARRY,MOVE];
+        this.add = [CARRY,CARRY,MOVE];
     
         this.name = "Hauler";
     }

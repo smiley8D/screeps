@@ -9,6 +9,7 @@ const Recycle = require("task.recycle");
 const Repair = require("task.repair");
 const Scout = require("task.scout");
 const Stock = require("task.stock");
+const StockFlag = require("task.stock_flag");
 const Upgrade = require("task.upgrade");
 
 const TASKS = {
@@ -17,6 +18,7 @@ const TASKS = {
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,
+    "StockFlag": StockFlag,
     "Claim": Claim,
     "Recycle": Recycle,
     "Dismantle": Dismantle,
@@ -269,26 +271,24 @@ module.exports.loop = function() {
     // Order creeps
     for (let creepname in Game.creeps) {
         let creep = Game.creeps[creepname];
+        let result = ERR_NOT_FOUND;
 
         // Contact handling
-
-        // Room navigation
-        if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 === 0 || creep.pos.y % 49 === 0)) {
-            creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {resusePath: 50, visualizePathStyle: {}});
-            if (creep.memory.task && creep.memory.task.emoji) {
-                creep.say(creep.memory.task.emoji + creep.memory.room);
-            } else {
-                creep.say("🗺️" + creep.memory.room);
-            }
-            continue;
-        }
  
         // Do task
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
-            TASKS[creep.memory.task.name].doTask(creep);
+            result = TASKS[creep.memory.task.name].doTask(creep);
         } else if (creep.memory.body) {
-            creep.memory.task = new Recycle().compress();
+            result = creep.memory.task = new Recycle().compress();
         }
+
+        // Room navigation
+        if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 === 0 || creep.pos.y % 49 === 0)) {
+            result = creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {resusePath: 50, visualizePathStyle: {}});
+        }
+
+        // Show result
+        if (creep.memory.task && TASKS[creep.memory.task.name]) { creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + (result != OK ? result : '')) }
     }
 
     // Note CPU usage

@@ -4,6 +4,8 @@ const Claimer = require("body.claimer");
 
 class Claim extends Task {
 
+    static emoji = '🚩';
+
     constructor(room, wanted) {
         super("Claim", room, room, wanted);
         this.body = new Claimer();
@@ -40,11 +42,7 @@ class Claim extends Task {
         if (result === ERR_GCL_NOT_ENOUGH) { result = creep.reserveController(controller) }
         if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {stroke: "#991eff"}}) }
 
-        if (result != OK) {
-            creep.say("🚩" + result);
-        } else {
-            creep.say("🚩");
-        };
+        return result;
     }
 
 }

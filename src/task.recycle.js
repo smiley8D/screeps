@@ -4,6 +4,8 @@ const Hauler = require("body.hauler");
 
 class Recycle extends Task {
 
+    static emoji = '♻️';
+
     constructor(room=false, wanted=0) {
         super("Recycle", room, room, wanted);
         this.body = new Hauler();
@@ -53,11 +55,7 @@ class Recycle extends Task {
             return;
         }
 
-        if (result != OK && result != ERR_NOT_FOUND) {
-            creep.say("♻️" + result);
-        } else if (result != ERR_NOT_FOUND) {
-            creep.say("♻️");
-        }
+        return result;
     }
 
 }
