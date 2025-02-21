@@ -21,6 +21,10 @@
 - Calculate replacement time from distance to nearest spawn
     - Store creep's spawn and calculate current linear distance?
 - Check if creep could up replaced w/ larger size
+    - Deliberate oversize seemed to mitigate this, reintroduce, but maybe cap below total size of task?
+- Re-add spawn cost flow, use it for calculating totals, keep creep flow for info
+- Metrics on survey
+- Metrics on last sighted (including in game map), add other events?
 
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%

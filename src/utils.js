@@ -695,7 +695,7 @@ utils = {
                     "Repairing: " + metrics.last.damage + " (" + (Math.round(10000*metrics.last.hits/metrics.last.hits_max)/100) + ((metrics.change_mov) ? "%) @ " +
                     Math.round(-1 * metrics.change_mov.damage) + "/t (" + Math.ceil(metrics.last.damage / (-1 * metrics.change_mov.damage)) + " t)" : "%)")
                 )}
-                if (metrics.last.build) {text.push(
+                if (metrics.last.build_max) {text.push(
                     "Building: " + metrics.last.build + " (" + (Math.round(10000*metrics.last.build_per)/100) + ((metrics.change_mov) ? "%) @ " +
                     Math.round(metrics.change_mov.build) + "/t (" + Math.ceil(metrics.last.build_max / metrics.change_mov.build) + " t)" : "%)")
                 )}
@@ -715,7 +715,7 @@ utils = {
                 // Energy flows
                 if (metrics.last.resources[RESOURCE_ENERGY] && metrics.count_mov && metrics.change_mov && metrics.change_mov.resources[RESOURCE_ENERGY]) {
                     let inflow_total = metrics.count_mov.harvest[RESOURCE_ENERGY];
-                    let outflow_total = metrics.count_mov.upgrade_spend + metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.last_mov.creeps_cost;
+                    let outflow_total = metrics.count_mov.upgrade_spend + metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.count_mov.spawn;
                     let transfer = metrics.change_mov.resources[RESOURCE_ENERGY].total;
                     if (transfer > 0) {outflow_total += transfer}
                     else {inflow_total -= transfer}
@@ -735,8 +735,9 @@ utils = {
                     if (outflow_total) {text.push("[ Energy Outflows ]")}
                     if (metrics.count_mov.upgrade_spend) {text.push("Upgrades: " + (Math.round(100*metrics.count_mov.upgrade_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.upgrade_spend/outflow_total)/10) + "%)")}
                     if (metrics.count_mov.repair_spend) {text.push("Repairs: " + (Math.round(100*metrics.count_mov.repair_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.repair_spend/outflow_total)/10) + "%)")}
-                    // if (metrics.count_mov.spawn) {text.push("Spawns: " + (Math.round(100*metrics.count_mov.spawn)/100) + " (" + (Math.round(1000*metrics.count_mov.spawn/outflow_total)/10) + "%)")}
-                    if (metrics.last_mov.creeps_cost) {text.push("Creeps: " + (Math.round(100*metrics.last_mov.creeps_cost)/100) + " (" + (Math.round(1000*metrics.last_mov.creeps_cost/outflow_total)/10) + "%)")}
+                    if (metrics.count_mov.build_spend) {text.push("Builds: " + (Math.round(100*metrics.count_mov.build_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.build_spend/outflow_total)/10) + "%)")}
+                    if (metrics.count_mov.spawn || metrics.last_mov.creeps_cost) {text.push("Creeps: " + (Math.round(100*metrics.count_mov.spawn)/100) + " (" + (Math.round(1000*metrics.count_mov.spawn/outflow_total)/10)
+                    + "%) @ " + (Math.round(100*metrics.last_mov.creeps_cost)/100) + " (" + (Math.round(1000*metrics.last_mov.creeps_cost/outflow_total)/10) + "%)")}
                     if (transfer > 0) {text.push("Transfer: " + (Math.round(100*transfer)/100) + " (" + (Math.round(1000*transfer/outflow_total)/10) + "%)")}
                 }
 

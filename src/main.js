@@ -20,7 +20,7 @@ const TASKS = {
     "Claim": Claim,
     "Recycle": Recycle,
     "Dismantle": Dismantle,
-    "Scout": Scout
+    // "Scout": Scout
 }
 
 module.exports.loop = function() {
@@ -221,7 +221,7 @@ module.exports.loop = function() {
                     // Use available spawner
                     let spawner = avail_spawns.get(room).pop();
                     if (avail_spawns.get(room).length === 0) {avail_spawns.delete(room)}
-                    [creep, size] = task.body.spawn(spawner, task, task.wanted - task.parts);
+                    [creep, size] = task.body.spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
                 }
                 if (creep) { break }
             }

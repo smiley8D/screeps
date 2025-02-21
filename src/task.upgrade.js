@@ -6,7 +6,6 @@ class Upgrade extends Task {
 
     constructor(room, wanted) {
         super("Upgrade", room, room, wanted);
-        this.max_workers = 1;
     }
 
     static getTasks() {
@@ -20,7 +19,14 @@ class Upgrade extends Task {
             if (!room.memory.metrics) {continue}
             if (!room.controller.my) {continue}
             if (!room.memory.metrics.last_mov.resources[RESOURCE_ENERGY]) {continue}
-            tasks.push(new Upgrade(room.name, Math.log(room.memory.metrics.last_mov.resources[RESOURCE_ENERGY].free)));
+
+            // Get flows
+            let metrics = room.memory.metrics;
+            let outflow_no_upgrade = metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.last_mov.creeps_cost;
+            let transfer = metrics.change_mov.resources[RESOURCE_ENERGY].total;
+            if (transfer > 0) {outflow_no_upgrade += transfer}
+
+            tasks.push(new Upgrade(room.name, outflow_no_upgrade*.8));
         }
         return tasks;
     }
