@@ -19,7 +19,18 @@
     - Look into switching to raw memory, compressing repeated keys
     - VERY HIGH PRIORITY, this is currently eating ~7 CPU / tick
 - Calculate replacement time from distance to nearest spawn
+    - Store creep's spawn and calculate current linear distance?
 - Check if creep could up replaced w/ larger size
+
+## Scouting notes
+- CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%
+- 1st method: iterate through spawns, search outward for rooms that need scouting
+    - This works decent enough w/ just 1 spawn but probably collapses completely w/ more
+    - Would prefer to not check every in range room every task update
+- 2nd method: iterate through rooms in memory (possibly create a sorted queue by last tick?), check rooms that need scouting, can break early bc ordered
+    - better integrates w/ current task assignment system
+    - could possibly prioritize which paths to try first based on relative location to spawns, or even just most recent utilized spawn
+    - searching would theoretically happen significantly less often
 
 ## Flags
 

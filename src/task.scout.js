@@ -10,10 +10,11 @@ class Scout extends Task {
         this.body = new ScoutBody();
         this.max_workers = 1;
         this.emoji = '📡';
-        this.search_rooms = [room, spawn_room];
+        this.max_search = 50;
     }
 
     static getTasks() {
+        let start = Game.cpu.getUsed();
         let rooms = new Map();
         let flagged_rooms = new Map();
         // Add scout flags
@@ -24,7 +25,21 @@ class Scout extends Task {
             if (flag.color == COLOR_BLUE) { flagged_rooms.set(flag.pos.roomName,flag) }
         }
 
-        // Check all spawners
+        // Check for rooms that need a refresh
+        for (let room in Memory.rooms) {
+            let metrics = Memory.rooms[room].metrics;
+            let sightings = Memory.rooms[room].sightings;
+
+
+        }
+
+        // Check neighbors
+        for (let room in Game.rooms) {
+            for (let dir in Game.map.describeExits(room)) {
+                let exit = Game.map.describeExits(room)[exit]
+            }
+        }
+
         for (let spawner in Game.spawns) {
             spawner = Game.spawns[spawner];
 
@@ -39,6 +54,7 @@ class Scout extends Task {
             }
         }
 
+        console.log("Scout CPU:",Game.cpu.getUsed()-start);
         return rooms.values();
     }
 
