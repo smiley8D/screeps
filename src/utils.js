@@ -781,7 +781,7 @@ utils = {
         else if (!room) { return cur }
 
         // Check if room matches or no check function provided
-        if (!check && check(room)) { cur.push(room) }
+        if (check === null || check(room)) { cur.push(room) }
 
         // Queue neighbors if distance ok
         if (dist < limit) {
