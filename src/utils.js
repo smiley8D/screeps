@@ -304,7 +304,8 @@ utils = {
             fill_max: 0,
             fill_avg: 0,
             imbalance: 0,
-            free: 0
+            free: 0,
+            space: 0
         }
 
         return resources;
@@ -576,9 +577,15 @@ utils = {
         if (prev_metrics) {
             // Handle resources
             for (let resource in Object.assign({}, prev_metrics.last.resources, last.resources, prev_metrics.last_mov.resources)) {
-                if (!prev_metrics.last.resources[resource]) { prev_metrics.last.resources[resource] = utils.freshResourceMetrics() }
-                if (!last.resources[resource]) { last.resources[resource] = utils.freshResourceMetrics() }
-                if (!prev_metrics.last_mov.resources[resource]) { prev_metrics.last_mov.resources[resource] = last.resources[resource] }
+                if (last.resources[resource] || prev_metrics.last_mov.resources[resource] >= 0.01) {
+                    if (!prev_metrics.last.resources[resource]) { prev_metrics.last.resources[resource] = utils.freshResourceMetrics() }
+                    if (!prev_metrics.last_mov.resources[resource]) { prev_metrics.last_mov.resources[resource] = last.resources[resource] }
+                    if (!last.resources[resource]) { last.resources[resource] = utils.freshResourceMetrics() }
+                } else {
+                    delete last.resources[resource];
+                    delete prev_metrics.last.resources[resource];
+                    delete prev_metrics.last_mov.resources[resource];
+                }
             }
             last_mov = utils.doMov(prev_metrics.last_mov, last);
         } else { last_mov = last }
@@ -599,15 +606,20 @@ utils = {
         if (prev_metrics && prev_metrics.count_mov ) {
             // Handle resources
             for (let resource in Object.assign({}, prev_metrics.count_mov.harvest, prev_metrics.count.harvest)) {
-                if (!prev_metrics.count_mov.harvest[resource]) { prev_metrics.count_mov.harvest[resource] = 0 }
-                if (!prev_metrics.count.harvest[resource]) { prev_metrics.count.harvest[resource] = 0 }
-                count.harvest[resource] = 0;
+                if (prev_metrics.count.harvest[resource] || prev_metrics.count_mov.harvest[resource] >= 0.01) {
+                    if (!prev_metrics.count.harvest[resource]) { prev_metrics.count.harvest[resource] = 0 }
+                    if (!prev_metrics.count_mov.harvest[resource]) { prev_metrics.count_mov.harvest[resource] = 0 }
+                    count.harvest[resource] = 0;
+                } else {
+                    delete prev_metrics.count.harvest[resource];
+                    delete prev_metrics.count_mov.harvest[resource]
+                }
             }
         } else if (prev_metrics && prev_metrics.count) {
             // Handle resources
             for (let resource in prev_metrics.count.harvest) {
-                if (!prev_metrics.count.harvest[resource]) { prev_metrics.count.harvest[resource] = 0 }
-                count.harvest[resource] = 0;
+                if (prev_metrics.count.harvest[resource]) { count.harvest[resource] = 0 }
+                else { delete prev_metrics.count.harvest[resource] }
             }
         }
 
@@ -691,11 +703,11 @@ utils = {
                     "/t (" + Math.ceil((progress_total- metrics.last.upgrade) / metrics.change_mov.upgrade_total) + " t)" : "%)"));
 
                 // Repair & build info
-                if (metrics.last.damage) {text.push(
+                if (metrics.last.damage >= 0.01) {text.push(
                     "Repairing: " + metrics.last.damage + " (" + (Math.round(10000*metrics.last.hits/metrics.last.hits_max)/100) + ((metrics.change_mov) ? "%) @ " +
-                    Math.round(-1 * metrics.change_mov.damage) + "/t (" + Math.ceil(metrics.last.damage / (-1 * metrics.change_mov.damage)) + " t)" : "%)")
+                    Math.round(-1 * metrics.change_mov.damage) + ((metrics.change_mov.damage < 0) ? "/t (" + Math.ceil(metrics.last.damage / (-1 * metrics.change_mov.damage)) + " t)" : "/t") : "%)")
                 )}
-                if (metrics.last.build_max) {text.push(
+                if (metrics.last.build_max >= 0.01) {text.push(
                     "Building: " + metrics.last.build + " (" + (Math.round(10000*metrics.last.build_per)/100) + ((metrics.change_mov) ? "%) @ " +
                     Math.round(metrics.change_mov.build) + "/t (" + Math.ceil(metrics.last.build_max / metrics.change_mov.build) + " t)" : "%)")
                 )}
@@ -721,24 +733,24 @@ utils = {
                     else {inflow_total -= transfer}
 
                     // In
-                    if (inflow_total) {text.push("[ Energy Inflows ]")}
+                    if (inflow_total >= 0.01) {text.push("[ Energy Inflows ]")}
                     if (survey) {
 
                     } else {
 
                     }
-                    if (metrics.count_mov.harvest[RESOURCE_ENERGY]) {text.push("Harvested: " + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY])/100) + " (" + (Math.round(1000*metrics.count_mov.harvest[RESOURCE_ENERGY]/inflow_total)/10)
+                    if (metrics.count_mov.harvest[RESOURCE_ENERGY] >= 0.01) {text.push("Harvested: " + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY])/100) + " (" + (Math.round(1000*metrics.count_mov.harvest[RESOURCE_ENERGY]/inflow_total)/10)
                     + ((survey) ? "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(survey.sources))/10) + "% eff)" : "%)"))}
-                    if (transfer < 0) {text.push("Transfer: " + (Math.round(-100*transfer)/100) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + "%)")}
+                    if (transfer <= -0.01) {text.push("Transfer: " + (Math.round(-100*transfer)/100) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + "%)")}
     
                     // Out
-                    if (outflow_total) {text.push("[ Energy Outflows ]")}
-                    if (metrics.count_mov.upgrade_spend) {text.push("Upgrades: " + (Math.round(100*metrics.count_mov.upgrade_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.upgrade_spend/outflow_total)/10) + "%)")}
-                    if (metrics.count_mov.repair_spend) {text.push("Repairs: " + (Math.round(100*metrics.count_mov.repair_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.repair_spend/outflow_total)/10) + "%)")}
-                    if (metrics.count_mov.build_spend) {text.push("Builds: " + (Math.round(100*metrics.count_mov.build_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.build_spend/outflow_total)/10) + "%)")}
-                    if (metrics.count_mov.spawn || metrics.last_mov.creeps_cost) {text.push("Creeps: " + (Math.round(100*metrics.count_mov.spawn)/100) + " (" + (Math.round(1000*metrics.count_mov.spawn/outflow_total)/10)
+                    if (outflow_total >= 0.01 || metrics.last_mov.creeps_cost >= 0.01) {text.push("[ Energy Outflows ]")}
+                    if (metrics.count_mov.upgrade_spend >= 0.01) {text.push("Upgrades: " + (Math.round(100*metrics.count_mov.upgrade_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.upgrade_spend/outflow_total)/10) + "%)")}
+                    if (metrics.count_mov.repair_spend >= 0.01) {text.push("Repairs: " + (Math.round(100*metrics.count_mov.repair_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.repair_spend/outflow_total)/10) + "%)")}
+                    if (metrics.count_mov.build_spend >= 0.01) {text.push("Builds: " + (Math.round(100*metrics.count_mov.build_spend)/100) + " (" + (Math.round(1000*metrics.count_mov.build_spend/outflow_total)/10) + "%)")}
+                    if (metrics.count_mov.spawn  >= 0.01|| metrics.last_mov.creeps_cost >= 0.01) {text.push("Creeps: " + (Math.round(100*metrics.count_mov.spawn)/100) + " (" + (Math.round(1000*metrics.count_mov.spawn/outflow_total)/10)
                     + "%) @ " + (Math.round(100*metrics.last_mov.creeps_cost)/100) + " (" + (Math.round(1000*metrics.last_mov.creeps_cost/outflow_total)/10) + "%)")}
-                    if (transfer > 0) {text.push("Transfer: " + (Math.round(100*transfer)/100) + " (" + (Math.round(1000*transfer/outflow_total)/10) + "%)")}
+                    if (transfer >= 0.01) {text.push("Transfer: " + (Math.round(100*transfer)/100) + " (" + (Math.round(1000*transfer/outflow_total)/10) + "%)")}
                 }
 
                 // Apply visuals
@@ -753,7 +765,7 @@ utils = {
     },
 
     // Search nearby rooms for a match with a callback
-    searchNearbyRooms: function(queue, check, limit=config.MAX_ROOM_SEARCH, amount=1, dists={}, cur=[]) {
+    searchNearbyRooms: function(queue, check=null, limit=config.MAX_ROOM_SEARCH, amount=1, dists={}, cur=[]) {
         let room = queue.shift();
 
         // Base case, goal met
@@ -768,8 +780,8 @@ utils = {
         if (!room && amount == 1) { return null }
         else if (!room) { return cur }
 
-        // Check if room matches
-        if (check(room)) { cur.push(room) }
+        // Check if room matches or no check function provided
+        if (!check && check(room)) { cur.push(room) }
 
         // Queue neighbors if distance ok
         if (dist < limit) {
