@@ -576,15 +576,17 @@ utils = {
         let last_mov;
         if (prev_metrics) {
             // Handle resources
-            for (let resource in Object.assign({}, prev_metrics.last.resources, last.resources, prev_metrics.last_mov.resources)) {
-                if (last.resources[resource] || prev_metrics.last_mov.resources[resource] >= 0.01) {
+            for (let resource in Object.assign({}, prev_metrics.last.resources, last.resources, prev_metrics.last_mov.resources, prev_metrics.change_mov.resources)) {
+                if (last.resources[resource] || prev_metrics.last_mov.resources[resource] >= 0.01 || prev_metrics.change_mov >= 0.01) {
                     if (!prev_metrics.last.resources[resource]) { prev_metrics.last.resources[resource] = utils.freshResourceMetrics() }
                     if (!prev_metrics.last_mov.resources[resource]) { prev_metrics.last_mov.resources[resource] = last.resources[resource] }
+                    if (!prev_metrics.change_mov.resources[resource]) { prev_metrics.change_mov.resources[resource] = utils.freshResourceMetrics() }
                     if (!last.resources[resource]) { last.resources[resource] = utils.freshResourceMetrics() }
                 } else {
                     delete last.resources[resource];
                     delete prev_metrics.last.resources[resource];
                     delete prev_metrics.last_mov.resources[resource];
+                    delete prev_metrics.change_mov.resources[resource];
                 }
             }
             last_mov = utils.doMov(prev_metrics.last_mov, last);
