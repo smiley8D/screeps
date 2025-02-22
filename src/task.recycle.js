@@ -20,7 +20,7 @@ class Recycle extends Task {
     }
 
     static doTask(creep) {
-        let result;
+        let result = ERR_NOT_FOUND;
         if (creep.store.getUsedCapacity()) {
             // Inventory not empty, depo
             result = utils.doDst(creep, utils.findDst(creep));

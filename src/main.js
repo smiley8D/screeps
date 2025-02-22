@@ -282,6 +282,12 @@ module.exports.loop = function() {
             creep.memory.task = new Recycle(creep).compress();
         }
 
+        // Handle room movement
+        if (typeof result === 'string') {
+            let pos = new RoomPosition(25, 25, result);
+            if (pos) { creep.memory.room = result }
+        }
+
         // Show result
         if (creep.memory.task && TASKS[creep.memory.task.name] && TASKS[creep.memory.task.name].emoji) { creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + (result != OK ? result : '')) }
     }

@@ -51,10 +51,8 @@ class Scout extends Task {
 
     static doTask(creep) {
         // Move to room
-        if (creep.room.name != creep.memory.task.tgt) {
-            creep.memory.room = creep.memory.task.tgt;
-            creep.say("📡" + creep.memory.task.tgt);
-            return;
+        if (creep.room.name != creep.memory.task.room) {
+            return  creep.memory.task.room;
         }
     }
 

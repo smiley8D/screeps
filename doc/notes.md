@@ -13,6 +13,7 @@
 - Often dramatic difference in energy change & transfers, probably to do with counters being slightly off, look in to
 - Creep behaviors
     - Consider/test GTFOTR again
+        - Alternatively, look ahead and see if creep is in way? Trade places if so?
     - Combat stance (aggressive, neutral, avoid?), add to room cost function
     - Room traversing (already in)
 - Diplomacy (integrate w/ behaviors)

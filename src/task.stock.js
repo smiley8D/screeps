@@ -66,7 +66,6 @@ class Stock extends Task {
                 src = null;
             } else if (!src && !dst && creep.room.name != creep.memory.task.room) {
                 // Move to correct room
-                creep.memory.room = creep.memory.task.room;
                 return creep.memory.task.room;
             } else if (!src && !dst) {
                 // Pick new src or dst by distance
