@@ -104,16 +104,16 @@ utils = {
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.25)))});
         if (src) { return src }
 
-        // Try closest flagged >= 5%
+        // Try closest flagged >= 10%
         src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
-            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.05) ||
-            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.05)))});
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.1) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.1)))});
         if (src) { return src }
 
         // Try most full storage in MAX_ROOM_SEARCH
-        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => Game.rooms[r] && Game.rooms[r].storage &&
-        Game.rooms[r].storage.store.getUsedCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource)), 'best');
-        if (room) { return room.storage }
+        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage) ?
+        Game.rooms[r].storage.store.getUsedCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource) : null), 'best');
+        if (room) { return Game.rooms[room].storage }
 
         return src;
     },
@@ -204,8 +204,13 @@ utils = {
 
     // Find the best dst based on room resource distribution
     bestDst: function(creep, resource=undefined) {
+        // Stay at satisfied flags
+        let dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+            !f.pos.lookFor(LOOK_STRUCTURES).length && f.pos.lookFor(LOOK_CREEPS).length && f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name})
+        if (dst) { return dst }
+
         // Try spawn containers
-        let dst = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) && s.store.getFreeCapacity(resource)});
+        dst = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) && s.store.getFreeCapacity(resource)});
         if (dst) { return dst }
 
         // Try defenses
@@ -234,16 +239,16 @@ utils = {
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.25)))});
         if (dst) { return dst }
 
-        // Try closest flagged < 95%
+        // Try closest flagged < 90%
         dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
-            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.05) ||
-            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.05)))});
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.1) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.1)))});
         if (dst) { return dst }
 
         // Try most empty storage in MAX_ROOM_SEARCH
-        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => Game.rooms[r] && Game.rooms[r].storage &&
-        Game.rooms[r].storage.store.getFreeCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource)), 'best');
-        if (room) { return room.storage }
+        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage) ?
+        Game.rooms[r].storage.store.getFreeCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource) : null), 'best');
+        if (room) { return Game.rooms[room].storage }
 
         return dst;
     },
@@ -274,9 +279,6 @@ utils = {
             total: 0,
             over: 0,
             under: 0,
-            fill: 0,
-            fill_max: 0,
-            fill_avg: 0,
             imbalance: 0,
             free: 0
         }
@@ -418,48 +420,39 @@ utils = {
                     resources.push(resource);
                 }
 
-                // Find imbalance
-                if (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_STORAGE || structure.structureType === STRUCTURE_LINK || structure.structureType === STRUCTURE_TERMINAL) {
-                    if (structure.pos.lookFor(LOOK_FLAGS).some((f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE) || f.color === COLOR_ORANGE)) {
-                        // Flagged as empty
-                        if (structure.store.getUsedCapacity()) { room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, Game.time]) }
-                        for (let resource of resources) {
-                            metrics.resources[resource].over += structure.store.getUsedCapacity(resource);
-                        }
-                    } else if (structure.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_WHITE && f.secondaryColor != COLOR_WHITE)) {
-                        // Flagged as fill
-                        if (structure.store.getFreeCapacity(utils.flag_resource[structure.pos.lookFor(LOOK_FLAGS)[0].secondaryColor])) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]) }
-                        metrics.resources[utils.flag_resource[structure.pos.lookFor(LOOK_FLAGS)[0].secondaryColor]].under += structure.store.getFreeCapacity(utils.flag_resource[structure.pos.lookFor(LOOK_FLAGS)[0].secondaryColor]);
-                    } else {
-                        // Non-flagged container/storage, build average
-                        for (let resource of resources) {
-                            if (metrics.resources[resource].fill += structure.store.getUsedCapacity(resource)) {
-                                metrics.resources[resource].fill_max += structure.store.getCapacity(resource);
-                            }
-                        }
-                    }
-                    // Process available resources
-                    for (let resource of resources) {
-                        metrics.resources[resource].free += structure.store.getUsedCapacity(resource);
-                    }
-                } else {
-                    // Not a container or storage, always fill
+                // Note imbalance
+                if (structure.pos.lookFor(LOOK_FLAGS).length) {}
+                else if (structure.structureType === STRUCTURE_SPAWN || structure.structureType === STRUCTURE_EXTENSION || structure.structureType === STRUCTURE_TOWER) {
+                    // Always fill
                     for (let resource of resources) {
                         metrics.resources[resource].under += structure.store.getFreeCapacity(resource);
                         if (structure.store.getFreeCapacity(resource)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]) }
                     }
+                } else if (structure.structueType === STRUCTURE_CONTAINER || structure.structueType === STRUCTURE_STORAGE || structure.structueType === STRUCTURE_LINK) {
+                    // Mark available
+                    for (let resource of resources) {
+                        metrics.resources[resource].free += structure.store.getUsedCapacity(resource);
+                    }
                 }
             }
         }
+
+        // Process logistics flags
+        for (let flag of room.find(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE })) {
+            let store;
+            if (flag.pos.lookFor(LOOK_STRUCTURES)) { store = flag.pos.lookFor(LOOK_STRUCTURES)[0].store }
+            else if (flag.pos.lookFor(LOOK_CREEPS)) { store = flag.pos.lookFor(LOOK_CREEPS)[0].store }
+            // TEMP ADD ENERGY IMBALANCE
+            if (flag.secondaryColor === COLOR_WHITE && !store) { metrics.resources[RESOURCE_ENERGY].over += 500 }
+            else if (utils.flag_resource[flag.secondaryColor] && !store) { metrics.resources[utils.flag_resource[flag.secondaryColor]].under += 500}
+            else if (flag.secondaryColor === COLOR_WHITE) { metrics.resources[RESOURCE_ENERGY].over += store.getUsedCapacity(RESOURCE_ENERGY) }
+            else if (utils.flag_resource[flag.secondaryColor]) { metrics.resources[utils.flag_resource[flag.secondaryColor]].under += store.getUsedCapacity(utils.flag_resource[flag.secondaryColor]) }
+        }
+
+        // Process averages
         if (metrics.hits_max) { metrics.hits_per = metrics.hits / metrics.hits_max }
         if (metrics.dismantle_max) { metrics.dismantle_per = (metrics.dismantle_max - metrics.dismantle) / metrics.dismantle_max }
 
-        // Process over/under averages
-        for (let resource in metrics.resources) {
-            if (metrics.resources[resource].fill) {
-                metrics.resources[resource].fill_avg = metrics.resources[resource].fill / metrics.resources[resource].fill_max;
-            }
-        }
         for (let structure of room.find(FIND_STRUCTURES, { filter: (s) => (s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_STORAGE
             || s.structureType === STRUCTURE_LINK || s.structureType === STRUCTURE_TERMINAL) &&
             !s.pos.lookFor(LOOK_FLAGS).length })) {

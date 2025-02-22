@@ -269,17 +269,17 @@ module.exports.loop = function() {
         let result = ERR_NOT_FOUND;
 
         // Contact handling
+
+        // Room navigation
+        if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 === 0 || creep.pos.y % 49 === 0)) {
+            result = creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {resusePath: 50, visualizePathStyle: {}});
+        }
  
         // Do task
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             result = TASKS[creep.memory.task.name].doTask(creep);
         } else if (creep.memory.body) {
             creep.memory.task = new Recycle(creep).compress();
-        }
-
-        // Room navigation
-        if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 === 0 || creep.pos.y % 49 === 0)) {
-            result = creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {resusePath: 50, visualizePathStyle: {}});
         }
 
         // Show result
