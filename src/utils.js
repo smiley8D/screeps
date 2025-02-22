@@ -304,6 +304,7 @@ utils = {
             dismantle: 0,
             dismantle_max: 0,
             dismantle_per: 0,
+            cpu: 0,
             resources: {}
         }
 
@@ -370,6 +371,7 @@ utils = {
         if (!room.memory) { return }
 
         // Initialize
+        let start = Game.cpu.getUsed();
         let metrics = utils.freshRoomMetrics();
 
         // Process structures
@@ -525,6 +527,9 @@ utils = {
             metrics.level = controller.level;
         }
 
+        // Note time
+        metrics.cpu = Game.cpu.getUsed() - start;
+
         // Update memory
         let prev_metrics = room.memory.metrics;
 
@@ -650,14 +655,19 @@ utils = {
 
                 text.push("CPU: " + (Math.round(100*metrics.cpu_total)/100) + " (" + (Math.round(1000*metrics.cpu_total/Game.cpu.limit)/10) + "%)");
                 text.push("Bucket: " + Game.cpu.bucket + " (" + (Math.round(1000*Game.cpu.bucket/10000)/10) + "%)");
-                text.push("Start: " + (Math.round(100*metrics.cpu_start)/100) + " (" + (Math.round(1000*metrics.cpu_start/Game.cpu.limit)/10) + "%)");
-                text.push("Cleanup: " + (Math.round(100*metrics.cpu_cleanup)/100) + " (" + (Math.round(1000*metrics.cpu_cleanup/Game.cpu.limit)/10) + "%)");
-                text.push("Log: " + (Math.round(100*metrics.cpu_log)/100) + " (" + (Math.round(1000*metrics.cpu_log/Game.cpu.limit)/10) + "%)");
-                text.push("Defend: " + (Math.round(100*metrics.cpu_defend)/100) + " (" + (Math.round(1000*metrics.cpu_defend/Game.cpu.limit)/10) + "%)");
-                text.push("Metrics: " + (Math.round(100*metrics.cpu_metrics)/100) + " (" + (Math.round(1000*metrics.cpu_metrics/Game.cpu.limit)/10) + "%)");
-                text.push("Task: " + (Math.round(100*metrics.cpu_task)/100) + " (" + (Math.round(1000*metrics.cpu_task/Game.cpu.limit)/10) + "%)");
-                text.push("Order: " + (Math.round(100*metrics.cpu_order)/100) + " (" + (Math.round(1000*metrics.cpu_order/Game.cpu.limit)/10) + "%)");
-                text.push("Visual: " + (Math.round(100*metrics.cpu_visual)/100) + " (" + (Math.round(1000*metrics.cpu_visual/Game.cpu.limit)/10) + "%)");
+                text.push("Start: " + (Math.round(100*metrics.cpu_start)/100));
+                text.push("Cleanup: " + (Math.round(100*metrics.cpu_cleanup)/100));
+                text.push("Log: " + (Math.round(100*metrics.cpu_log)/100));
+                text.push("Defend: " + (Math.round(100*metrics.cpu_defend)/100));
+                text.push("Order: " + (Math.round(100*metrics.cpu_order)/100));
+                text.push("Visual: " + (Math.round(100*metrics.cpu_visual)/100));
+                text.push("Task: " + (Math.round(100*metrics.cpu_task)/100));
+                text.push("Metrics: " + (Math.round(100*metrics.cpu_metrics)/100));
+
+                for (let room in Game.rooms) {
+                    let mov = Memory.rooms[room].metrics.last_mov.cpu;
+                    if (mov) { text.push(room + ": " + (Math.round(100*mov)/100)) }
+                }
 
                 // Apply visuals
                 for (let i = 0; i < text.length; i++) {
