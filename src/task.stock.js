@@ -83,8 +83,9 @@ class Stock extends Task {
             if (src) {
                 if (src instanceof Flag) {
                     if (src.pos === creep.pos) { result = OK }
-                    if (src.pos.lookFor(LOOK_CREEPS).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_CREEPS)[0], resource) }
-                    if (src.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
+                    else if (src.pos.lookFor(LOOK_CREEPS).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_CREEPS)[0], resource) }
+                    else if (src.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
+                    else { result = creep.moveTo(src, {visualizePathStyle: {stroke: "#ffa500"}}) }
                 } else {
                     result = utils.doSrc(creep, src, resource);
                 }
@@ -92,8 +93,9 @@ class Stock extends Task {
             } else if (dst) {
                 if (dst instanceof Flag) {
                     if (dst.pos === creep.pos) { result = OK }
-                    if (dst.pos.lookFor(LOOK_CREEPS).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_CREEPS)[0], resource) }
-                    if (dst.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
+                    else if (dst.pos.lookFor(LOOK_CREEPS).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_CREEPS)[0], resource) }
+                    else if (dst.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
+                    else { result = creep.moveTo(dst, {visualizePathStyle: {stroke: "#1e90ff"}}) }
                 } else {
                     result = utils.doDst(creep, dst, resource);
                 }
