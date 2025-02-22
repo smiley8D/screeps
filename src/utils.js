@@ -650,14 +650,18 @@ utils = {
                 text.push("Cleanup: " + (Math.round(100*metrics.cpu_cleanup)/100));
                 text.push("Log: " + (Math.round(100*metrics.cpu_log)/100));
                 text.push("Defend: " + (Math.round(100*metrics.cpu_defend)/100));
-                text.push("Order: " + (Math.round(100*metrics.cpu_order)/100));
-                text.push("Visual: " + (Math.round(100*metrics.cpu_visual)/100));
                 text.push("Task: " + (Math.round(100*metrics.cpu_task)/100));
-                text.push("Metrics: " + (Math.round(100*metrics.cpu_metrics)/100));
+                text.push("Visual: " + (Math.round(100*metrics.cpu_visual)/100));
 
+                text.push("[ Metrics: " + (Math.round(100*metrics.cpu_metrics)/100) + " ]");
                 for (let room in Game.rooms) {
                     let mov = Memory.rooms[room].metrics.last_mov.cpu;
                     if (mov) { text.push(room + ": " + (Math.round(100*mov)/100)) }
+                }
+
+                text.push("[ Order: " + (Math.round(100*metrics.cpu_order)/100) + " ]");
+                for (let task in metrics.cpu_tasks) {
+                    text.push(task + ": " + (Math.round(100*metrics.cpu_tasks[task])/100))
                 }
 
                 // Apply visuals
@@ -870,6 +874,7 @@ utils = {
                 cpu_order: 0,
                 cpu_visual: 0,
                 cpu_total: 0,
+                cpu_tasks: {}
             }
         }
     },
