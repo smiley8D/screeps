@@ -634,15 +634,6 @@ utils = {
 
     // Display metrics visuals
     showMetrics() {
-        // Scouting information on world map
-        for (let room_name in Memory.rooms) {
-            if (!Memory.rooms[room_name].metrics || !Memory.rooms[room_name].metrics.tick) {continue}
-            let time = Game.time - Memory.rooms[room_name].metrics.tick;
-            if (Game.rooms[room_name]) { time = 0 }
-            Game.map.visual.text(time, new RoomPosition(25,7,room_name))
-        }
-
-        // Room metrics
         for (let room_name in Memory.rooms) {
             let metrics;
             let visual = new RoomVisual(room_name);
@@ -678,6 +669,7 @@ utils = {
             // Show room metrics
             metrics = Memory.rooms[room_name].metrics;
             let survey = Memory.rooms[room_name].survey;
+            let sightings = Memory.rooms[room_name].sightings;
             if (metrics) {
 
                 // Build visuals
@@ -748,9 +740,43 @@ utils = {
                 for (let i = 0; i < text.length; i++) {
                     visual.text(text[i], 0, i + 0.5, {align: "left"});
                 }
+    
+                // Update world map
+                let time = Game.time - Memory.rooms[room_name].metrics.tick;
+                if (Game.rooms[room_name]) { time = 0 }
+                Game.map.visual.text(time, new RoomPosition(25,7,room_name), {fontSize: 5, opacity: 0.3})
             } else {
                 // Show indicator that metrics are loading
                 visual.text("[ Room: " + room_name + " (unscanned) ]", 0, 0.5, {align: "left"});
+            }
+
+            // Show sightings
+            if (sightings) {
+                let sightings = Memory.rooms[room_name].sightings
+                let sorted_players;
+                if (sightings) {
+                    // Build visuals
+                    sorted_players = [];
+                    for (let player in sightings) { sorted_players.push(player) }
+                    sorted_players.sort((a, b) => sightings[a] - sightings[b]);
+
+                    let text = [];
+                    for (let i in sorted_players) {
+                        let player = sorted_players[i];
+                        text.push(player + ": " + (Game.time - sightings[player]));
+                    }
+                    text.push("[ Sightings ]")
+    
+                    // Apply visuals
+                    for (let i = 0; i < text.length; i++) {
+                        visual.text(text[i], 49, 49 - i, {align: "right"});
+                    }
+                }
+
+                if (sorted_players.length) {
+                    let recent = sorted_players.pop()
+                    Game.map.visual.text(recent + ": " + sightings[recent], new RoomPosition(25,43,room_name), {fontSize: 5, opacity: 0.3});
+                }
             }
         }
     },
