@@ -447,7 +447,6 @@ utils = {
             if (flag.secondaryColor === COLOR_WHITE && !store) { metrics.resources[RESOURCE_ENERGY].over += 500 }
             else if (utils.flag_resource[flag.secondaryColor] && !store) { metrics.resources[utils.flag_resource[flag.secondaryColor]].under += 500}
             else if (flag.secondaryColor === COLOR_WHITE) { metrics.resources[RESOURCE_ENERGY].over += store.getUsedCapacity(RESOURCE_ENERGY) }
-            else if (utils.flag_resource[flag.secondaryColor]) { metrics.resources[utils.flag_resource[flag.secondaryColor]].under += store.getUsedCapacity(utils.flag_resource[flag.secondaryColor]) }
         }
 
         // Process averages
