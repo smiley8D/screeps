@@ -86,6 +86,12 @@ utils = {
         src = creep.pos.findClosestByPath(valid_srcs);
         if (src) { return src }
 
+        // Try closest flagged >= 75%
+        src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.75) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.75)))});
+        if (src) { return src }
+
         // Try closest flagged >= 50%
         src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.5) ||
@@ -116,9 +122,13 @@ utils = {
     doSrc: function(creep, src, resource=undefined) {
         let result = ERR_NOT_FOUND;
 
-        // Try withdraw
-        if (resource) {result = creep.withdraw(src, resource) }
-        else if (src.store) {
+        // Handle tgt is creep
+        if (src instanceof Creep) {
+            result = utils.doDst(src, creep, resource)
+        } else if (resource) {
+            // Try targetted withdraw
+            result = creep.withdraw(src, resource)
+        } else if (src.store) {
             // Try any present resources
             for (let resource of RESOURCES_ALL) {
                 if (src.store.getUsedCapacity(resource)) { result = creep.withdraw(src, resource)}
@@ -206,6 +216,12 @@ utils = {
             !f.pos.lookFor(LOOK_STRUCTURES).length && (!f.pos.lookFor(LOOK_CREEPS).length || f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name)})
         if (dst) { return dst }
 
+        // Try closest flagged < 25%
+        dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.75) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.75)))});
+        if (dst) { return dst }
+
         // Try closest flagged < 50%
         dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.5) ||
@@ -214,14 +230,14 @@ utils = {
 
         // Try closest flagged < 75%
         dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
-            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.75) ||
-            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.75)))});
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.25) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.25)))});
         if (dst) { return dst }
 
         // Try closest flagged < 95%
         dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
-            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.95) ||
-            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.95)))});
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.05) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.05)))});
         if (dst) { return dst }
 
         // Try most empty storage in MAX_ROOM_SEARCH

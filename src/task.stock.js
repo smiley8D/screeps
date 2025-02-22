@@ -24,7 +24,7 @@ class Stock extends Task {
 
             if (!room.memory.metrics) {continue}
             for (let resource in room.memory.metrics.last.resources) {
-                let parts = Math.max(0, 2 * Math.log(room.memory.metrics.last.resources[resource].imbalance));
+                let parts = Math.max(0, Math.log(room.memory.metrics.last.resources[resource].imbalance));
                 tasks.push(new Stock(room.name, parts, resource));
             }
         }
