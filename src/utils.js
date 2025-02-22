@@ -33,7 +33,7 @@ utils = {
         // Containers
         if (opts.containers) {
             srcs.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) =>
-                (s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_LINK || s.structureType === STRUCTURE_TERMINAL) &&
+                (s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER) &&
                 (s.store.getUsedCapacity(resource) && (opts.partial || s.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource)))
             }));
         }
@@ -43,7 +43,8 @@ utils = {
         }
         // Haulers
         if (opts.haulers) {
-
+            srcs.push(creep.pos.findClosestByPath(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getUsedCapacity(resource) &&
+                (opts.partial || c.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource))}));
         }
 
         // Find valid src
@@ -180,7 +181,8 @@ utils = {
         }
         // Haulers
         if (opts.haulers) {
-            dsts.push();
+            dsts.push(creep.pos.findClosestByPath(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getFreeCapacity(resource) &&
+                (opts.partial || c.store.getFreeCapacity(resource) <= creep.store.getUsedCapacity(resource))}));
         }
         // Spawners
         if (opts.spawners && (resource === RESOURCE_ENERGY || (!resource && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
