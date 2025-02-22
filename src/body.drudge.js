@@ -4,7 +4,7 @@ class Drudge extends Body {
 
     constructor() {
         super();
-        this.base = [WORK,CARRY,MOVE];
+        this.base = [WORK,CARRY,CARRY,MOVE];
         this.add = [WORK];
 
         this.name = "Drudge";
