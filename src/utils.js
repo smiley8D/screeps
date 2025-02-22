@@ -424,11 +424,9 @@ utils = {
                 if (structure.pos.lookFor(LOOK_FLAGS).length) {}
                 else if (structure.structureType === STRUCTURE_SPAWN || structure.structureType === STRUCTURE_EXTENSION || structure.structureType === STRUCTURE_TOWER) {
                     // Always fill
-                    for (let resource of resources) {
-                        metrics.resources[resource].under += structure.store.getFreeCapacity(resource);
-                        if (structure.store.getFreeCapacity(resource)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]) }
-                    }
-                } else if (structure.structueType === STRUCTURE_CONTAINER || structure.structueType === STRUCTURE_STORAGE || structure.structueType === STRUCTURE_LINK) {
+                    metrics.resources[RESOURCE_ENERGY].under += structure.store.getFreeCapacity(RESOURCE_ENERGY);
+                    if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]) }
+                } else if (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_STORAGE || structure.structureType === STRUCTURE_LINK) {
                     // Mark available
                     for (let resource of resources) {
                         metrics.resources[resource].free += structure.store.getUsedCapacity(resource);
@@ -440,8 +438,8 @@ utils = {
         // Process logistics flags
         for (let flag of room.find(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE })) {
             let store;
-            if (flag.pos.lookFor(LOOK_STRUCTURES)) { store = flag.pos.lookFor(LOOK_STRUCTURES)[0].store }
-            else if (flag.pos.lookFor(LOOK_CREEPS)) { store = flag.pos.lookFor(LOOK_CREEPS)[0].store }
+            if (flag.pos.lookFor(LOOK_STRUCTURES).length) { store = flag.pos.lookFor(LOOK_STRUCTURES)[0].store }
+            else if (flag.pos.lookFor(LOOK_CREEPS).length) { store = flag.pos.lookFor(LOOK_CREEPS)[0].store }
             // TEMP ADD ENERGY IMBALANCE
             if (flag.secondaryColor === COLOR_WHITE && !store) { metrics.resources[RESOURCE_ENERGY].over += 500 }
             else if (utils.flag_resource[flag.secondaryColor] && !store) { metrics.resources[utils.flag_resource[flag.secondaryColor]].under += 500}
@@ -452,21 +450,6 @@ utils = {
         // Process averages
         if (metrics.hits_max) { metrics.hits_per = metrics.hits / metrics.hits_max }
         if (metrics.dismantle_max) { metrics.dismantle_per = (metrics.dismantle_max - metrics.dismantle) / metrics.dismantle_max }
-
-        for (let structure of room.find(FIND_STRUCTURES, { filter: (s) => (s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_STORAGE
-            || s.structureType === STRUCTURE_LINK || s.structureType === STRUCTURE_TERMINAL) &&
-            !s.pos.lookFor(LOOK_FLAGS).length })) {
-            for (let resource in metrics.resources) {
-                let diff = structure.store.getCapacity(resource) * ((structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)) - metrics.resources[resource].fill_avg);
-                if (diff > 0) {
-                    metrics.resources[resource].over += diff;
-                    room.memory.visuals.push(["⬇︎", structure.pos.x, structure.pos.y, Game.time]);
-                } else if (diff < 0) {
-                    metrics.resources[resource].under -= diff;
-                    room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]);
-                }
-            }
-        }
 
         // Compute imbalances
         for (let resource in metrics.resources) {

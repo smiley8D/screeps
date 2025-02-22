@@ -82,7 +82,7 @@ class Stock extends Task {
             // Execute
             if (src) {
                 if (src instanceof Flag) {
-                    if (src.pos === creep.pos) { result = OK }
+                    if (src.pos.lookFor(LOOK_CREEPS).length && src.pos.lookFor(LOOK_CREEPS)[0].name === creep.name) { result = OK }
                     else if (src.pos.lookFor(LOOK_CREEPS).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_CREEPS)[0], resource) }
                     else if (src.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
                     else { result = creep.moveTo(src, {visualizePathStyle: {stroke: "#ffa500"}}) }
