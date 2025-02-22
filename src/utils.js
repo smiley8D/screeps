@@ -24,26 +24,26 @@ utils = {
         let srcs = [];
         if (opts.trash) {
             // Drops
-            srcs.push(creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (d) => (d.resourceType === resource || !resource) && (opts.partial || d.amount >= creep.store.getFreeCapacity(resource))}));
+            srcs.push(creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {filter: (d) => (d.resourceType === resource || !resource) && (opts.partial || d.amount >= creep.store.getFreeCapacity(resource))}));
             // Tombstones
-            srcs.push(creep.pos.findClosestByPath(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource) && (opts.partial || t.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
+            srcs.push(creep.pos.findClosestByRange(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource) && (opts.partial || t.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
             // Ruin
-            srcs.push(creep.pos.findClosestByPath(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource) && (opts.partial || r.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
+            srcs.push(creep.pos.findClosestByRange(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource) && (opts.partial || r.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
         }
         // Containers
         if (opts.containers) {
-            srcs.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) =>
+            srcs.push(creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) =>
                 (s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER) &&
                 (s.store.getUsedCapacity(resource) && (opts.partial || s.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource)))
             }));
         }
         // Sources
         if (opts.sources && resource === RESOURCE_ENERGY) {
-            srcs.push(creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE));
+            srcs.push(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE));
         }
         // Haulers
         if (opts.haulers) {
-            srcs.push(creep.pos.findClosestByPath(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getUsedCapacity(resource) &&
+            srcs.push(creep.pos.findClosestByRange(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getUsedCapacity(resource) &&
                 (opts.partial || c.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource))}));
         }
 
@@ -52,7 +52,7 @@ utils = {
         for (let i in srcs) {
             if (srcs[i]) { valid_srcs.push(srcs[i]) }
         }
-        src = creep.pos.findClosestByPath(valid_srcs);
+        src = creep.pos.findClosestByRange(valid_srcs);
 
         // Update cache
         if (src) {
@@ -67,45 +67,45 @@ utils = {
     // Find the best src based on room resource distribution
     bestSrc: function(creep, resource) {
         // Try unsatisfied flags
-        let src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
+        let src = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
             !f.pos.lookFor(LOOK_STRUCTURES).length && (!f.pos.lookFor(LOOK_CREEPS).length || f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name)})
         if (src) { return src }
 
         // Try closest decayable
         let srcs = [];
         // Drops
-        srcs.push(creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (d) => d.resourceType === resource || !resource}));
+        srcs.push(creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {filter: (d) => d.resourceType === resource || !resource}));
         // Tombstones
-        srcs.push(creep.pos.findClosestByPath(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource)}));
+        srcs.push(creep.pos.findClosestByRange(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource)}));
         // Ruin
-        srcs.push(creep.pos.findClosestByPath(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource)}));
+        srcs.push(creep.pos.findClosestByRange(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource)}));
         let valid_srcs = [];
         for (let i in srcs) {
             if (srcs[i]) { valid_srcs.push(srcs[i]) }
         }
-        src = creep.pos.findClosestByPath(valid_srcs);
+        src = creep.pos.findClosestByRange(valid_srcs);
         if (src) { return src }
 
         // Try closest flagged >= 75%
-        src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
+        src = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.75) ||
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.75)))});
         if (src) { return src }
 
         // Try closest flagged >= 50%
-        src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
+        src = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.5) ||
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.5)))});
         if (src) { return src }
 
         // Try closest flagged >= 25%
-        src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
+        src = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.25) ||
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.25)))});
         if (src) { return src }
 
         // Try closest flagged >= 10%
-        src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
+        src = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.1) ||
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.1)))});
         if (src) { return src }
@@ -169,18 +169,18 @@ utils = {
         let dsts = []
         // Containers
         if (opts.containers) {
-            dsts.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) =>
+            dsts.push(creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) =>
             ((s.structureType === STRUCTURE_STORAGE && s.my) || s.structureType === STRUCTURE_CONTAINER) &&
             (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource)))}));
         }
         // Haulers
         if (opts.haulers) {
-            dsts.push(creep.pos.findClosestByPath(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getFreeCapacity(resource) &&
+            dsts.push(creep.pos.findClosestByRange(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getFreeCapacity(resource) &&
                 (opts.partial || c.store.getFreeCapacity(resource) <= creep.store.getUsedCapacity(resource))}));
         }
         // Spawners
         if (opts.spawners && (resource === RESOURCE_ENERGY || (!resource && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
-            dsts.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my &&
+            dsts.push(creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) => s.my &&
                 (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) &&
                 (s.store.getFreeCapacity(RESOURCE_ENERGY) && (opts.partial || s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getUsedCapacity(RESOURCE_ENERGY)))}));
         }
@@ -190,7 +190,7 @@ utils = {
         for (let i in dsts) {
             if (dsts[i]) { valid_dsts.push(dsts[i]) }
         }
-        dst = creep.pos.findClosestByPath(valid_dsts);
+        dst = creep.pos.findClosestByRange(valid_dsts);
 
         // Update cache
         if (dst) {
@@ -205,42 +205,42 @@ utils = {
     // Find the best dst based on room resource distribution
     bestDst: function(creep, resource=undefined) {
         // Stay at satisfied flags
-        let dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+        let dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
             !f.pos.lookFor(LOOK_STRUCTURES).length && f.pos.lookFor(LOOK_CREEPS).length && f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name})
         if (dst) { return dst }
 
         // Try spawn containers
-        dst = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) && s.store.getFreeCapacity(resource)});
+        dst = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) && s.store.getFreeCapacity(resource)});
         if (dst) { return dst }
 
         // Try defenses
-        dst = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(resource)})
+        dst = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(resource)})
 
         // Try unsatisfied flags
-        dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+        dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
             !f.pos.lookFor(LOOK_STRUCTURES).length && (!f.pos.lookFor(LOOK_CREEPS).length || f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name)})
         if (dst) { return dst }
 
         // Try closest flagged < 25%
-        dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+        dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.75) ||
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.75)))});
         if (dst) { return dst }
 
         // Try closest flagged < 50%
-        dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+        dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.5) ||
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.5)))});
         if (dst) { return dst }
 
         // Try closest flagged < 75%
-        dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+        dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.25) ||
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.25)))});
         if (dst) { return dst }
 
         // Try closest flagged < 90%
-        dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+        dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
             (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.1) ||
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.1)))});
         if (dst) { return dst }
