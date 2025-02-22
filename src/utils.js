@@ -336,6 +336,9 @@ utils = {
             level: 0,
             creeps: 0,
             creeps_cost: 0,
+            dismantle: 0,
+            dismantle_max: 0,
+            dismantle_per: 0,
             resources: {}
         }
 
@@ -407,8 +410,11 @@ utils = {
         // Process structures
         for (let structure of room.find(FIND_STRUCTURES)) {
             // Process damage
-            if (structure.pos.lookFor(LOOK_FLAGS,{filter:(f)=>f.color != COLOR_ORANGE}).length > 0) {
-                // Structure to be disassembled, ignore
+            if (structure.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_ORANGE)) {
+                // Structure to be disassembled
+                metrics.dismantle += structure.hits;
+                metrics.dismantle_max += structure.hitsMax;
+                room.memory.visuals.push(["💣"+(Math.round(100*(structure.hitsMax - structure.hits) / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
             } else if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
                 metrics.damage += structure.hitsMax - structure.hits
                 metrics.hits += structure.hits;
@@ -483,6 +489,7 @@ utils = {
             }
         }
         if (metrics.hits_max) { metrics.hits_per = metrics.hits / metrics.hits_max }
+        if (metrics.dismantle_max) { metrics.dismantle_per = (metrics.dismantle_max - metrics.dismantle) / metrics.dismantle_max }
 
         // Process over/under averages
         for (let resource in metrics.resources) {
@@ -731,6 +738,10 @@ utils = {
                 if (metrics.last.build_max >= 0.01) {text.push(
                     "Building: " + metrics.last.build + " (" + (Math.round(10000*metrics.last.build_per)/100) + ((metrics.change_mov) ? "%) @ " +
                     Math.round(metrics.change_mov.build) + "/t (" + Math.ceil(metrics.last.build_max / metrics.change_mov.build) + " t)" : "%)")
+                )}
+                if (metrics.last.dismantle_max >= 0.01) {text.push(
+                    "Dismantling: " + metrics.last.dismantle + " (" + (Math.round(10000*metrics.last.dismantle_per)/100) + ((metrics.change_mov) ? "%) @ " +
+                    Math.round(metrics.change_mov.dismantle) + "/t (" + Math.ceil(metrics.last.dismantle_max / metrics.change_mov.dismantle) + " t)" : "%)")
                 )}
 
                 // Balances

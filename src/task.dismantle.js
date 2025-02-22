@@ -3,8 +3,11 @@ utils = require("utils");
 
 class Dismantle extends Task {
 
+    static emoji = '💣';
+
     constructor(flag, wanted) {
         super("Dismantle", flag.name, flag.pos.roomName, wanted);
+        this.details = flag.name;
     }
 
     static getTasks() {
@@ -34,14 +37,8 @@ class Dismantle extends Task {
     }
 
     static doTask(creep) {
-        // Move to room
-        if (creep.room.name != creep.memory.task.room) {
-            creep.memory.room = creep.memory.task.room;
-            creep.say("💣" + creep.memory.task.room);
-            return;
-        }
-
         let flag = Game.flags[creep.memory.task.tgt];
+        if (!flag) { return ERR_NOT_FOUND }
         let structures = flag.pos.lookFor(LOOK_STRUCTURES);
         let structure = null;
         if (structures.length > 0) {structure = structures[0]}
@@ -63,11 +60,7 @@ class Dismantle extends Task {
             result = utils.doDst(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
         }
 
-        if (result != OK) {
-            creep.say("💣" + result);
-        } else {
-            creep.say("💣");
-        };
+        return result;
     }
 
 }
