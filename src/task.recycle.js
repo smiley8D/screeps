@@ -18,12 +18,8 @@ class Recycle extends Task {
     static doTask(creep) {
         // Move to room if assigned
         if (creep.memory.task.room && creep.room.name != creep.memory.task.room) {
-            creep.memory.room = creep.memory.task.room;
-            creep.say("♻️" + creep.memory.task.room);
-            return;
+            return creep.memory.task.room;
         }
-
-        let result = ERR_NOT_FOUND;
 
         // If space available, look for more trash
         let src;
@@ -52,7 +48,6 @@ class Recycle extends Task {
             if (graveyard) {
                 result = creep.moveTo(graveyard, {visualizePathStyle: {}});
             }
-            return;
         }
 
         return result;

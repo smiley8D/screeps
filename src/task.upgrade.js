@@ -1,6 +1,7 @@
 const Task = require("task");
 const utils = require("utils");
 const config = require("config");
+const Drudge = require('body.drudge');
 
 class Upgrade extends Task {
 
@@ -8,6 +9,7 @@ class Upgrade extends Task {
 
     constructor(room, wanted) {
         super("Upgrade", room, room, wanted);
+        this.body = new Drudge();
     }
 
     static getTasks() {

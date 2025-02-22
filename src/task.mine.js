@@ -1,5 +1,5 @@
 const Task = require("task");
-const Miner = require("body.miner");
+const Drudge = require("body.drudge");
 
 const utils = require("utils");
 const config = require("config");
@@ -10,7 +10,7 @@ class Mine extends Task {
 
     constructor(source, room, wanted, spots) {
         super("Mine", source, room, wanted);
-        this.body = new Miner();
+        this.body = new Drudge();
         this.max_workers = spots;
     }
 
