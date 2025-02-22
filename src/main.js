@@ -9,7 +9,6 @@ const Recycle = require("task.recycle");
 const Repair = require("task.repair");
 const Scout = require("task.scout");
 const Stock = require("task.stock");
-const StockFlag = require("task.stock_flag");
 const Upgrade = require("task.upgrade");
 
 const TASKS = {
@@ -18,7 +17,6 @@ const TASKS = {
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,
-    "StockFlag": StockFlag,
     "Claim": Claim,
     "Recycle": Recycle,
     "Dismantle": Dismantle,
@@ -261,6 +259,8 @@ module.exports.loop = function() {
                 for (let creep of body) {
                     creep.memory.task = new Recycle().compress();
                     creep.memory.room = null;
+                    creep.memory.curSrc = null;
+                    creep.memory.curDst = null;
                 }
             }
         }

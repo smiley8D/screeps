@@ -64,9 +64,12 @@
 
 ## Flags
 
-- Grey-Grey: Graveyard, place for unassigned creeps to gather out of the way
-- Purple-Purple: Claim/reserve controller in room
-- Blue-Blue: Persistent scouting
+- Grey: Graveyard, place for unassigned creeps to gather out of the way
+- Purple: Claim/reserve controller in room
+- Blue: Scout
 - White-###: Logistics
-    - -Grey: Drain
-    - -Yellow: Energy
+    - White: Drain
+    - Yellow: Energy
+    - Grey: Hydrogen
+- Orange: Deconstruct
+- 

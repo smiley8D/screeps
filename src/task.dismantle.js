@@ -22,7 +22,7 @@ class Dismantle extends Task {
                     flag.remove();
                 } else {
                     // Create task
-                    tasks.push(new Dismantle(flag, structures[0].hits))
+                    tasks.push(new Dismantle(flag, Math.max(1,Math.log(structures[0].hits))))
                 }
             } else {
                 // Send a basic worker
