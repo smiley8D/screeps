@@ -92,7 +92,7 @@ class Stock extends Task {
                 if (result === ERR_NOT_ENOUGH_RESOURCES || result === ERR_FULL) { src = null }
             } else if (dst) {
                 if (dst instanceof Flag) {
-                    if (dst.pos === creep.pos) { result = OK }
+                    if (dst.pos.lookFor(LOOK_CREEPS).length && dst.pos.lookFor(LOOK_CREEPS)[0].name === creep.name) { result = OK }
                     else if (dst.pos.lookFor(LOOK_CREEPS).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_CREEPS)[0], resource) }
                     else if (dst.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
                     else { result = creep.moveTo(dst, {visualizePathStyle: {stroke: "#1e90ff"}}) }
