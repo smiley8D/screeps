@@ -27,6 +27,11 @@ module.exports.loop = function() {
     // Initialize memory
     if (!Memory.metrics) {utils.reset()}
 
+    // CPU check
+    let cpu_used = Game.cpu.getUsed();
+    Memory.metrics.cpu_start = Memory.metrics.cpu_start * (1 - config.MOV_N) + cpu_used * config.MOV_N;
+    let cpu_count = cpu_used;
+
     // Cleanup memory
     if (Game.time % config.CLEANUP_TICK === 0) {
         // Cleanup dead creeps
@@ -41,6 +46,11 @@ module.exports.loop = function() {
                 delete Memory.rooms[room].metrics;
             }
         }
+
+        // CPU check
+        cpu_used = Game.cpu.getUsed();
+        Memory.metrics.cpu_cleanup = Memory.metrics.cpu_cleanup * (1 - config.MOV_N) + (cpu_used - cpu_count) * config.MOV_N;
+        cpu_count = cpu_used;
     }
 
     // Process last tick events
@@ -93,6 +103,11 @@ module.exports.loop = function() {
         }
     }
 
+    // CPU check
+    cpu_used = Game.cpu.getUsed();
+    Memory.metrics.cpu_log = Memory.metrics.cpu_log * (1 - config.MOV_N) + (cpu_used - cpu_count) * config.MOV_N;
+    cpu_count = cpu_used;
+
     // Tower defenses
     for (let room_name in Game.rooms) {
         let room = Game.rooms[room_name];
@@ -112,10 +127,20 @@ module.exports.loop = function() {
         }
     }
 
+    // CPU check
+    cpu_used = Game.cpu.getUsed();
+    Memory.metrics.cpu_defend = Memory.metrics.cpu_defend * (1 - config.MOV_N) + (cpu_used - cpu_count) * config.MOV_N;
+    cpu_count = cpu_used;
+
     // Heavy lifting activities
     if (Game.time % config.HEAVY_TICK === 0 && Game.cpu.bucket == 10000) {
         // Update metrics
         utils.globalMetrics();
+
+        // CPU check
+        cpu_used = Game.cpu.getUsed();
+        Memory.metrics.cpu_metrics = Memory.metrics.cpu_metrics * (1 - config.MOV_N) + (cpu_used - cpu_count) * config.MOV_N;
+        cpu_count = cpu_used;
 
         // Generate tasks
         let tasks = new Map();
@@ -261,6 +286,11 @@ module.exports.loop = function() {
                 }
             }
         }
+
+        // CPU check
+        cpu_used = Game.cpu.getUsed();
+        Memory.metrics.cpu_task = Memory.metrics.cpu_task * (1 - config.MOV_N) + (cpu_used - cpu_count) * config.MOV_N;
+        cpu_count = cpu_used;
     }
 
     // Order creeps
@@ -292,10 +322,10 @@ module.exports.loop = function() {
         if (creep.memory.task && TASKS[creep.memory.task.name] && TASKS[creep.memory.task.name].emoji) { creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + (result != OK ? result : '')) }
     }
 
-    // Note CPU usage
-    if (Memory.metrics) {
-        Memory.metrics.cpu_mov = Memory.metrics.cpu_mov * (1 - config.MOV_N) + Game.cpu.getUsed() * config.MOV_N;
-    }
+    // CPU check
+    cpu_used = Game.cpu.getUsed();
+    Memory.metrics.cpu_order = Memory.metrics.cpu_order * (1 - config.MOV_N) + (cpu_used - cpu_count) * config.MOV_N;
+    cpu_count = cpu_used;
 
     // Paint visuals
     utils.showMetrics();
@@ -320,4 +350,9 @@ module.exports.loop = function() {
         }
         Memory.rooms[room_name].visuals = new_visuals;
     }
+
+    // Final CPU check
+    cpu_used = Game.cpu.getUsed();
+    Memory.metrics.cpu_visual = Memory.metrics.cpu_visual * (1 - config.MOV_N) + (cpu_used - cpu_count) * config.MOV_N;
+    Memory.metrics.cpu_total = Memory.metrics.cpu_total * (1 - config.MOV_N) + cpu_used * config.MOV_N;
 }

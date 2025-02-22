@@ -424,6 +424,7 @@ utils = {
                 if (structure.pos.lookFor(LOOK_FLAGS).length) {}
                 else if (structure.structureType === STRUCTURE_SPAWN || structure.structureType === STRUCTURE_EXTENSION || structure.structureType === STRUCTURE_TOWER) {
                     // Always fill
+                    if (!metrics.resources[RESOURCE_ENERGY]) { metrics.resources[RESOURCE_ENERGY] = utils.freshResourceMetrics() }
                     metrics.resources[RESOURCE_ENERGY].under += structure.store.getFreeCapacity(RESOURCE_ENERGY);
                     if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]) }
                 } else if (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_STORAGE || structure.structureType === STRUCTURE_LINK) {
@@ -441,6 +442,8 @@ utils = {
             if (flag.pos.lookFor(LOOK_STRUCTURES).length) { store = flag.pos.lookFor(LOOK_STRUCTURES)[0].store }
             else if (flag.pos.lookFor(LOOK_CREEPS).length) { store = flag.pos.lookFor(LOOK_CREEPS)[0].store }
             // TEMP ADD ENERGY IMBALANCE
+            if (!metrics.resources[RESOURCE_ENERGY]) { metrics.resources[RESOURCE_ENERGY] = utils.freshResourceMetrics() }
+            if (utils.flag_resource[flag.secondaryColor] && !metrics.resources[utils.flag_resource[flag.secondaryColor]]) { metrics.resources[utils.flag_resource[flag.secondaryColor]] = utils.freshResourceMetrics() }
             if (flag.secondaryColor === COLOR_WHITE && !store) { metrics.resources[RESOURCE_ENERGY].over += 500 }
             else if (utils.flag_resource[flag.secondaryColor] && !store) { metrics.resources[utils.flag_resource[flag.secondaryColor]].under += 500}
             else if (flag.secondaryColor === COLOR_WHITE) { metrics.resources[RESOURCE_ENERGY].over += store.getUsedCapacity(RESOURCE_ENERGY) }
@@ -646,8 +649,16 @@ utils = {
                 // Build visuals
                 let text = ["[ Shard: " + Game.shard.name+ " ]"];
 
-                text.push("CPU: " + (Math.round(100*metrics.cpu_mov)/100) + " (" + (Math.round(1000*metrics.cpu_mov/Game.cpu.limit)/10) + "%)");
-                text.push("Bucket: " + Game.cpu.bucket + " (" + (Math.round(1000*Game.cpu.bucket/10000)/10) + "%)")
+                text.push("CPU: " + (Math.round(100*metrics.cpu_total)/100) + " (" + (Math.round(1000*metrics.cpu_total/Game.cpu.limit)/10) + "%)");
+                text.push("Bucket: " + Game.cpu.bucket + " (" + (Math.round(1000*Game.cpu.bucket/10000)/10) + "%)");
+                text.push("Start: " + (Math.round(100*metrics.cpu_start)/100) + " (" + (Math.round(1000*metrics.cpu_start/Game.cpu.limit)/10) + "%)");
+                text.push("Cleanup: " + (Math.round(100*metrics.cpu_cleanup)/100) + " (" + (Math.round(1000*metrics.cpu_cleanup/Game.cpu.limit)/10) + "%)");
+                text.push("Log: " + (Math.round(100*metrics.cpu_log)/100) + " (" + (Math.round(1000*metrics.cpu_log/Game.cpu.limit)/10) + "%)");
+                text.push("Defend: " + (Math.round(100*metrics.cpu_defend)/100) + " (" + (Math.round(1000*metrics.cpu_defend/Game.cpu.limit)/10) + "%)");
+                text.push("Metrics: " + (Math.round(100*metrics.cpu_metrics)/100) + " (" + (Math.round(1000*metrics.cpu_metrics/Game.cpu.limit)/10) + "%)");
+                text.push("Task: " + (Math.round(100*metrics.cpu_task)/100) + " (" + (Math.round(1000*metrics.cpu_task/Game.cpu.limit)/10) + "%)");
+                text.push("Order: " + (Math.round(100*metrics.cpu_order)/100) + " (" + (Math.round(1000*metrics.cpu_order/Game.cpu.limit)/10) + "%)");
+                text.push("Visual: " + (Math.round(100*metrics.cpu_visual)/100) + " (" + (Math.round(1000*metrics.cpu_visual/Game.cpu.limit)/10) + "%)");
 
                 // Apply visuals
                 for (let i = 0; i < text.length; i++) {
@@ -815,7 +826,15 @@ utils = {
                 utils.reset(room_name, metrics, sightings, survey);
             }
             Memory.metrics = {
-                cpu_mov: 0
+                cpu_start: 0,
+                cpu_cleanup: 0,
+                cpu_log: 0,
+                cpu_defend: 0,
+                cpu_metrics: 0,
+                cpu_task: 0,
+                cpu_order: 0,
+                cpu_visual: 0,
+                cpu_total: 0,
             }
         }
     },

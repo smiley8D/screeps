@@ -2,6 +2,10 @@
 
 - Performance
     - Look into switching to raw memory, compressing repeated keys
+    - Pathing, caching, etc.
+        - Especially for multirooms, I don't think I ever want it to recompute that during a run
+        - Need to research and test more
+        - Consider using findClosestByRange more often. Within a room it probably works quite well
 - Calculate replacement time from distance to nearest spawn
     - Store creep's spawn and calculate current linear distance?
 - Metrics on survey
@@ -14,7 +18,9 @@
 - Creep behaviors
     - Consider/test GTFOTR again
         - Alternatively, look ahead and see if creep is in way? Trade places if so?
-    - Combat stance (aggressive, neutral, avoid?), add to room cost function
+    - Combat stance (aggressive, neutral, avoid?)
+        - PathFinder has a flee option, could be very useful for avoidance
+        - Room cost function
     - Room traversing (already in)
 - Diplomacy (integrate w/ behaviors)
     - Player stance (ally, neutral, enemy?)
@@ -25,9 +31,6 @@
     - Switch ally to enemy if attacked a sufficient amount (probably using a moving average) (consider territory?)
     - Configurable no scouting of allies? Would be nice to set
     - Per-room overrides? Ex some rooms always treat everyone/someones hostiles, etc.
-- Task return values
-    - Have creep loop handle speech bubbles, use return value
-    - If return value is a valid room name, do room routing
 
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%
