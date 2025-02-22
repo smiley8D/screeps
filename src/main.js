@@ -257,10 +257,7 @@ module.exports.loop = function() {
         for (let room of avail_creeps.values()) {
             for (let body of room.values()) {
                 for (let creep of body) {
-                    creep.memory.task = new Recycle().compress();
-                    creep.memory.room = null;
-                    creep.memory.curSrc = null;
-                    creep.memory.curDst = null;
+                    creep.memory.task = new Recycle(creep).compress();
                 }
             }
         }
@@ -277,7 +274,7 @@ module.exports.loop = function() {
         if (creep.memory.task && TASKS[creep.memory.task.name]) {
             result = TASKS[creep.memory.task.name].doTask(creep);
         } else if (creep.memory.body) {
-            result = creep.memory.task = new Recycle().compress();
+            creep.memory.task = new Recycle(creep).compress();
         }
 
         // Room navigation
@@ -286,7 +283,7 @@ module.exports.loop = function() {
         }
 
         // Show result
-        if (creep.memory.task && TASKS[creep.memory.task.name]) { creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + (result != OK ? result : '')) }
+        if (creep.memory.task && TASKS[creep.memory.task.name] && TASKS[creep.memory.task.name].emoji) { creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + (result != OK ? result : '')) }
     }
 
     // Note CPU usage

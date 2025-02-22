@@ -1,14 +1,18 @@
 const Task = require("task");
 const utils = require("utils");
 const Hauler = require("body.hauler");
+const Stock = require("task.stock");
 
 class Recycle extends Task {
 
-    static emoji = '♻️';
+    static emoji = null;
 
-    constructor(room=false, wanted=0) {
-        super("Recycle", room, room, wanted);
-        this.body = new Hauler();
+    constructor(creep) {
+        super("Recycle", null, null, 0);
+        creep.memory.curSrc = null;
+        creep.memory.curDst = null;
+        creep.memory.room = null;
+        creep.memory.curTgt = null;
     }
 
     static getTasks() {
@@ -16,26 +20,8 @@ class Recycle extends Task {
     }
 
     static doTask(creep) {
-        // Move to room if assigned
-        if (creep.memory.task.room && creep.room.name != creep.memory.task.room) {
-            return creep.memory.task.room;
-        }
-
-        // If space available, look for more trash
-        let src;
-        if (creep.store.getFreeCapacity()) {
-            src = utils.findSrc(creep, undefined, {
-                containers: false,
-                sources: false,
-                haulers: false
-            });
-        }
-
         let result;
-        if (src) {
-            // If trash, pickup
-            result = utils.doSrc(creep, src);
-        } else if (creep.store.getUsedCapacity()) {
+        if (creep.store.getUsedCapacity()) {
             // Inventory not empty, depo
             result = utils.doDst(creep, utils.findDst(creep));
         } else if (creep.ticksToLive < 500 && creep.room.find(FIND_MY_SPAWNS)) {
@@ -45,7 +31,7 @@ class Recycle extends Task {
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(spawner, {visualizePathStyle: {stroke: "#dc0000"}})}
         } else {
             // Move to graveyard
-            let graveyard = creep.pos.findClosestByRange(FIND_FLAGS, { filter: (f) => f.color === COLOR_GREY && f.pos.lookFor(LOOK_STRUCTURES).length === 0});
+            let graveyard = creep.pos.findClosestByRange(FIND_FLAGS, { filter: (f) => f.color === COLOR_GREY });
             if (graveyard) {
                 result = creep.moveTo(graveyard, {visualizePathStyle: {}});
             }

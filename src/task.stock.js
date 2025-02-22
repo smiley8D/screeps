@@ -24,7 +24,7 @@ class Stock extends Task {
 
             if (!room.memory.metrics) {continue}
             for (let resource in room.memory.metrics.last.resources) {
-                let parts = Math.max(0, Math.log(room.memory.metrics.last.resources[resource].imbalance));
+                let parts = Math.max(0, 2 * Math.log(room.memory.metrics.last.resources[resource].imbalance));
                 tasks.push(new Stock(room.name, parts, resource));
             }
         }
@@ -82,7 +82,7 @@ class Stock extends Task {
             // Execute
             if (src) {
                 if (src instanceof Flag) {
-                    if (src.pos === creep.pos) { return OK }
+                    if (src.pos === creep.pos) { result = OK }
                     if (src.pos.lookFor(LOOK_CREEPS).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_CREEPS)[0], resource) }
                     if (src.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
                 } else {
@@ -91,7 +91,7 @@ class Stock extends Task {
                 if (result === ERR_NOT_ENOUGH_RESOURCES || result === ERR_FULL) { src = null }
             } else if (dst) {
                 if (dst instanceof Flag) {
-                    if (dst.pos === creep.pos) { return OK }
+                    if (dst.pos === creep.pos) { result = OK }
                     if (dst.pos.lookFor(LOOK_CREEPS).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_CREEPS)[0], resource) }
                     if (dst.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
                 } else {
