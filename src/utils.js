@@ -779,7 +779,7 @@ utils = {
 
                 if (sorted_players.length) {
                     let recent = sorted_players.pop()
-                    Game.map.visual.text(recent + ": " + sightings[recent], new RoomPosition(25,43,room_name), {fontSize: 5, opacity: 0.3});
+                    if (Game.time - sightings[recent] < 86000) { Game.map.visual.text(recent + ": " + (Game.time - sightings[recent]), new RoomPosition(25,43,room_name), {fontSize: 5, opacity: 0.3}) }
                 }
             }
         }
