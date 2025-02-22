@@ -66,9 +66,12 @@ utils = {
 
     // Find the best src based on room resource distribution
     bestSrc: function(creep, resource) {
-        let src;
+        // Try unsatisfied flags
+        let src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
+            !f.pos.lookFor(LOOK_STRUCTURES).length && (!f.pos.lookFor(LOOK_CREEPS).length || f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name)})
+        if (src) { return src }
 
-        // Try decayables
+        // Try closest decayable
         let srcs = [];
         // Drops
         srcs.push(creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {filter: (d) => d.resourceType === resource || !resource}));
@@ -76,54 +79,29 @@ utils = {
         srcs.push(creep.pos.findClosestByPath(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource)}));
         // Ruin
         srcs.push(creep.pos.findClosestByPath(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource)}));
-
-        // Also try most full flagged
-        let cur = 0;
-        let flagged_srcs = []
-        for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getUsedCapacity(resource) &&
-            (s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_LINK || s.structureType === STRUCTURE_TERMINAL) &&
-            s.pos.lookFor(LOOK_FLAGS).filter((f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE) || f.color === COLOR_ORANGE).length})) {
-            let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
-            if (fill > cur) {
-                flagged_srcs = [structure]
-                cur = fill;
-            } else if (fill === cur) {
-                flagged_srcs.push(structure);
-            }
-        }
-
         let valid_srcs = [];
         for (let i in srcs) {
             if (srcs[i]) { valid_srcs.push(srcs[i]) }
         }
-        for (let i in flagged_srcs) {
-            if (flagged_srcs[i]) { valid_srcs.push(flagged_srcs[i]) }
-        }
         src = creep.pos.findClosestByPath(valid_srcs);
+        if (src) { return src }
 
-        // Try most full unflagged
-        if (!src) {
-            let cur = 0;
-            let srcs = [];
+        // Try closest flagged >= 50%
+        src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.5) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.5)))});
+        if (src) { return src }
 
-            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getUsedCapacity(resource) &&
-                (s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_LINK || s.structureType === STRUCTURE_TERMINAL)
-                && s.pos.lookFor(LOOK_FLAGS).length === 0})) {
-                let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
-                if (fill > cur) {
-                    srcs = [structure]
-                    cur = fill;
-                } else if (fill === cur) {
-                    srcs.push(structure);
-                }
-            }
+        // Try closest flagged > 0%
+        src = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource)) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource))))});
+        if (src) { return src }
 
-            let valid_srcs = [];
-            for (let i in srcs) {
-                if (srcs[i]) { valid_srcs.push(srcs[i]) }
-            }
-            src = creep.pos.findClosestByPath(valid_srcs);
-        }
+        // Try most full storage in MAX_ROOM_SEARCH
+        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => Game.rooms[r] && Game.rooms[r].storage &&
+        Game.rooms[r].storage.store.getUsedCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource)), 'best');
+        if (room) { return room.storage }
 
         return src;
     },
@@ -176,7 +154,7 @@ utils = {
         // Containers
         if (opts.containers) {
             dsts.push(creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) =>
-            ((s.structureType === STRUCTURE_STORAGE && s.my) || s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_LINK || s.structureType === STRUCTURE_TERMINAL) &&
+            ((s.structureType === STRUCTURE_STORAGE && s.my) || s.structureType === STRUCTURE_CONTAINER) &&
             (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource)))}));
         }
         // Haulers
@@ -210,78 +188,34 @@ utils = {
 
     // Find the best dst based on room resource distribution
     bestDst: function(creep, resource=undefined) {
-        let dst;
-
         // Try spawn containers
-        dst = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) && s.store.getFreeCapacity(resource)});
+        let dst = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) && s.store.getFreeCapacity(resource)});
+        if (dst) { return dst }
 
-        // Try flagged
-        if (!dst) {
-            let cur = 1;
-            let dsts = [];
+        // Try defenses
+        dst = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (s) => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(resource)})
 
-            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getFreeCapacity(resource) &&
-                s.pos.lookFor(LOOK_FLAGS).filter((f) => f.color == COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource]).length})) {
-                let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
-                if (fill < cur) {
-                    dsts = [structure]
-                    cur = fill;
-                } else if (fill === cur) {
-                    dsts.push(structure);
-                }
-            }
+        // Try unsatisfied flags
+        dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+            !f.pos.lookFor(LOOK_STRUCTURES).length && (!f.pos.lookFor(LOOK_CREEPS).length || f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name)})
+        if (dst) { return dst }
 
-            let valid_dsts = [];
-            for (let i in dsts) {
-                if (dsts[i]) { valid_dsts.push(dsts[i]) }
-            }
-            dst = creep.pos.findClosestByPath(valid_dsts);
-        }
+        // Try closest flagged < 50%
+        dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) / c.store.getCapacity(resource) > 0.5) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) / s.store.getCapacity(resource) > 0.5)))});
+        if (dst) { return dst }
 
-        // Try non-containers
-        if (!dst) {
-            let cur = 1;
-            let dsts = [];
+        // Try closest flagged < 100%
+        dst = creep.pos.findClosestByPath(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
+            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource)) ||
+            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource))))});
+        if (dst) { return dst }
 
-            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getFreeCapacity(resource)
-                && s.structureType != STRUCTURE_CONTAINER && s.structureType != STRUCTURE_STORAGE && s.structureType != STRUCTURE_LINK && s.structureType != STRUCTURE_TERMINAL})) {
-                let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
-                if (fill < cur) {
-                    dsts = [structure]
-                    cur = fill;
-                } else if (fill === cur) {
-                    dsts.push(structure);
-                }
-            }
-
-            let valid_dsts = [];
-            for (let i in dsts) {
-                if (dsts[i]) { valid_dsts.push(dsts[i]) }
-            }
-            dst = creep.pos.findClosestByPath(valid_dsts);
-        }
-
-        // Try most empty unflagged
-        if (!dst) {
-            let cur = 1;
-            let dsts = [];
-
-            for (let structure of creep.room.find(FIND_STRUCTURES, {filter: (s) => s.store && s.store.getFreeCapacity(resource) && s.pos.lookFor(LOOK_FLAGS).length === 0})) {
-                let fill = structure.store.getUsedCapacity(resource) / structure.store.getCapacity(resource)
-                if (fill < cur) {
-                    dsts = [structure]
-                    cur = fill;
-                } else if (fill === cur) {
-                    dsts.push(structure);
-                }
-            }
-
-            let valid_dsts = [];
-            for (let i in dsts) {
-                if (dsts[i]) { valid_dsts.push(dsts[i]) }
-            }
-            dst = creep.pos.findClosestByPath(valid_dsts);
-        }
+        // Try most empty storage in MAX_ROOM_SEARCH
+        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => Game.rooms[r] && Game.rooms[r].storage &&
+        Game.rooms[r].storage.store.getFreeCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource)), 'best');
+        if (room) { return room.storage }
 
         return dst;
     },
@@ -316,8 +250,7 @@ utils = {
             fill_max: 0,
             fill_avg: 0,
             imbalance: 0,
-            free: 0,
-            space: 0
+            free: 0
         }
 
         return resources;

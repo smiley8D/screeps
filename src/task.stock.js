@@ -46,13 +46,6 @@ class Stock extends Task {
     static doTask(creep) {
         let resource = creep.memory.task.resource;
 
-        // Move to room
-        if (creep.room.name != creep.memory.task.room) {
-            creep.memory.room = creep.memory.task.room;
-            creep.say("📦" + resource[0] + creep.memory.task.room);
-            return;
-        }
-
         let result = ERR_NOT_FOUND;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
             // Inventory contains wrong resource, depo
@@ -71,6 +64,10 @@ class Stock extends Task {
                 // Inventory full, get dst
                 dst = utils.bestDst(creep, resource);
                 src = null;
+            } else if (!src && !dst && creep.room.name != creep.memory.task.room) {
+                // Move to correct room
+                creep.memory.room = creep.memory.task.room;
+                return creep.memory.task.room;
             } else if (!src && !dst) {
                 // Pick new src or dst by distance
                 src = utils.bestSrc(creep, resource);
@@ -84,10 +81,22 @@ class Stock extends Task {
 
             // Execute
             if (src) {
-                result = utils.doSrc(creep, src, resource);
+                if (src instanceof Flag) {
+                    if (src.pos === creep.pos) { return OK }
+                    if (src.pos.lookFor(LOOK_CREEPS).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_CREEPS)[0], resource) }
+                    if (src.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
+                } else {
+                    result = utils.doSrc(creep, src, resource);
+                }
                 if (result === ERR_NOT_ENOUGH_RESOURCES || result === ERR_FULL) { src = null }
             } else if (dst) {
-                result = utils.doDst(creep, dst, resource);
+                if (dst instanceof Flag) {
+                    if (dst.pos === creep.pos) { return OK }
+                    if (dst.pos.lookFor(LOOK_CREEPS).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_CREEPS)[0], resource) }
+                    if (dst.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
+                } else {
+                    result = utils.doDst(creep, dst, resource);
+                }
                 if (result === ERR_NOT_ENOUGH_RESOURCES || result === ERR_FULL) { dst = null }
             }
 
