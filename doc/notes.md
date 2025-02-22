@@ -6,6 +6,7 @@
         - Especially for multirooms, I don't think I ever want it to recompute that during a run
         - Need to research and test more
         - Consider using findClosestByRange more often. Within a room it probably works quite well
+            - currently testing, not much noticable impact
 - Calculate replacement time from distance to nearest spawn
     - Store creep's spawn and calculate current linear distance?
 - Metrics on survey

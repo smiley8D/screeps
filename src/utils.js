@@ -634,7 +634,9 @@ utils = {
 
     // Display metrics visuals
     showMetrics() {
-        for (let room_name in Memory.rooms) {
+        let rooms = Object.keys(Game.rooms).concat(Object.values(Game.flags).filter((f) => f.color === COLOR_BLUE).map((f) => f.pos.roomName))
+        for (let room_name of rooms) {
+            if (!Memory.rooms[room_name]) { continue }
             let metrics;
             let visual = new RoomVisual(room_name);
 
