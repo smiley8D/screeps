@@ -24,26 +24,26 @@ utils = {
         let srcs = [];
         if (opts.trash) {
             // Drops
-            srcs.push(creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {filter: (d) => (d.resourceType === resource || !resource) && (opts.partial || d.amount >= creep.store.getFreeCapacity(resource))}));
+            srcs = srcs.concat(creep.room.find(FIND_DROPPED_RESOURCES, {filter: (d) => (d.resourceType === resource || !resource) && (opts.partial || d.amount >= creep.store.getFreeCapacity(resource))}));
             // Tombstones
-            srcs.push(creep.pos.findClosestByRange(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource) && (opts.partial || t.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
+            srcs = srcs.concat(creep.room.find(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource) && (opts.partial || t.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
             // Ruin
-            srcs.push(creep.pos.findClosestByRange(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource) && (opts.partial || r.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
+            srcs = srcs.concat(creep.room.find(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource) && (opts.partial || r.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
         }
         // Containers
         if (opts.containers) {
-            srcs.push(creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) =>
+            srcs = srcs.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) =>
                 (s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER) &&
                 (s.store.getUsedCapacity(resource) && (opts.partial || s.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource)))
             }));
         }
         // Sources
         if (opts.sources && resource === RESOURCE_ENERGY) {
-            srcs.push(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE));
+            srcs = srcs.concat(creep.room.find(FIND_SOURCES_ACTIVE));
         }
         // Haulers
         if (opts.haulers) {
-            srcs.push(creep.pos.findClosestByRange(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getUsedCapacity(resource) &&
+            srcs = srcs.concat(creep.room.find(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getUsedCapacity(resource) &&
                 (opts.partial || c.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource))}));
         }
 
@@ -74,11 +74,11 @@ utils = {
         // Try closest decayable
         let srcs = [];
         // Drops
-        srcs.push(creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {filter: (d) => d.resourceType === resource || !resource}));
+        srcs = srcs.concat(creep.room.find(FIND_DROPPED_RESOURCES, {filter: (d) => d.resourceType === resource || !resource}));
         // Tombstones
-        srcs.push(creep.pos.findClosestByRange(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource)}));
+        srcs = srcs.concat(creep.room.find(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource)}));
         // Ruin
-        srcs.push(creep.pos.findClosestByRange(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource)}));
+        srcs = srcs.concat(creep.room.find(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource)}));
         let valid_srcs = [];
         for (let i in srcs) {
             if (srcs[i]) { valid_srcs.push(srcs[i]) }
@@ -169,18 +169,18 @@ utils = {
         let dsts = []
         // Containers
         if (opts.containers) {
-            dsts.push(creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) =>
+            dsts = dsts.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) =>
             ((s.structureType === STRUCTURE_STORAGE && s.my) || s.structureType === STRUCTURE_CONTAINER) &&
             (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource)))}));
         }
         // Haulers
         if (opts.haulers) {
-            dsts.push(creep.pos.findClosestByRange(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getFreeCapacity(resource) &&
+            dsts = dsts.concat(creep.room.find(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getFreeCapacity(resource) &&
                 (opts.partial || c.store.getFreeCapacity(resource) <= creep.store.getUsedCapacity(resource))}));
         }
         // Spawners
         if (opts.spawners && (resource === RESOURCE_ENERGY || (!resource && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
-            dsts.push(creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) => s.my &&
+            dsts = dsts.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) => s.my &&
                 (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) &&
                 (s.store.getFreeCapacity(RESOURCE_ENERGY) && (opts.partial || s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getUsedCapacity(RESOURCE_ENERGY)))}));
         }
