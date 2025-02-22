@@ -132,17 +132,18 @@ module.exports.loop = function() {
     Memory.metrics.cpu_defend = Memory.metrics.cpu_defend * (1 - config.MOV_N) + (cpu_used - cpu_count) * config.MOV_N;
     cpu_count = cpu_used;
 
-    // Heavy lifting activities
-    if (Game.time % config.HEAVY_TICK === 0 && Game.cpu.bucket == 10000) {
-        // Update metrics
+    // Update metrics
+    if (Game.time % config.METRICS_TICK === 0 && Game.cpu.bucket === 10000) {
         utils.globalMetrics();
 
         // CPU check
         cpu_used = Game.cpu.getUsed();
         Memory.metrics.cpu_metrics = Memory.metrics.cpu_metrics * (1 - config.MOV_N) + (cpu_used - cpu_count) * config.MOV_N;
         cpu_count = cpu_used;
+    }
 
-        // Generate tasks
+    // Generate tasks
+    if (Game.time % config.TASK_TICK === 0 && Game.cpu.bucket === 10000) {
         let tasks = new Map();
         let sorted_tasks = [];
         for (let task_name in TASKS) {
