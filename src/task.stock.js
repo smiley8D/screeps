@@ -55,8 +55,10 @@ class Stock extends Task {
         } else {
             // Determine next step
             let src = Game.getObjectById(creep.memory.curSrc);
+            if (!src) { src = Game.flags[creep.memory.curSrc] }
             if (src && src.store && !src.store.getUsedCapacity(resource)) { src = null }
             let dst = Game.getObjectById(creep.memory.curDst);
+            if (!dst) { src = Game.flags[creep.memory.curDrc] }
             if (dst && dst.store && !dst.store.getFreeCapacity(resource)) { dst = null }
             if (!src && !creep.store.getUsedCapacity()) {
                 // Inventory empty, get src
@@ -104,9 +106,11 @@ class Stock extends Task {
             }
 
             // Update cache
-            if (src) { creep.memory.curSrc = src.id }
+            if (src && src.id) { creep.memory.curSrc = src.id }
+            else if (src) { creep.memory.curSrc = src.name }
             else { creep.memory.curSrc = null }
-            if (dst) { creep.memory.curDst = dst.id }
+            if (dst && dst.id) { creep.memory.curDst = dst.id }
+            else if (dst) { creep.memory.curDst = dst.name }
             else { creep.memory.curDst = null }
         }
 
