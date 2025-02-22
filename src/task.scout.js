@@ -11,12 +11,10 @@ class Scout extends Task {
         super("Scout", room, room, 1);
         this.body = new ScoutBody();
         this.max_workers = 1;
-        // this.max_search = 50;
         this.search_rooms = [room, spawn_room];
     }
 
     static getTasks() {
-        let start = Game.cpu.getUsed();
         let tasks = [];
         let flagged_rooms = new Map();
         // Add scout flags
@@ -35,9 +33,10 @@ class Scout extends Task {
 
         // Get rooms in range that need scanning
         let dists = {}
-        let found_rooms = utils.searchNearbyRooms(spawn_rooms, 50, (r,d) => flagged_rooms.has(r) || !Memory.rooms[r] || !Memory.rooms[r].metrics ||
+        let found_rooms = utils.searchNearbyRooms(spawn_rooms, 50, (r,d) => flagged_rooms.has(r) && (!Memory.rooms[r] || !Memory.rooms[r].metrics ||
             (Memory.rooms[r].metrics.tick < (Game.time - config.SCOUT_TICK) ||
-            (Memory.rooms[r].sightings && Object.keys(Memory.rooms[r].sightings).some((k) => k != 'Power Bank' && k != 'Invader' && k != 'Source Keeper' && Memory.rooms[r].sightings[k] >= Memory.rooms[r].metrics.tick / 5))),
+            (Memory.rooms[r].sightings && Object.keys(Memory.rooms[r].sightings).some((k) =>
+                k != 'Power Bank' && k != 'Invader' && k != 'Source Keeper' && Memory.rooms[r].sightings[k] >= Memory.rooms[r].metrics.tick / 5)))),
             'check', dists);
 
         // Create tasks
@@ -45,7 +44,6 @@ class Scout extends Task {
             tasks.push(new Scout(found_rooms[i], dists[found_rooms[i]][1]));
         }
 
-        console.log("Scout CPU:",Game.cpu.getUsed()-start);
         return tasks;
     }
 
@@ -54,6 +52,8 @@ class Scout extends Task {
         if (creep.room.name != creep.memory.task.room) {
             return  creep.memory.task.room;
         }
+
+        return OK;
     }
 
 }

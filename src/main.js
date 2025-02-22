@@ -20,7 +20,7 @@ const TASKS = {
     "Claim": Claim,
     "Recycle": Recycle,
     "Dismantle": Dismantle,
-    // "Scout": Scout
+    "Scout": Scout
 }
 
 module.exports.loop = function() {
