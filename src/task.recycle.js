@@ -31,6 +31,7 @@ class Recycle extends Task {
             });
         }
 
+        let result;
         if (src) {
             // If trash, pickup
             result = utils.doSrc(creep, src);
