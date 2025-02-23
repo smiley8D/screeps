@@ -341,8 +341,12 @@ module.exports.loop = function() {
 
     // Paint visuals
     utils.showMetrics();
-    let rooms = Object.keys(Game.rooms).concat(Object.values(Game.flags).filter((f) => f.color === COLOR_PURPLE).map((f) => f.pos.roomName))
-    for (let room_name of rooms) {
+    let rooms = Object.assign({}, Game.rooms);
+    // Include flagged rooms
+    for (let flag of Object.values(Game.flags)) {
+        if (!rooms[flag.pos.roomName]) {rooms[flag.pos.roomName] = flag}
+    }
+    for (let room_name in rooms) {
         if (!Memory.rooms[room_name]) { continue }
         let visuals = Memory.rooms[room_name].visuals;
         if (!visuals) {continue;}

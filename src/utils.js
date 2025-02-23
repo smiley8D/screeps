@@ -622,8 +622,12 @@ utils = {
 
     // Display metrics visuals
     showMetrics() {
-        let rooms = Object.keys(Game.rooms).concat(Object.values(Game.flags).filter((f) => f.color === COLOR_PURPLE).map((f) => f.pos.roomName))
-        for (let room_name of rooms) {
+        let rooms = Object.assign({}, Game.rooms);
+        // Include flagged rooms
+        for (let flag of Object.values(Game.flags)) {
+            if (!rooms[flag.pos.roomName]) {rooms[flag.pos.roomName] = flag}
+        }
+        for (let room_name in rooms) {
             if (!Memory.rooms[room_name]) { continue }
             let metrics;
             let visual = new RoomVisual(room_name);
@@ -645,6 +649,7 @@ utils = {
 
                 text.push("[ Metrics: " + (Math.round(100*metrics.cpu_metrics)/100) + " ]");
                 for (let room in Game.rooms) {
+                    if (!Memory.rooms[room].metrics) { continue }
                     let mov = Memory.rooms[room].metrics.last_mov.cpu;
                     if (mov) { text.push(room + ": " + (Math.round(100*mov)/100)) }
                 }
@@ -888,6 +893,20 @@ utils = {
     flag_resource: {
         6: RESOURCE_ENERGY,
         9: RESOURCE_HYDROGEN
+    },
+
+    // Get current user
+    username: function() {
+      if (Object.values(Game.spawns).length) {
+        return Object.values(Game.spawns)[0].owner.username;
+      } else if (Object.values(Game.creeps).length) {
+        return Object.values(Game.creeps)[0].owner.username;
+      } else if (Object.values(Game.rooms).length) {
+        if (!Object.values(Game.rooms)[0].controller || !Object.values(Game.rooms)[0].controller.my) { return null }
+        return Object.values(Game.rooms)[0].controller.owner.username;
+      } else {
+        return null;
+      }
     }
 
 }

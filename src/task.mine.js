@@ -32,8 +32,8 @@ class Mine extends Task {
                     }
                 }
 
-                // Determine wanted - HARDCODED TO MATCH SOURCE MAX RATE FOR NOW
-                let wanted = 6;
+                // Determine wanted
+                let wanted = 1 + (source.energyCapacity / 600);
                 if (source instanceof Mineral) {
                     wanted = Math.max(0, Math.log(source.mineralAmount));
                     spots = 1;

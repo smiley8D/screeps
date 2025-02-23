@@ -1,5 +1,6 @@
 const Task = require("task");
 const config = require("config");
+const utils = require("utils");
 const Claimer = require("body.claimer");
 
 class Claim extends Task {
@@ -22,8 +23,10 @@ class Claim extends Task {
 
             // Check flag
             if (flag.color != COLOR_YELLOW) { continue }
-            else if (flag.room && ((flag.color != COLOR_BROWN && !flag.room.controller) ||
-            (flag.room.controller && flag.room.controller.my))) {
+
+            // Check controller exists and is not owned by me (unless flag allows otherwise for either)
+            if (flag.room && ((flag.secondaryColor != COLOR_BROWN && !flag.room.controller) || 
+            (flag.secondaryColor != COLOR_RED && flag.room.controller && flag.room.controller.my))) {
                 flag.remove();
                 continue;
             }
@@ -32,27 +35,34 @@ class Claim extends Task {
             switch (flag.secondaryColor) {
                 case COLOR_YELLOW:
                     // Claim
-                    if (flag.room && flag.room.controller.owner) {
-                        flag.remove();
-                        continue;
-                    }
+                    if (flag.room && flag.room.controller.owner) { continue }
                     tasks.push(new Claim(flag.pos.roomName, 'claim', 1));
                     break;
                 case COLOR_BLUE:
                     // Reserve
-                    if (flag.room && flag.room.controller.owner) {
-                        flag.remove();
-                        continue;
+                    if (flag.room) {
+                        // Check not already owned or reserved
+                        if (flag.room.controller.owner || (flag.room.controller.reservation && flag.room.controller.reservation.username != utils.username())) { continue }
+
+                        // Get remaining reservation ticks to add
+                        let remaining = 5000;
+                        if (flag.room.controller.reservation) { remaining -= flag.room.controller.reservation.ticksToEnd }
+
+                        tasks.push(new Claim(flag.pos.roomName, 'reserve', Math.max(1, Math.log(remaining)/2)));
+                    } else {
+                        tasks.push(new Claim(flag.pos.roomName, 'reserve', 2));
                     }
-                    tasks.push(new Claim(flag.pos.roomName, 'reserve', 2));
                     break;
                 case COLOR_RED:
                     // Attack
-                    if (flag.room && !flag.room.controller.owner) {
-                        flag.remove();
-                        continue;
-                    }
+                    // Check owned or reserved
+                    if (flag.room && (!flag.room.controller.reservation && !flag.room.controller.owner)) { continue }
+                    // HARDCODE 1 FOR NOW
                     tasks.push(new Claim(flag.pos.roomName, 'attack', 1));
+                    break;
+                case COLOR_BROWN:
+                    // Exploit
+                    // NOTHING FOR NOW, CHECK NOTES
                     break;
             }
         }
