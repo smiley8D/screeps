@@ -458,7 +458,7 @@ utils = {
         }
         for (let structure of room.find(FIND_TOMBSTONES).concat(room.find(FIND_RUINS))) {
             let inv_counter = 0;
-            for (let resource in RESOURCES_ALL) {
+            for (let resource of RESOURCES_ALL) {
                 if (inv_counter === structure.store.getUsedCapacity()) { break }
                 let amount = structure.store.getUsedCapacity(resource);
                 if (!amount) { continue }
