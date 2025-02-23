@@ -23,7 +23,7 @@ class Recycle extends Task {
         let result = ERR_NOT_FOUND;
         if (creep.store.getUsedCapacity()) {
             // Inventory not empty, depo
-            result = utils.doDst(creep, utils.findDst(creep));
+            result = utils.doDst(creep, utils.findDst(creep, undefined, {haulers: creep.memory.body != 'Hauler'}));
         } else if (creep.ticksToLive < 500 && creep.room.find(FIND_MY_SPAWNS)) {
             // Recycle creep
             let spawner = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
