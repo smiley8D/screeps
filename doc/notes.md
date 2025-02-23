@@ -60,6 +60,7 @@
         - spawn/storage positions picked to minimize total distance between all logi flags?
     - Since I'll have tasks dedicated to flags, I shouldn't need to give them special treatment in bestSrc/Dst
         - This means tash should have a higher priority which would be good
+- Hauler pull tasks ("Trailer?") for Drudge units not in position
 
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1
