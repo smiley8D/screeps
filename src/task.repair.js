@@ -47,12 +47,12 @@ class Repair extends Task {
             let structure = Game.getObjectById(creep.memory.curTgt);
             if (!structure || structure.hitsMax === structure.hits) {
                 // Mixed priority of damage & distance
-                structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter:(o) => (!o.owner || o.my) && o.hits  < 100 && !o.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_YELLOW)});
-                if (!structure) { structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter:(o) => !o.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_YELLOW) &&
+                structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter:(o) => (!o.owner || o.my) && o.hits  < 100 && !o.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE)});
+                if (!structure) { structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter:(o) => !o.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE) &&
                     (!o.owner || o.my) && o.hits / o.hitsMax < ((o.structureType === STRUCTURE_WALL || o.structureType === STRUCTURE_RAMPART) ? 0.1 * config.DEFENSE_PER : 0.1)}) }
-                if (!structure) { structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter:(o) => !o.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_YELLOW) &&
+                if (!structure) { structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter:(o) => !o.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE) &&
                     (!o.owner || o.my) && o.hits / o.hitsMax < ((o.structureType === STRUCTURE_WALL || o.structureType === STRUCTURE_RAMPART) ? 0.5 * config.DEFENSE_PER : 0.5)}) }
-                if (!structure) { structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter:(o) => !o.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_YELLOW) &&
+                if (!structure) { structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter:(o) => !o.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE) &&
                     (!o.owner || o.my) && o.hits < ((o.structureType === STRUCTURE_WALL || o.structureType === STRUCTURE_RAMPART) ? o.hitsMax * config.DEFENSE_PER : o.hitsMax)}) }
                 if (structure) {
                     creep.memory.curTgt = structure.id;

@@ -6,38 +6,15 @@ class Pioneer extends Task {
 
     static emoji = '🏔️';
 
-    constructor(source, room, wanted, spots) {
+    constructor(room, wanted) {
         super("Pioneer", source, room, wanted);
         this.max_workers = spots;
+        this.emergency = true;
     }
 
     static getTasks() {
-        let tasks = []
-        for (let room in Game.rooms) {
-            room = Game.rooms[room];
+        let tasks = [];
 
-            // Check room owned
-            if (!room.controller || !room.controller.my) { continue }
-
-            // Find mineables
-            for (let source of room.find(FIND_SOURCES).concat(room.find(FIND_MINERALS, { filter: (m) => m.pos.lookFor(LOOK_STRUCTURES).length }))) {
-                // Calculate parking spots
-                let spots = 0;
-                for (let x = source.pos.x - 1; x <= source.pos.x + 1; x++) {
-                    for (let y = source.pos.y - 1; y <= source.pos.y + 1; y++) {
-                        if (source.room.getTerrain().get(x, y) === 0) { spots++; }
-                    }
-                }
-
-                // Determine wanted - HARDCODED TO MATCH SOURCE MAX RATE FOR NOW
-                let wanted = 6;
-                if (source instanceof Mineral) {
-                    wanted = Math.max(0, Math.log(source.mineralAmount));
-                    spots = 1;
-                }
-                tasks.push(new Mine(source.id, room.name, wanted, spots));
-            }
-        }
         return tasks;
     }
 

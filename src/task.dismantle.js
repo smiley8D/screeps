@@ -16,7 +16,7 @@ class Dismantle extends Task {
         // Iterate through dismantle flags
         for (let flag in Game.flags) {
             flag = Game.flags[flag];
-            if (flag.color != COLOR_ORANGE) {continue}
+            if (flag.color != COLOR_ORANGE || flag.secondaryColor != COLOR_ORANGE) {continue}
             if (flag.room) {
                 // Can get detailed information
                 let structures = flag.pos.lookFor(LOOK_STRUCTURES);

@@ -71,11 +71,15 @@
 ## Flags
 
 - Grey: Graveyard, place for unassigned creeps to gather out of the way
-- Purple: Claim/reserve controller in room
-- Blue: Scout
+- Orange: Deconstruct
 - White-###: Logistics
     - White: Drain
     - Yellow: Energy
     - Grey: Hydrogen
-- Orange: Deconstruct
-- 
+- Purple-###: Intelligence (will generate visuals)
+    - Purple: Scout
+- Yellow-###: Expansion
+    - Yellow: Claim
+    - Blue: Reserve
+    - Red: Attack controller
+    - Brown: Exploit, harvest resources

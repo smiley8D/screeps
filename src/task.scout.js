@@ -22,7 +22,7 @@ class Scout extends Task {
             flag = Game.flags[flag];
 
             // Only match scout flags
-            if (flag.color == COLOR_BLUE) { flagged_rooms.set(flag.pos.roomName,flag) }
+            if (flag.color === COLOR_PURPLE && flag.secondaryColor === COLOR_PURPLE) { flagged_rooms.set(flag.pos.roomName,flag) }
         }
 
         // Assemble spawner rooms

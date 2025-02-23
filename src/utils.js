@@ -330,6 +330,9 @@ utils = {
             upgrade: 0,
             upgrade_spend: 0,
             spawn: 0,
+            recycle: 0,
+            renew: 0,
+            transfer: 0,
             harvest: {}
         }
 
@@ -386,7 +389,7 @@ utils = {
         // Process structures
         for (let structure of room.find(FIND_STRUCTURES)) {
             // Process damage
-            if (structure.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_ORANGE)) {
+            if (structure.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE)) {
                 // Structure to be disassembled
                 metrics.dismantle += structure.hits;
                 metrics.dismantle_max += structure.hitsMax;
@@ -643,7 +646,7 @@ utils = {
 
     // Display metrics visuals
     showMetrics() {
-        let rooms = Object.keys(Game.rooms).concat(Object.values(Game.flags).filter((f) => f.color === COLOR_BLUE).map((f) => f.pos.roomName))
+        let rooms = Object.keys(Game.rooms).concat(Object.values(Game.flags).filter((f) => f.color === COLOR_PURPLE).map((f) => f.pos.roomName))
         for (let room_name of rooms) {
             if (!Memory.rooms[room_name]) { continue }
             let metrics;

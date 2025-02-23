@@ -234,7 +234,7 @@ module.exports.loop = function() {
                 // Use available spawner
                 let spawner = avail_spawns.get(room).pop();
                 if (avail_spawns.get(room).length === 0) {avail_spawns.delete(room)}
-                [creep, size] = task.body.spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
+                [creep, size] = task.body.spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)), task.emergency);
             }
 
             // Update task fullfillment
@@ -341,7 +341,7 @@ module.exports.loop = function() {
 
     // Paint visuals
     utils.showMetrics();
-    let rooms = Object.keys(Game.rooms).concat(Object.values(Game.flags).filter((f) => f.color === COLOR_BLUE).map((f) => f.pos.roomName))
+    let rooms = Object.keys(Game.rooms).concat(Object.values(Game.flags).filter((f) => f.color === COLOR_PURPLE).map((f) => f.pos.roomName))
     for (let room_name of rooms) {
         if (!Memory.rooms[room_name]) { continue }
         let visuals = Memory.rooms[room_name].visuals;

@@ -31,7 +31,7 @@ class Recycle extends Task {
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(spawner, {visualizePathStyle: {stroke: "#dc0000"}})}
         } else {
             // Move to graveyard
-            let graveyard = creep.pos.findClosestByRange(FIND_FLAGS, { filter: (f) => f.color === COLOR_GREY });
+            let graveyard = creep.pos.findClosestByRange(FIND_FLAGS, { filter: (f) => f.color === COLOR_GREY && f.secondaryColor === COLOR_GREY });
             if (graveyard) {
                 result = creep.moveTo(graveyard, {visualizePathStyle: {}});
             }

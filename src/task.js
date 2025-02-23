@@ -40,6 +40,9 @@ class Task {
 
         // Optional additional details for result bubble
         this.detail = '';
+
+        // Task can use spawn reserves
+        this.emergency = false;
     }
 
     // Generate list of tasks
