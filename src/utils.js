@@ -56,10 +56,10 @@ utils = {
 
         // Update cache
         if (src) {
-            creep.memory.curSrc = src.id;
+            delete creep.memory.curSrc;
             return src;
         } else {
-            creep.memory.curSrc = null;
+            delete creep.memory.curSrc;
             return;
         }
     },
@@ -197,7 +197,7 @@ utils = {
             creep.memory.curDst = dst.id;
             return dst;
         } else {
-            creep.memory.curDst = null;
+            delete creep.memory.curDst;
             return;
         }
     },
@@ -215,6 +215,7 @@ utils = {
 
         // Try defenses
         dst = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(resource)})
+        if (dst) { return dst }
 
         // Try unsatisfied flags
         dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
@@ -851,11 +852,11 @@ utils = {
                 memory.sightings = {};
             }
             if (survey || !memory.survey) {
-                memory.survey = null;
+                delete memory.survey;
                 if (Game.rooms[room_name]) { memory.survey = utils.doSurvey(Game.rooms[room_name]) }
             }
             if (metrics || !memory.metrics) {
-                memory.metrics = null;
+                delete memory.metrics;
                 if (Game.rooms[room_name]) { memory.metrics = utils.roomMetrics(Game.rooms[room_name]) }
             }
         } else {
@@ -884,7 +885,7 @@ utils = {
     // Unassign one or all creeps
     unassign(creep=null) {
         if (creep) {
-            if (Game.creeps[creep]) {Game.creeps[creep].memory.task = null}
+            if (Game.creeps[creep]) {delete Game.creeps[creep].memory.task}
         } else {
             for (let creep in Game.creeps) { utils.unassign(creep) }
         }

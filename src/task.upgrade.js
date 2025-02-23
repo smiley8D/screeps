@@ -41,11 +41,11 @@ class Upgrade extends Task {
         let result;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
-            creep.memory.curSrc = null;
+            delete creep.memory.curSrc;
             result = utils.doDst(creep, utils.findDst(creep));
         } else if (creep.store.getUsedCapacity()) {
             // Energy in inventory, upgrade and move closer
-            creep.memory.curSrc = null;
+            delete creep.memory.curSrc;
             result = creep.upgradeController(controller);
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {}})  }
             else if (result === OK) { creep.moveTo(controller, {visualizePathStyle: {}}) }

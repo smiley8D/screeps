@@ -40,17 +40,20 @@ class Dismantle extends Task {
         let flag = Game.flags[creep.memory.task.tgt];
         if (!flag) { return ERR_NOT_FOUND }
         let structures = flag.pos.lookFor(LOOK_STRUCTURES);
-        let structure = null;
-        if (structures.length > 0) {structure = structures[0]}
+        if (structures.length === 0) {
+            flag.remove();
+            return OK;
+        }
+        let structure = structures[0];
 
         let result = ERR_NOT_FOUND;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
-            creep.memory.curSrc = null;
+            delete creep.memory.curSrc;
             result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
         } else if (creep.store.getFreeCapacity()) {
             // Space in inventory, dismantle
-            creep.memory.curDst = null;
+            delete creep.memory.curDst;
 
             // Attempt dismantle
             result = creep.dismantle(structure);

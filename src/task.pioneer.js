@@ -59,7 +59,7 @@ class Pioneer extends Task {
             result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
         } else if (creep.store.getFreeCapacity() >= 2 * (2 * (creep.memory.size - 1) + 1)) {
             // Space in inventory, mine
-            creep.memory.curDst = null;
+            delete creep.memory.curDst;
             result = creep.harvest(target)
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(target, { visualizePathStyle: {} }) }
         } else {

@@ -35,11 +35,11 @@ class Build extends Task {
         let result;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
-            creep.memory.curSrc = null;
+            delete creep.memory.curSrc;
             result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
         } else if (creep.store.getUsedCapacity()) {
             // Energy in inventory, build
-            creep.memory.curSrc = null;
+            delete creep.memory.curSrc;
 
             // Get structure
             let structure = Game.getObjectById(creep.memory.curTgt);
@@ -48,7 +48,7 @@ class Build extends Task {
                 if (structure) {
                     creep.memory.curTgt = structure.id;
                 } else {
-                    creep.memory.curTgt = null;
+                    delete creep.memory.curTgt;
                 }
             }
 
@@ -57,7 +57,7 @@ class Build extends Task {
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
-            creep.memory.curTgt = null;
+            delete creep.memory.curTgt;
             result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
         }
 

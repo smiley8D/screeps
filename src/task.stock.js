@@ -108,10 +108,10 @@ class Stock extends Task {
             // Update cache
             if (src && src.id) { creep.memory.curSrc = src.id }
             else if (src) { creep.memory.curSrc = src.name }
-            else { creep.memory.curSrc = null }
+            else { delete creep.memory.curSrc }
             if (dst && dst.id) { creep.memory.curDst = dst.id }
             else if (dst) { creep.memory.curDst = dst.name }
-            else { creep.memory.curDst = null }
+            else { delete creep.memory.curDst }
         }
 
         return result;

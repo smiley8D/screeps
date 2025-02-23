@@ -9,10 +9,10 @@ class Recycle extends Task {
 
     constructor(creep) {
         super("Recycle", null, null, 0);
-        creep.memory.curSrc = null;
-        creep.memory.curDst = null;
-        creep.memory.room = null;
-        creep.memory.curTgt = null;
+        delete creep.memory.curSrc;
+        delete creep.memory.curDst;
+        delete creep.memory.room;
+        delete creep.memory.curTgt;
     }
 
     static getTasks() {

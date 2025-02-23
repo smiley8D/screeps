@@ -204,7 +204,7 @@ module.exports.loop = function() {
                 if (!avail_creeps.has(creep.memory.body)) {avail_creeps.set(creep.memory.body,new Map())}
                 let creeps = avail_creeps.get(creep.memory.body);
                 if (!creeps.has(creep.room.name)) { creeps.set(creep.room.name, []) }
-                creep.memory.task = null;
+                delete creep.memory.task;
                 creeps.get(creep.room.name).push(creep);
             }
         }
@@ -240,10 +240,10 @@ module.exports.loop = function() {
             // Update task fullfillment
             if (creep) {
                 if (creep.memory) {
-                    creep.memory.curSrc = null;
-                    creep.memory.curDst = null;
-                    creep.memory.room = null;
-                    creep.memory.curTgt = null;
+                    delete creep.memory.curSrc;
+                    delete creep.memory.curDst;
+                    delete creep.memory.room;
+                    delete creep.memory.curTgt;
                 }
                 task.parts += size;
                 task.workers++;
@@ -304,7 +304,7 @@ module.exports.loop = function() {
         // Room navigation
         if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 === 0 || creep.pos.y % 49 === 0)) {
             result = creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {resusePath: 50, visualizePathStyle: {}});
-        }
+        } else if (creep.memory.room) { delete creep.memory.room }
 
         let task_cpu = {}
  
