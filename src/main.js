@@ -280,7 +280,7 @@ module.exports.loop = function() {
             for (; i < room_tasks[room].length; i++) {
                 let task = room_tasks[room][i];
                 visuals = Memory.rooms[room].visuals;
-                visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted)+" ("+task.workers+")", 0, 48.5-i, Game.time, {align: "left"}]);
+                visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted)+"   ( "+task.workers+" / "+task.max_workers+" )", 0, 48.5-i, Game.time, {align: "left"}]);
             }
             visuals.push(["[ Tasks: " + room_tasks[room].length + " ]", 0, 48.5-i, Game.time, {align: "left"}]);
         }
