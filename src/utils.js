@@ -10,7 +10,8 @@ utils = {
             trash: true,
             containers: true,
             sources: false,
-            haulers: true
+            haulers: true,
+            limit: null
         }
         for (let opt in in_opts) {
             opts[opt] = in_opts[opt];
@@ -53,6 +54,9 @@ utils = {
             if (srcs[i]) { valid_srcs.push(srcs[i]) }
         }
         src = creep.pos.findClosestByRange(valid_srcs);
+
+        // Check range
+        if (opts.limit != null && creep.pos.getRangeTo(src) > opts.limit) { src = null }
 
         // Update cache
         if (src) {
@@ -155,7 +159,8 @@ utils = {
             partial: true,
             containers: true,
             haulers: true,
-            spawners: true
+            spawners: true,
+            limit: null
         }
         for (let opt in in_opts) {
             opts[opt] = in_opts[opt];
@@ -191,6 +196,9 @@ utils = {
             if (dsts[i]) { valid_dsts.push(dsts[i]) }
         }
         dst = creep.pos.findClosestByRange(valid_dsts);
+
+        // Check range
+        if (opts.limit != null && creep.pos.getRangeTo(dst) > opts.limit) { dst = null }
 
         // Update cache
         if (dst) {

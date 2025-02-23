@@ -65,7 +65,7 @@ class Mine extends Task {
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(target, { visualizePathStyle: {} }) }
         } else {
             // Full inventory, depo
-            result = utils.doDst(creep, utils.findDst(creep, resource), resource);
+            result = utils.doDst(creep, utils.findDst(creep, resource, {limit: 3}), resource);
         }
 
         return result;

@@ -51,7 +51,7 @@ class Upgrade extends Task {
             else if (result === OK) { creep.moveTo(controller, {visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
-            result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
+            result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY, {limit: 3}), RESOURCE_ENERGY);
         }
 
         return result;
