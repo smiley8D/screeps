@@ -36,6 +36,7 @@
     - 300 tick reset for all, reserving/owning bumps up to 3000, unowned is 1500, center is 4000
     - Figure out how to make decisions based on this, is it worth it to get extra energy?
     - When does the downgrade happen? If a source is partially exploited, will it downgrade before reset?
+- Calculate parking spots in survey, also apply to controller (currently hard-coded to 1)
 
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%

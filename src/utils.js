@@ -474,7 +474,7 @@ utils = {
         for (let creep of room.find(FIND_CREEPS)) {
             // Update costs
             metrics.creeps++;
-            if (creep.memory && creep.memorycost) {
+            if (creep.memory && creep.memory.cost) {
                 // Cost cached, use that
                 metrics.creeps_cost += (creep.memory.cost / 1500)
             }
@@ -733,6 +733,11 @@ utils = {
                     if (metrics.count_mov.spawn  >= 0.01|| metrics.last_mov.creeps_cost >= 0.01) {text.push("Creeps: " + (Math.round(100*metrics.count_mov.spawn)/100) + " (" + (Math.round(1000*metrics.count_mov.spawn/outflow_total)/10)
                     + "%) @ " + (Math.round(100*metrics.last_mov.creeps_cost)/100) + " (" + (Math.round(1000*metrics.last_mov.creeps_cost/outflow_total)/10) + "%)")}
                     if (transfer >= 0.01) {text.push("Transfer: " + (Math.round(100*transfer)/100) + " (" + (Math.round(1000*transfer/outflow_total)/10) + "%)")}
+                } else if (metrics.last_mov && metrics.last_mov.creeps_cost) {
+                    if ( metrics.last_mov.creeps_cost >= 0.01) {
+                        text.push("[ Energy Outflows ]")
+                        text.push("Creeps: @ " +(Math.round(100*metrics.last_mov.creeps_cost)/100))
+                    }
                 }
 
                 // Apply visuals

@@ -7,11 +7,11 @@ class Claim extends Task {
 
     static emoji = '🚩';
 
-    constructor(room, action, wanted) {
+    constructor(room, action, wanted, spots) {
         super("Claim", room, room, wanted);
         this.body = new Claimer();
-        this.action = action;
         this.detail = action;
+        this.max_workers = spots;
     }
 
     static getTasks() {
@@ -31,12 +31,14 @@ class Claim extends Task {
                 continue;
             }
 
+            let spots = 1;
+
             // Handle actions
             switch (flag.secondaryColor) {
                 case COLOR_YELLOW:
                     // Claim
                     if (flag.room && flag.room.controller.owner) { continue }
-                    tasks.push(new Claim(flag.pos.roomName, 'claim', 1));
+                    tasks.push(new Claim(flag.pos.roomName, 'claim', 1, spots));
                     break;
                 case COLOR_BLUE:
                     // Reserve
@@ -48,9 +50,9 @@ class Claim extends Task {
                         let remaining = 5000;
                         if (flag.room.controller.reservation) { remaining -= flag.room.controller.reservation.ticksToEnd }
 
-                        tasks.push(new Claim(flag.pos.roomName, 'reserve', Math.max(1, Math.log(remaining)/2)));
+                        tasks.push(new Claim(flag.pos.roomName, 'reserve', Math.max(1, Math.log(remaining)/2), spots));
                     } else {
-                        tasks.push(new Claim(flag.pos.roomName, 'reserve', 2));
+                        tasks.push(new Claim(flag.pos.roomName, 'reserve', 2, spots));
                     }
                     break;
                 case COLOR_RED:
@@ -58,7 +60,7 @@ class Claim extends Task {
                     // Check owned or reserved
                     if (flag.room && (!flag.room.controller.reservation && !flag.room.controller.owner)) { continue }
                     // HARDCODE 1 FOR NOW
-                    tasks.push(new Claim(flag.pos.roomName, 'attack', 1));
+                    tasks.push(new Claim(flag.pos.roomName, 'attack', 1, spots));
                     break;
                 case COLOR_BROWN:
                     // Exploit
