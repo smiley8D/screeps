@@ -206,6 +206,12 @@ module.exports.loop = function() {
                 if (!creeps.has(creep.room.name)) { creeps.set(creep.room.name, []) }
                 delete creep.memory.task;
                 creeps.get(creep.room.name).push(creep);
+            } else if (!tasks.has(creep.memory.task.id)) {
+                // Unset state
+                delete creep.memory.task;
+                delete creep.memory.curSrc;
+                delete creep.memory.curDst;
+                delete creep.memory.curTgt;
             }
         }
 
