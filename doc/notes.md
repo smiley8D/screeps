@@ -37,6 +37,12 @@
     - Figure out how to make decisions based on this, is it worth it to get extra energy?
     - When does the downgrade happen? If a source is partially exploited, will it downgrade before reset?
 - Calculate parking spots in survey, also apply to controller (currently hard-coded to 1)
+- Task metrics/track info in memory
+    - solve double-printing issue for visuals
+    - can be used to determine task assignments, constants, etc.
+- Set defense % to % of free room energy?
+- Do combat first, devote CPU to it
+- Military commands done via flags, flag name references an "army" or force composition which is designed elsewhere
 
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%
@@ -66,6 +72,14 @@
     - Since I'll have tasks dedicated to flags, I shouldn't need to give them special treatment in bestSrc/Dst
         - This means tash should have a higher priority which would be good
 - Hauler pull tasks ("Trailer?") for Drudge units not in position
+- Pioneers mix of haulers and miners, should look into having them use bestDst
+
+## Pioneer notes (short on time, dropping these here for now)
+- Worth separating base bootstrapping and remote exploitation into 2 very different tasks, possibly w/ diff body types
+- Base bootstrapping is when "i need spawn energy, buildings, or repairs and the existing creep and infrastructure networks are insufficient"
+- Remote exploitation is mining but in a diff room w/ a larger travel time (and probably also worse logistics)
+    - Can act almost exactly like miner otherwise I think
+    - Add check to not depo in unowned/other owned structures? (if room owned by someone else, containers off limits?)
 
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1
@@ -83,8 +97,14 @@
     - Grey: Hydrogen
 - Purple-###: Intelligence (will generate visuals)
     - Purple: Scout
-- Yellow-###: Expansion
-    - Yellow: Claim
+- Yellow-###: Expansion/exploitation
+    - Purple: Claim
     - Blue: Reserve
-    - Red: Attack controller
-    - Brown: Exploit, harvest resources
+    - Red: Attack ownership
+    - Yellow: Exploit energy
+    - Brown: Exploit other
+- Red-###: Military (decide colors later) (some can be configured to renew, esp rally)
+    - Garrison
+    - Escort
+    - Attack
+    - Rally

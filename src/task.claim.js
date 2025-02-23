@@ -26,7 +26,7 @@ class Claim extends Task {
 
             // Check controller exists and is not owned by me (unless flag allows otherwise for either)
             if (flag.room && ((flag.secondaryColor != COLOR_BROWN && !flag.room.controller) || 
-            (flag.secondaryColor != COLOR_RED && flag.room.controller && flag.room.controller.my))) {
+            ((flag.secondaryColor != COLOR_RED && flag.secondaryColor != COLOR_YELLOW) && flag.room.controller && flag.room.controller.my))) {
                 flag.remove();
                 continue;
             }
@@ -35,7 +35,7 @@ class Claim extends Task {
 
             // Handle actions
             switch (flag.secondaryColor) {
-                case COLOR_YELLOW:
+                case COLOR_PURPLE:
                     // Claim
                     if (flag.room && flag.room.controller.owner) { continue }
                     tasks.push(new Claim(flag.pos.roomName, 'C', 1, spots));
@@ -61,10 +61,6 @@ class Claim extends Task {
                     if (flag.room && (!flag.room.controller.reservation && !flag.room.controller.owner)) { continue }
                     // HARDCODE 1 FOR NOW
                     tasks.push(new Claim(flag.pos.roomName, 'A', 1, spots));
-                    break;
-                case COLOR_BROWN:
-                    // Exploit
-                    // NOTHING FOR NOW, CHECK NOTES
                     break;
             }
         }
