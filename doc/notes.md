@@ -77,6 +77,15 @@
 ## Pioneer notes (short on time, dropping these here for now)
 - Worth separating base bootstrapping and remote exploitation into 2 very different tasks, possibly w/ diff body types
 - Base bootstrapping is when "i need spawn energy, buildings, or repairs and the existing creep and infrastructure networks are insufficient"
+    - Trigger condition:
+        - The point is that it's a fallback when there is limited spawning ability, whether that's no spawner or slowly-replenishing spawner
+        - Low/slowly regening energy?
+            - Low is easy to calc, can just say room energy avail < 300 possibly (multispawners mess w/ this so maybe not)
+    - Action priorities:
+        - No energy? loot (including sources)
+        - Empty spawners? supply
+        - Damage? repair
+        - Build sites? build
 - Remote exploitation is mining but in a diff room w/ a larger travel time (and probably also worse logistics)
     - Can act almost exactly like miner otherwise I think
     - Add check to not depo in unowned/other owned structures? (if room owned by someone else, containers off limits?)

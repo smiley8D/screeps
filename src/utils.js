@@ -315,22 +315,91 @@ utils = {
         return counts;
     },
 
+    // Calculate number of open spots around a position
+    spots: function(pos) {
+        // Get room
+        let room = Game.rooms[pos.roomName];
+        let terrain = room.getTerrain();
+
+        // Calculate spots
+        let spots = 0;
+        for (let x = pos.x - 1; x <= pos.x + 1; x++) {
+            for (let y = pos.y - 1; y <= pos.y + 1; y++) {
+                if (terrain.get(x, y) === 0) { spots++; }
+            }
+        }
+
+        return spots;
+    },
+
     // Survey a visible room for map information
     doSurvey: function(room) {
         let survey = {
-            sources: room.find(FIND_SOURCES).length,
-            minerals: {},
-            deposits: {},
+            sources: [],
+            minerals: [],
+            deposits: [],
+            power_banks: [],
+            controller: null,
             tick: Game.time
         }
+
+        // Survey sources
+        for (let source of room.find(FIND_SOURCES)) {
+            survey.sources.push({
+                x: source.pos.x,
+                y: source.pos.y,
+                spots: utils.spots(source.pos),
+                capacity: source.energyCapacity
+            })
+        }
+
         // Survey minerals
         for (let mineral of room.find(FIND_MINERALS)) {
-            survey.minerals[mineral.mineralType] = mineral.density;
+            survey.minerals.push({
+                x: mineral.pos.x,
+                y: mineral.pos.y,
+                spots: utils.spots(mineral.pos),
+                type: mineral.mineralType,
+                density: mineral.density
+            })
         }
+
         // Survey deposits
         for (let deposit of room.find(FIND_DEPOSITS)) {
-            survey.deposits[deposit.depositType] = deposit.ticksToDecay;
+            survey.deposits.push({
+                x: deposit.pos.x,
+                y: deposit.pos.y,
+                type: deposit.depositType,
+                decay: deposit.ticksToDecay
+            })
         }
+
+        // Survey power banks
+        for (let bank of room.find(FIND_STRUCTURES, {filter: {structureType: STRUCTURE_POWER_BANK}})) {
+            survey.power_banks.push({
+                x: bank.pos.x,
+                y: bank.pos.y,
+                spots: utils.spots(bank.pos),
+                power: bank.power,
+                decay: bank.ticksToDecay
+            })
+        }
+
+        // Survey controller
+        if (room.controller) {
+            survey.controller = {
+                x: room.controller.pos.x,
+                y: room.controller.pos.y,
+                owner: (room.controller.owner ? room.controller.owner.username : null),
+                level: room.controller.level,
+                reservation: (room.controller.reservation ? room.controller.reservation.username : null),
+                reservation_ticks: (room.controller.reservation ? room.controller.reservation.ticksToEnd : null),
+                safe: room.controller.safeMode,
+                safe_available: room.controller.safeModeAvailable,
+                safe_cooldown: room.controller.safeModeCooldown
+            }
+        }
+
         return survey;
     },
 
@@ -597,6 +666,7 @@ utils = {
             change_mov: change_mov,
             count: count,
             count_mov: count_mov,
+            survey: utils.doSurvey(room),
             tick: Game.time,
         }
     },
@@ -667,7 +737,6 @@ utils = {
 
             // Show room metrics
             metrics = Memory.rooms[room_name].metrics;
-            let survey = Memory.rooms[room_name].survey;
             let sightings = Memory.rooms[room_name].sightings;
             if (metrics) {
 
@@ -679,6 +748,19 @@ utils = {
                 text.push("RCL " + (metrics.last.level) + ": " + (progress_total - metrics.last.upgrade) +
                     " (" + (Math.round(10000*metrics.last.upgrade/progress_total)/100) + ((metrics.change_mov) ? "%) @ " + Math.round(metrics.change_mov.upgrade_total) +
                     "/t (" + Math.ceil((progress_total- metrics.last.upgrade) / metrics.change_mov.upgrade_total) + " t)" : "%)"));
+
+                // Survey info
+                text.push("[ Survey ]");
+                if (metrics.survey.sources.length) { text.push("Sources: " + metrics.survey.sources.length) }
+                for (let i in metrics.survey.minerals) {
+                    text.push("Mineral: " + metrics.survey.minerals[i].type + " (" + utils.density_string[metrics.survey.minerals[i].density] + ")")
+                }
+                for (let i in metrics.survey.deposits) {
+                    text.push("Deposit: " + metrics.survey.deposits[i].type + " (" + metrics.survey.deposits[i].decay + " t)")
+                }
+                for (let i in metrics.survey.power_banks) {
+                    text.push("Power: " + metrics.survey.power_banks[i].power + " (" + metrics.survey.power_banks[i].decay + " t)")
+                }
 
                 // Repair & build info
                 if (metrics.last.damage >= 0.01) {text.push(
@@ -716,13 +798,8 @@ utils = {
 
                     // In
                     if (inflow_total >= 0.01) {text.push("[ Energy Inflows ]")}
-                    if (survey) {
-
-                    } else {
-
-                    }
                     if (metrics.count_mov.harvest[RESOURCE_ENERGY] >= 0.01) {text.push("Harvested: " + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY])/100) + " (" + (Math.round(1000*metrics.count_mov.harvest[RESOURCE_ENERGY]/inflow_total)/10)
-                    + ((survey) ? "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(survey.sources))/10) + "% eff)" : "%)"))}
+                    + "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(metrics.survey.sources.length))/10) + "% eff)")}
                     if (transfer <= -0.01) {text.push("Transfer: " + (Math.round(-100*transfer)/100) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + "%)")}
     
                     // Out
@@ -839,30 +916,26 @@ utils = {
         return utils.searchNearbyRooms(queue, limit, func, method, dists, cur, cur_best, src);
     },
 
-    // Clear visuals & metrics
-    reset: function(room_name=null, metrics=false, sightings=false, survey=false) {
+    // Reset memory
+    reset: function(room_name=null, metrics=false, sightings=false) {
         if (room_name) {
             if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
             let memory = Memory.rooms[room_name];
             memory.visuals = [];
-            if (sightings || !memory.sightings) {
-                memory.sightings = {};
-            }
-            if (survey || !memory.survey) {
-                delete memory.survey;
-                if (Game.rooms[room_name]) { memory.survey = utils.doSurvey(Game.rooms[room_name]) }
-            }
             if (metrics || !memory.metrics) {
                 delete memory.metrics;
                 if (Game.rooms[room_name]) { memory.metrics = utils.roomMetrics(Game.rooms[room_name]) }
             }
+            if (sightings || !memory.sightings) {
+                memory.sightings = {};
+            }
         } else {
             for (let room_name in Game.rooms) {
-                utils.reset(room_name, metrics, sightings, survey);
+                utils.reset(room_name, metrics, sightings);
             }
             for (let room_name in Memory.rooms) {
                 if (Game.rooms[room_name]) {continue}
-                utils.reset(room_name, metrics, sightings, survey);
+                utils.reset(room_name, metrics, sightings);
             }
             Memory.metrics = {
                 cpu_start: 0,
@@ -898,6 +971,14 @@ utils = {
     flag_resource: {
         6: RESOURCE_ENERGY,
         9: RESOURCE_HYDROGEN
+    },
+
+    // Mapping of density levels to strings
+    density_string: {
+        1: "Low",
+        2: "Moderate",
+        3: "High",
+        4: "Ultra"
     },
 
     // Get current user

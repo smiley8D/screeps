@@ -8,14 +8,19 @@ class Mine extends Task {
 
     static emoji = '⛏️';
 
-    constructor(source, room, wanted, spots) {
-        super("Mine", source, room, wanted);
-        this.body = new Drudge();
+    constructor(pos, room, wanted, spots) {
+        super("Mine", room + ":" + pos.x + ":" + pos.y, room, wanted);
+        if (Game.rooms[room] && Game.rooms[room].controller && Game.rooms[room].controller.my) {
+            this.body = new Drudge();
+        }
         this.max_workers = spots;
+        this.x = pos.x,
+        this.y = pos.y
     }
 
     static getTasks() {
         let tasks = []
+        // Exploit energy in owned rooms
         for (let room in Game.rooms) {
             room = Game.rooms[room];
 
@@ -23,25 +28,72 @@ class Mine extends Task {
             if (!room.controller || !room.controller.my) { continue }
 
             // Find mineables
-            for (let source of room.find(FIND_SOURCES).concat(room.find(FIND_MINERALS, { filter: (m) => m.pos.lookFor(LOOK_STRUCTURES).length }))) {
-                // Calculate parking spots
-                let spots = 0;
-                for (let x = source.pos.x - 1; x <= source.pos.x + 1; x++) {
-                    for (let y = source.pos.y - 1; y <= source.pos.y + 1; y++) {
-                        if (source.room.getTerrain().get(x, y) === 0) { spots++; }
-                    }
-                }
+            for (let source of room.find(FIND_SOURCES)) {
+                // Determine spots
+                let spots = utils.spots(source.pos);
 
                 // Determine wanted
                 let wanted = 1 + (source.energyCapacity / 600);
-                if (source instanceof Mineral) {
-                    wanted = Math.max(0, Math.log(source.mineralAmount));
-                    spots = 1;
-                }
-                tasks.push(new Mine(source.id, room.name, wanted, spots));
+
+                tasks.push(new Mine(source.pos, room.name, wanted, spots));
             }
         }
+
+        // Process exploit flags
+        for (let flag in Game.flags) {
+            flag = Game.flags[flag];
+            if (flag.color != COLOR_YELLOW) { continue }
+
+            // Some checks
+            if (flag.secondaryColor === COLOR_YELLOW && flag.room && flag.room.controller && flag.room.controller.my) {
+                flag.remove();
+                continue;
+            }
+
+            // Get survey data
+            if (!Memory.rooms[flag.pos.roomName] || !Memory.rooms[flag.pos.roomName].metrics) { continue }
+            let survey = Memory.rooms[flag.pos.roomName].metrics.survey;
+
+            // Flag types
+            if (flag.secondaryColor === COLOR_BROWN) {
+                // Create tasks or non-sources
+                for (let i in survey.minerals) {
+                    let mineral = survey.minerals[i];
+
+                    tasks.push(new Mine(new RoomPosition(mineral.x, mineral.y, flag.pos.roomName), flag.pos.roomName, 1, mineral.spots));
+                }
+                for (let i in survey.deposits) {
+                    tasks.push(new Mine(new RoomPosition(deposit.x, deposit.y, flag.pos.roomName), flag.pos.roomName, 1, 1));
+                }
+            } else if (flag.secondaryColor === COLOR_YELLOW) {
+                // Don't double-tap owned rooms
+                if (flag.room && flag.room.controller && flag.room.controller.my) { continue }
+
+                // Create tasks for sources
+                for (let i in survey.sources) {
+                    let source = survey.sources[i];
+
+                    let wanted = 1 + (source.capacity / 600);
+
+                    tasks.push(new Mine(new RoomPosition(source.x, source.y, flag.pos.roomName), flag.pos.roomName, wanted, source.spots));
+                }
+            }
+        }
+
         return tasks;
+    }
+
+    // Compress tasks for memory storage
+    compress() {
+        return {
+            id: this.id,
+            name: this.name,
+            tgt: this.tgt,
+            room: this.room,
+            detail: this.detail,
+            x: this.x,
+            y: this.y
+        }
     }
 
     static doTask(creep) {
@@ -50,9 +102,33 @@ class Mine extends Task {
             return creep.memory.task.room;
         }
 
-        let target = Game.getObjectById(creep.memory.task.tgt);
+        // Get target
+        let target = Game.getObjectById(creep.memory.curTgt);
+        let pos;
+        if (!target && creep.store.getUsedCapacity()) {
+            // First round, empty inventory
+            result = utils.doDst(creep, utils.findDst(creep));
+        } else if (!target) {
+            pos = creep.room.getPositionAt(creep.memory.task.x, creep.memory.task.y);
+            target = creep.room.lookForAt(LOOK_SOURCES, pos);
+            let look_result = creep.room.lookForAt(LOOK_SOURCES, pos);
+            if (look_result.length) { target = look_result[0] }
+        }
+        if (!target) {
+            let look_result = creep.room.lookForAt(LOOK_MINERALS, pos);
+            if (look_result.length) { target = look_result[0] }
+        }
+        if (!target) {
+            let look_result = creep.room.lookForAt(LOOK_DEPOSITS, pos);
+            if (look_result.length) { target = look_result[0] }
+        }
+        if (!target) { return ERR_NOT_FOUND }
+        creep.memory.curTgt = target.id;
+
+        // Get resource
         let resource = RESOURCE_ENERGY;
-        if (target.mineralType) { resource = target.mineralType }
+        if (target instanceof Mineral ) { resource = target.mineralType }
+        if (target instanceof Deposit ) { resource = target.depositType }
 
         let result;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
