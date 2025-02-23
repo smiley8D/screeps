@@ -48,10 +48,15 @@ class Upgrade extends Task {
             delete creep.memory.curSrc;
             result = creep.upgradeController(controller);
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {}})  }
-            else if (result === OK) { creep.moveTo(controller, {visualizePathStyle: {}}) }
+            else if (result === OK) { result = creep.moveTo(controller, {visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
-            result = utils.doSrc(creep, utils.findSrc(creep, RESOURCE_ENERGY, {limit: 3}), RESOURCE_ENERGY);
+            let src = utils.findSrc(creep, RESOURCE_ENERGY, {limit: 3});
+            if (!src) {
+                result = creep.moveTo(controller, {visualizePathStyle: {}});
+            } else {
+                result = utils.doSrc(creep, src, RESOURCE_ENERGY);
+            }
         }
 
         return result;
