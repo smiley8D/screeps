@@ -83,7 +83,7 @@ module.exports.loop = function() {
                 upgrade_spend += event.data.energySpent;
             } else if (event.event === EVENT_HARVEST) {
                 let resource = RESOURCE_ENERGY;
-                let tgt = Game.getObjectById(event.data.targetId );
+                let tgt = Game.getObjectById(event.data.targetId);
                 if (tgt.resourceType) { resource = tgt.resourceType }
                 if (!harvest[resource]) { harvest[resource] = 0 }
                 harvest[resource] += event.data.amount;

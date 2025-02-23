@@ -32,7 +32,7 @@ utils = {
             srcs = srcs.concat(creep.room.find(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource) && (opts.partial || r.store.getUsedCapacity(recycle) >= creep.store.getFreeCapacity(resource))}));
         }
         // Containers
-        if (opts.containers) {
+        if (opts.containers && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my)) {
             srcs = srcs.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) =>
                 (s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER) &&
                 (s.store.getUsedCapacity(resource) && (opts.partial || s.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource)))
@@ -103,7 +103,7 @@ utils = {
         if (src) { return src }
 
         // Try most full storage in MAX_ROOM_SEARCH
-        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage) ?
+        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
         Game.rooms[r].storage.store.getUsedCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource) : null), 'best');
         if (room) { return Game.rooms[room].storage }
 
@@ -161,7 +161,7 @@ utils = {
         // Find new dst
         let dsts = []
         // Containers
-        if (opts.containers) {
+        if (opts.containers && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my)) {
             dsts = dsts.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) =>
             ((s.structureType === STRUCTURE_STORAGE && s.my) || s.structureType === STRUCTURE_CONTAINER) &&
             (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource)))}));
@@ -172,7 +172,7 @@ utils = {
                 (opts.partial || c.store.getFreeCapacity(resource) <= creep.store.getUsedCapacity(resource))}));
         }
         // Spawners
-        if (opts.spawners && (resource === RESOURCE_ENERGY || (!resource && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
+        if (opts.spawners && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my) && (resource === RESOURCE_ENERGY || (!resource && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
             dsts = dsts.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) => s.my &&
                 (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) &&
                 (s.store.getFreeCapacity(RESOURCE_ENERGY) && (opts.partial || s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getUsedCapacity(RESOURCE_ENERGY)))}));
@@ -207,11 +207,11 @@ utils = {
 
         // Try spawn containers
         dst = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) && s.store.getFreeCapacity(resource)});
-        if (dst) { return dst }
+        if (dst && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my)) { return dst }
 
         // Try defenses
         dst = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(resource)})
-        if (dst) { return dst }
+        if (dst && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my)) { return dst }
 
         // Try unsatisfied flags
         dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
@@ -231,7 +231,7 @@ utils = {
         if (dst) { return dst }
 
         // Try most empty storage in MAX_ROOM_SEARCH
-        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage) ?
+        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
         Game.rooms[r].storage.store.getFreeCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource) : null), 'best');
         if (room) { return Game.rooms[room].storage }
 
