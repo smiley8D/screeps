@@ -107,7 +107,7 @@ class Mine extends Task {
         let pos;
         if (!target && creep.store.getUsedCapacity()) {
             // First round, empty inventory
-            result = utils.doDst(creep, utils.findDst(creep));
+            return utils.doDst(creep, utils.findDst(creep));
         } else if (!target) {
             pos = creep.room.getPositionAt(creep.memory.task.x, creep.memory.task.y);
             target = creep.room.lookForAt(LOOK_SOURCES, pos);
@@ -152,7 +152,8 @@ class Mine extends Task {
                 dst = utils.findDst(creep, resource);
             }
             if (!dst) {
-                result = creep.moveTo(target, { visualizePathStyle: {} });
+                creep.moveTo(target, { visualizePathStyle: {} });
+                result = ERR_NOT_FOUND;
             } else {
                 result = utils.doDst(creep, dst, resource);
             }
