@@ -337,7 +337,13 @@ module.exports.loop = function() {
         }
 
         // Show result
-        if (creep.memory.task && TASKS[creep.memory.task.name] && TASKS[creep.memory.task.name].emoji) { creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + (result != OK ? result : '')) }
+        if (creep.memory.task && TASKS[creep.memory.task.name] && TASKS[creep.memory.task.name].emoji) {
+            if (creep.memory.room) {
+                creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.room + ":" + creep.memory.task.detail + (result != OK ? result : ''))
+            } else {
+                creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + (result != OK ? result : ''));
+            }
+        }
     }
 
     // CPU check

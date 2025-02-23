@@ -55,6 +55,13 @@ utils = {
         }
         src = creep.pos.findClosestByRange(valid_srcs);
 
+        // Check multiroom storages
+        if (!src && !opts.limit) {
+            let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
+            Game.rooms[r].storage.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource) : null), 'first');
+            if (room) { src = Game.rooms[room].storage }
+        }
+
         // Check range
         if (opts.limit != null && creep.pos.getRangeTo(src) > opts.limit) { src = null }
 
@@ -135,7 +142,10 @@ utils = {
         if (result === ERR_INVALID_TARGET) { result = creep.harvest(src) }
 
         // Move in range
-        if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(src, {visualizePathStyle: {stroke: "#ffa500"}}) }
+        if (result === ERR_NOT_IN_RANGE) {
+            result = creep.moveTo(src, {visualizePathStyle: {stroke: "#ffa500"}});
+            if (src.pos.roomName != creep.room.name) { creep.memory.room = src.pos.roomName }
+        }
 
         return result;
     },
@@ -184,6 +194,13 @@ utils = {
             if (dsts[i]) { valid_dsts.push(dsts[i]) }
         }
         dst = creep.pos.findClosestByRange(valid_dsts);
+
+        // Check multiroom storages
+        if (!dst && !opts.limit) {
+            let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
+            Game.rooms[r].storage.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) : null), 'first');
+            if (room) { dst = Game.rooms[room].storage }
+        }
 
         // Check range
         if (opts.limit != null && creep.pos.getRangeTo(dst) > opts.limit) { dst = null }
@@ -253,7 +270,10 @@ utils = {
         }
 
         // Move in range
-        if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(dst, {visualizePathStyle: {stroke: "#1e90ff"}}) }
+        if (result === ERR_NOT_IN_RANGE) {
+            result = creep.moveTo(dst, {visualizePathStyle: {stroke: "#1e90ff"}});
+            if (dst.pos.roomName != creep.room.name) { creep.memory.room = dst.pos.roomName }
+        }
 
         return result;
     },
