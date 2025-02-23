@@ -8,7 +8,7 @@ class Claim extends Task {
     static emoji = '🚩';
 
     constructor(room, action, wanted, spots) {
-        super("Claim", room, room, wanted);
+        super("Claim", room + ':' + action, room, wanted);
         this.body = new Claimer();
         this.detail = action;
         this.max_workers = spots;
@@ -38,7 +38,7 @@ class Claim extends Task {
                 case COLOR_YELLOW:
                     // Claim
                     if (flag.room && flag.room.controller.owner) { continue }
-                    tasks.push(new Claim(flag.pos.roomName, 'claim', 1, spots));
+                    tasks.push(new Claim(flag.pos.roomName, 'C', 1, spots));
                     break;
                 case COLOR_BLUE:
                     // Reserve
@@ -50,9 +50,9 @@ class Claim extends Task {
                         let remaining = 5000;
                         if (flag.room.controller.reservation) { remaining -= flag.room.controller.reservation.ticksToEnd }
 
-                        tasks.push(new Claim(flag.pos.roomName, 'reserve', Math.max(1, Math.log(remaining)/2), spots));
+                        tasks.push(new Claim(flag.pos.roomName, 'R', Math.max(1, Math.log(remaining)/2), spots));
                     } else {
-                        tasks.push(new Claim(flag.pos.roomName, 'reserve', 2, spots));
+                        tasks.push(new Claim(flag.pos.roomName, 'R', 2, spots));
                     }
                     break;
                 case COLOR_RED:
@@ -60,7 +60,7 @@ class Claim extends Task {
                     // Check owned or reserved
                     if (flag.room && (!flag.room.controller.reservation && !flag.room.controller.owner)) { continue }
                     // HARDCODE 1 FOR NOW
-                    tasks.push(new Claim(flag.pos.roomName, 'attack', 1, spots));
+                    tasks.push(new Claim(flag.pos.roomName, 'A', 1, spots));
                     break;
                 case COLOR_BROWN:
                     // Exploit
@@ -83,15 +83,15 @@ class Claim extends Task {
 
         // Handle actions
         switch (creep.memory.task.detail) {
-            case 'claim':
+            case 'C':
                 // Claim
                 result = creep.claimController(controller);
                 break;
-            case 'reserve':
+            case 'R':
                 // Reserve
                 result = creep.reserveController(controller);
                 break;
-            case 'attack':
+            case 'A':
                 // Attack
                 result = creep.attackController(controller);
                 break;
