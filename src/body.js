@@ -10,6 +10,16 @@ class Body {
     }
 
     spawn(spawner, task, limit=null) {
+        // Compute costs
+        let cost = 0;
+        for (let part of this.base) {
+            cost += BODYPART_COST[part];
+        }
+        let add_cost = 0;
+        for (let part of this.add) {
+            add_cost += BODYPART_COST[part];
+        }
+
         // Get maximum affordable size
         let i = 1;
         let body = this.base;
@@ -19,16 +29,11 @@ class Body {
                 let result = spawner.spawnCreep(body.concat(this.add), name, {dryRun: true});
                 if (result === OK) {
                     body = body.concat(this.add)
+                    cost += add_cost;
                 } else {
                     break;
                 }
             }
-        }
-
-        // Determine cost
-        let cost = 0;
-        for (let i in body) {
-            cost += BODYPART_COST[body[i]];
         }
 
         let result = spawner.spawnCreep(body, name, {memory: {task: task.compress(), body: this.name, size: i, cost: cost}});
