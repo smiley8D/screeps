@@ -97,12 +97,6 @@ class Mine extends Task {
     }
 
     static doTask(creep) {
-        // Move to room
-        if (creep.room.name != creep.memory.task.room) {
-            creep.memory.room = creep.memory.task.room;
-            return;
-        }
-
         // Get target
         let target = Game.getObjectById(creep.memory.curTgt);
         let pos;
@@ -140,6 +134,12 @@ class Mine extends Task {
                 result = utils.doDst(creep, utils.findDst(creep));
             }
         } else if (creep.store.getFreeCapacity() >= 2 * (2 * (creep.memory.size - 1) + 1)) {
+            // Move to room
+            if (creep.room.name != creep.memory.task.room) {
+                creep.memory.room = creep.memory.task.room;
+                return ERR_NOT_IN_RANGE;
+            }
+
             // Space in inventory, mine
             delete creep.memory.curDst;
             result = creep.harvest(target)

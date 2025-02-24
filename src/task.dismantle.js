@@ -52,6 +52,12 @@ class Dismantle extends Task {
             delete creep.memory.curSrc;
             result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
         } else if (creep.store.getFreeCapacity()) {
+            // Move to room
+            if (creep.room.name != creep.memory.task.room) {
+                creep.memory.room = creep.memory.task.room;
+                return ERR_NOT_IN_RANGE;
+            }
+    
             // Space in inventory, dismantle
             delete creep.memory.curDst;
 

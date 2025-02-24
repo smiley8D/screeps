@@ -50,7 +50,8 @@ class Scout extends Task {
     static doTask(creep) {
         // Move to room
         if (creep.room.name != creep.memory.task.room) {
-            return  creep.memory.task.room;
+            creep.memory.room = creep.memory.task.room;
+            return  ERR_NOT_IN_RANGE;
         }
 
         return OK;

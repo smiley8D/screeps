@@ -311,35 +311,31 @@ module.exports.loop = function() {
         if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 === 0 || creep.pos.y % 49 === 0)) {
             result = creep.moveTo(new RoomPosition(25, 25, creep.memory.room), {resusePath: 50, visualizePathStyle: {}});
         } else if (creep.memory.room) { delete creep.memory.room }
-
-        let task_cpu = {}
  
-        // Do task
-        if (creep.memory.task && TASKS[creep.memory.task.name]) {
-            let start = Game.cpu.getUsed();
-            result = TASKS[creep.memory.task.name].doTask(creep);
-            if (!task_cpu[creep.memory.task.name]) { task_cpu[creep.memory.task.name] = 0 }
-            task_cpu[creep.memory.task.name] += Game.cpu.getUsed() - start;
-        } else if (creep.memory.body) {
-            creep.memory.task = new Recycle(creep).compress();
-        }
+        if (!creep.memory.room) {
+            let task_cpu = {}
 
-        // Update task usage
-        for (let task in task_cpu) {
-            if (!Memory.metrics.cpu_tasks[task]) { Memory.metrics.cpu_tasks[task] = task_cpu[task] }
-            else { Memory.metrics.cpu_tasks[task] = Memory.metrics.cpu_tasks[task] * (1 - config.MOV_N) + task_cpu[task] }
-        }
-
-        // Handle room movement
-        if (typeof result === 'string') {
-            let pos = new RoomPosition(25, 25, result);
-            if (pos) { creep.memory.room = result }
+            // Do task
+            if (creep.memory.task && TASKS[creep.memory.task.name]) {
+                let start = Game.cpu.getUsed();
+                result = TASKS[creep.memory.task.name].doTask(creep);
+                if (!task_cpu[creep.memory.task.name]) { task_cpu[creep.memory.task.name] = 0 }
+                task_cpu[creep.memory.task.name] += Game.cpu.getUsed() - start;
+            } else if (creep.memory.body) {
+                creep.memory.task = new Recycle(creep).compress();
+            }
+    
+            // Update task usage
+            for (let task in task_cpu) {
+                if (!Memory.metrics.cpu_tasks[task]) { Memory.metrics.cpu_tasks[task] = task_cpu[task] }
+                else { Memory.metrics.cpu_tasks[task] = Memory.metrics.cpu_tasks[task] * (1 - config.MOV_N) + task_cpu[task] }
+            }
         }
 
         // Show result
         if (creep.memory.task && TASKS[creep.memory.task.name] && TASKS[creep.memory.task.name].emoji) {
             if (creep.memory.room) {
-                creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.room + ":" + creep.memory.task.detail + (result != OK ? result : ''))
+                creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + creep.memory.room + (result != OK ? result : ''))
             } else {
                 creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + (result != OK ? result : ''));
             }

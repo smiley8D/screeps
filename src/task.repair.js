@@ -16,8 +16,8 @@ class Repair extends Task {
         for (let room in Game.rooms) {
             room = Game.rooms[room];
 
-            // Check room owned
-            if (!room.controller || !room.controller.my) {continue}
+            // Check room not other-owned
+            if (room.controller && room.controller.owner && !room.controller.my) {continue}
 
             if (!room.memory.metrics) {continue}
             let total_dmg = room.memory.metrics.last.hits_max - room.memory.metrics.last.hits;
@@ -29,17 +29,17 @@ class Repair extends Task {
     }
 
     static doTask(creep) {
-        // Move to room
-        if (creep.room.name != creep.memory.task.room) {
-            return creep.memory.task.room;
-        }
-
         let result;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
             delete creep.memory.curTgt;
             result = utils.doDst(creep, utils.findDst(creep));
         } else if (creep.store.getUsedCapacity()) {
+            // Move to room
+            if (creep.room.name != creep.memory.task.room) {
+                return creep.memory.task.room;
+            }
+    
             // Energy in inventory, repair
             delete creep.memory.curSrc;
 

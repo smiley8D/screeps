@@ -19,8 +19,8 @@ class Stock extends Task {
         for (let room in Game.rooms) {
             room = Game.rooms[room];
 
-            // Check room owned
-            if (!room.controller || !room.controller.my) {continue}
+            // Check room not other-owned
+            if (room.controller && room.controller.owner && !room.controller.my) {continue}
 
             if (!room.memory.metrics) {continue}
             for (let resource in room.memory.metrics.last.resources) {
@@ -70,7 +70,8 @@ class Stock extends Task {
                 src = null;
             } else if (!src && !dst && creep.room.name != creep.memory.task.room) {
                 // Move to correct room
-                return creep.memory.task.room;
+                creep.memory.room = creep.memory.task.room;
+                return ERR_NOT_IN_RANGE;
             } else if (!src && !dst) {
                 // Pick new src or dst by distance
                 src = utils.bestSrc(creep, resource);
