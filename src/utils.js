@@ -208,8 +208,7 @@ utils = {
     freshResourceMetrics: function() {
         let resources= {
             total: 0,
-            over: 0,
-            under: 0,
+            imbalance: 0,
             trash: 0,
             free: 0
         }
@@ -430,7 +429,7 @@ utils = {
                 else if (structure.structureType === STRUCTURE_SPAWN || structure.structureType === STRUCTURE_EXTENSION || structure.structureType === STRUCTURE_TOWER) {
                     // Always fill
                     if (!metrics.resources[RESOURCE_ENERGY]) { metrics.resources[RESOURCE_ENERGY] = utils.freshResourceMetrics() }
-                    metrics.resources[RESOURCE_ENERGY].under += structure.store.getFreeCapacity(RESOURCE_ENERGY);
+                    metrics.resources[RESOURCE_ENERGY].imbalance -= structure.store.getFreeCapacity(RESOURCE_ENERGY);
                     if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]) }
                 } else if (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_STORAGE || structure.structureType === STRUCTURE_LINK) {
                     // Mark available
@@ -441,17 +440,17 @@ utils = {
             }
         }
 
-        // // Process logistics flags
-        // for (let flag of room.find(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE })) {
-        //     let store;
-        //     if (flag.pos.lookFor(LOOK_STRUCTURES).length) { store = flag.pos.lookFor(LOOK_STRUCTURES)[0].store }
-        //     // TEMP ADD ENERGY IMBALANCE
-        //     if (!metrics.resources[RESOURCE_ENERGY]) { metrics.resources[RESOURCE_ENERGY] = utils.freshResourceMetrics() }
-        //     if (utils.flag_resource[flag.secondaryColor] && !metrics.resources[utils.flag_resource[flag.secondaryColor]]) { metrics.resources[utils.flag_resource[flag.secondaryColor]] = utils.freshResourceMetrics() }
-        //     if (flag.secondaryColor === COLOR_WHITE && !store) { metrics.resources[RESOURCE_ENERGY].over += 2000 }
-        //     else if (utils.flag_resource[flag.secondaryColor] && !store) { metrics.resources[utils.flag_resource[flag.secondaryColor]].under += 2000}
-        //     else if (flag.secondaryColor === COLOR_WHITE) { metrics.resources[RESOURCE_ENERGY].over += store.getUsedCapacity(RESOURCE_ENERGY) }
-        // }
+        // Process logistics flags
+        for (let flag of room.find(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE })) {
+            let store;
+            if (flag.pos.lookFor(LOOK_STRUCTURES).length) { store = flag.pos.lookFor(LOOK_STRUCTURES)[0].store }
+            // TEMP ADD ENERGY IMBALANCE
+            if (!metrics.resources[RESOURCE_ENERGY]) { metrics.resources[RESOURCE_ENERGY] = utils.freshResourceMetrics() }
+            if (utils.flag_resource[flag.secondaryColor] && !metrics.resources[utils.flag_resource[flag.secondaryColor]]) { metrics.resources[utils.flag_resource[flag.secondaryColor]] = utils.freshResourceMetrics() }
+            if (flag.secondaryColor === COLOR_WHITE && !store) { metrics.resources[RESOURCE_ENERGY].imbalance += 2000 }
+            else if (utils.flag_resource[flag.secondaryColor] && !store) { metrics.resources[utils.flag_resource[flag.secondaryColor]].imbalance -= 2000}
+            else if (flag.secondaryColor === COLOR_WHITE) { metrics.resources[RESOURCE_ENERGY].imbalance += store.getUsedCapacity(RESOURCE_ENERGY) }
+        }
 
         // Process averages
         if (metrics.hits_max) { metrics.hits_per = metrics.hits / metrics.hits_max }
@@ -464,6 +463,7 @@ utils = {
             metrics.resources[resource].total += drop.amount;
             metrics.resources[resource].trash += drop.amount;
             metrics.resources[resource].free += drop.amount;
+            metrics.resources[resource].imbalance += drop.amount;
         }
         for (let structure of room.find(FIND_TOMBSTONES).concat(room.find(FIND_RUINS))) {
             let inv_counter = 0;
@@ -476,6 +476,7 @@ utils = {
                 metrics.resources[resource].total += amount;
                 metrics.resources[resource].trash += amount;
                 metrics.resources[resource].free += amount;
+                metrics.resources[resource].imbalance += amount;
             }
         }
 
@@ -724,7 +725,8 @@ utils = {
                         header = true;
                     }
                     text.push(resource.charAt(0).toUpperCase() + resource.slice(1) + ": " + metrics.last.resources[resource].free + ((metrics.change_mov && metrics.change_mov.resources[resource]) ? " @ " + (Math.round(100*metrics.change_mov.resources[resource].free)/100) +
-                    "/t" + ((metrics.change_mov.resources[resource].free < 0) ? " (" + Math.floor(-1*metrics.last.resources[resource].free/metrics.change_mov.resources[resource].free) + " t)" : "") : ""))
+                    "/t" + ((metrics.change_mov.resources[resource].free < 0) ? " (" + Math.floor(-1*metrics.last.resources[resource].free/metrics.change_mov.resources[resource].free) + " t)" : "")
+                    : "") + ((Math.abs(metrics.last.resources[resource].imbalance) >= 10 ? " (" + Math.round(metrics.last.resources[resource].imbalance) + " i)" : "")));
                 }
 
                 // Energy flows
