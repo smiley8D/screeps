@@ -186,7 +186,13 @@ module.exports.loop = function() {
         for (let creep in Game.creeps) {
             creep = Game.creeps[creep];
 
-            if (creep.ticksToLive > 100 && creep.memory.task && tasks.has(creep.memory.task.id) &&
+            // Get replace time
+            let replace_ticks = 100;
+            if (creep.memory.size) { replace_ticks = creep.memory.size * 3}
+            let spawn = Game.spawns[creep.memory.spawn];
+            if (spawn) { replace_ticks += 50 * creep.pos.getRangeTo(spawn.pos) }
+
+            if (creep.ticksToLive > replace_ticks && creep.memory.task && tasks.has(creep.memory.task.id) &&
             tasks.get(creep.memory.task.id).parts < tasks.get(creep.memory.task.id).wanted &&
             tasks.get(creep.memory.task.id).workers < tasks.get(creep.memory.task.id).max_workers) {
                 // Creep already assigned and unavailable
