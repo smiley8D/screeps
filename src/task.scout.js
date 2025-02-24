@@ -12,7 +12,6 @@ class Scout extends Task {
     constructor(room, spawn_room) {
         super("Scout", room, room, 1);
         this.body = new ScoutBody();
-        this.max_workers = 1;
         this.search_rooms = [room, spawn_room];
     }
 

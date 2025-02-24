@@ -26,7 +26,7 @@ class Task {
         this.workers = 0;
 
         // Maximum number of allowed workers
-        this.max_workers = 8;
+        this.max_workers = 1;
 
         // Total size of parts assigned
         this.parts = 0;

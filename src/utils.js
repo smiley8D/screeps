@@ -83,10 +83,10 @@ utils = {
 
         // Handle tgt is creep
         if (src instanceof Creep) {
-            if (creep.pos.getRangeTo(src) > 2) {
-                result = ERR_NOT_IN_RANGE;
-            } else {
+            if (creep.pos.isNearTo(src)) {
                 result = utils.doDst(src, creep, resource);
+            } else {
+                result = ERR_NOT_IN_RANGE;
             }
         } else if (resource) {
             // Try targetted withdraw
@@ -97,6 +97,8 @@ utils = {
                 if (src.store.getUsedCapacity(resource)) { result = creep.withdraw(src, resource)}
                 if (result === OK || result === ERR_NOT_IN_RANGE) { break }
             }
+        } else {
+            result = ERR_INVALID_TARGET
         }
 
         // Try pickup

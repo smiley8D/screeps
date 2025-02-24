@@ -12,8 +12,7 @@ class Mine extends Task {
 
     constructor(pos, room, wanted, spots) {
         super("Mine", room + ":" + pos.x + ":" + pos.y, room, wanted);
-        // TEMP DISABLE WHILE LOGI DOWN
-        // this.body = new Drudge();
+        this.body = new Drudge();
         this.max_workers = spots;
         this.x = pos.x,
         this.y = pos.y

@@ -11,8 +11,7 @@ class Upgrade extends Task {
 
     constructor(room, wanted) {
         super("Upgrade", room, room, wanted);
-        // TEMP DISABLE WHILE LOGI DOWN
-        // this.body = new Drudge();
+        this.body = new Drudge();
     }
 
     static getTasks() {

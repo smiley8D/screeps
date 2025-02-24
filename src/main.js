@@ -14,13 +14,15 @@ const Recycle = require("task.recycle");
 const Repair = require("task.repair");
 const Scout = require("task.scout");
 const Stock = require("task.stock");
+const Supply = require("task.supply");
 const Upgrade = require("task.upgrade");
 
 const TASKS = {
     "Garbage": Garbage,
-    "Pioneer": Pioneer,
+    // "Pioneer": Pioneer,
     "Mine": Mine,
     "Stock": Stock,
+    "Supply": Supply,
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,
@@ -172,7 +174,7 @@ module.exports.loop = function() {
             let creep;
             let task;
             if (spawner.spawning) { creep = Game.creeps[spawner.spawning.name] }
-            if (creep) { task = tasks.get(creep.memory.task.id) }
+            if (creep && creep.memory.task) { task = tasks.get(creep.memory.task.id) }
             if (!creep) {
                 if (!avail_spawns.has(spawner.room.name)) {avail_spawns.set(spawner.room.name,[])}
                 let spawners = avail_spawns.get(spawner.room.name);
@@ -190,7 +192,7 @@ module.exports.loop = function() {
             let replace_ticks = 100;
             if (creep.memory.size) { replace_ticks = creep.memory.size * 3}
             let spawn = Game.spawns[creep.memory.spawn];
-            if (spawn) { replace_ticks += 50 * creep.pos.getRangeTo(spawn.pos) }
+            if (spawn) { replace_ticks += 50 * Game.map.getRoomLinearDistance(creep.room.name, spawn.room.name) }
 
             if (creep.ticksToLive > replace_ticks && creep.memory.task && tasks.has(creep.memory.task.id) &&
             tasks.get(creep.memory.task.id).parts < tasks.get(creep.memory.task.id).wanted &&
@@ -335,9 +337,11 @@ module.exports.loop = function() {
             // Do task
             if (creep.memory.task && TASKS[creep.memory.task.name]) {
                 let start = Game.cpu.getUsed();
+                let task_name = creep.memory.task.name;
                 result = TASKS[creep.memory.task.name].doTask(creep);
-                if (!task_cpu[creep.memory.task.name]) { task_cpu[creep.memory.task.name] = 0 }
-                task_cpu[creep.memory.task.name] += Game.cpu.getUsed() - start;
+                if (creep.memory.task)
+                if (!task_cpu[task_name]) { task_cpu[task_name] = 0 }
+                task_cpu[task_name] += Game.cpu.getUsed() - start;
             } else if (creep.memory.body) {
                 creep.memory.task = new Recycle(creep).compress();
             }

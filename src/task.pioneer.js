@@ -34,7 +34,7 @@ class Pioneer extends Task {
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
             delete creep.memory.curSrc;
-            result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
+            result = utils.doDst(creep, utils.findDst(creep));
         } else if (!creep.store.getUsedCapacity() || creep.memory.curSrc) {
             // Empty inventory, refill
             delete creep.memory.curTgt;

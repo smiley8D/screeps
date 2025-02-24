@@ -12,6 +12,7 @@ class Stock extends Task {
     constructor(room, wanted) {
         super("Stock", room, room, wanted);
         this.body = new Hauler();
+        this.max_workers = 2;
     }
 
     static getTasks() {
@@ -39,7 +40,7 @@ class Stock extends Task {
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
             delete creep.memory.curSrc;
-            result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
+            result = utils.doDst(creep, utils.findDst(creep, undefined, {haulers: false}));
         } else if (!creep.store.getFreeCapacity() || creep.memory.curDst) {
             // Move to room
             if (creep.room.name != creep.memory.task.room) {

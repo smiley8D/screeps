@@ -48,7 +48,8 @@ class Garbage extends Task {
 
             // Pickup trash
             delete creep.memory.curDst;
-            result = utils.doSrc(creep, utils.findSrc(creep, undefined, {containers: false, haulers: false}))
+            let src = utils.findSrc(creep, undefined, {containers: false, haulers: false});
+            result = utils.doSrc(creep, src);
         }
 
         return result;

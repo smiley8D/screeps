@@ -84,10 +84,9 @@
 
 ## Flags
 
-- Grey: Graveyard, place for unassigned creeps to gather out of the way
+- Brown: Graveyard, place for unassigned creeps to gather out of the way
 - Orange: Deconstruct
-- White-###: Logistics
-    - White: Drain
+- White-###/Grey-###: Logistics (Fill/Drain)
     - Yellow: Energy
     - Grey: Hydrogen
 - Purple-###: Intelligence (will generate visuals)
