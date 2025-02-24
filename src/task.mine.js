@@ -129,11 +129,7 @@ class Mine extends Task {
         let result;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(resource)) {
             // Inventory contains wrong resource, depo
-            if (creep.memory.body === "Drudge") {
-                result = utils.doDst(creep, utils.findDst(creep, {limit: 3}));
-            } else {
-                result = utils.doDst(creep, utils.findDst(creep));
-            }
+            result = utils.doDst(creep, utils.findDst(creep));
         } else if (creep.store.getFreeCapacity() >= 2 * (2 * (creep.memory.size - 1) + 1)) {
             // Move to room
             if (creep.room.name != creep.memory.task.room) {
@@ -147,12 +143,7 @@ class Mine extends Task {
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(target, { maxRooms: 1, visualizePathStyle: {} }) }
         } else {
             // Full inventory, depo
-            let dst;
-            if (creep.memory.body === "Drudge") {
-                dst = utils.findDst(creep, resource, {limit: 3});
-            } else {
-                dst = utils.findDst(creep, resource);
-            }
+            let dst = utils.findDst(creep, resource);
             if (!dst) {
                 creep.moveTo(target, { maxRooms: 1, visualizePathStyle: {} });
                 result = ERR_NOT_FOUND;

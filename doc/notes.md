@@ -54,27 +54,11 @@
 - Research path caching, possibly integrate w/ efforts like GTFOTR to reduce path finding attempts
 
 ## Logistics notes
-- Link and terminal handling, rn grouped w/ things like towers
-- All logistically-relevant creeps have a primary purpose, they perform logistics in whatever fashion most quickly serves that purpose
-- For most creeps, this is "i need resource x now" or (ex miners) "i need room to dump x resource now"
-- Stock is more complicated bc it tries to balance out resources, and it's current focus is ~50% split between sourcing and depoing
-- Modify findSrc/Dst to search by rooms, grabbing first w/ avail resource or avail space, moving there, then running like normal
-    - Would be really killer if could combine possible srcs/dsts from all adjacent rooms and search like that
-- Modify bestSrc/Dst to search by room, grabbing by highest % filled w/ resource or lowest % filled (depending on search)?
-    - this sounds complicated and possibly not ideal, need to rethink
-- Add ability for all src/dsts methods to interact w/ haulers, especially those on flags
-- Flag changes, keep as separate task but match appearance of stock (use flagname as tgt)
-    - Recognize if no container, then be the container
-    - If container, assign as log of amount filled (if flag empty) or amount missing (if flag resource)
-    - This is diff from stock, it has a primary task and uses the findSrc/Dst for fastest fulfillment
-    - Flags can be basis for auto building
-        - eventually a container should be placed there (see above behavior for assigned creep(s))
-        - eventually roads mapped from there
-        - spawn/storage positions picked to minimize total distance between all logi flags?
-    - Since I'll have tasks dedicated to flags, I shouldn't need to give them special treatment in bestSrc/Dst
-        - This means tash should have a higher priority which would be good
 - Hauler pull tasks ("Trailer?") for Drudge units not in position
-- Look into a "supply-route" or "trade-route" based approach for tasking
+- Restock task (fill spawner/extension/towers)
+- Cleanup task (pickup drops, loot tombstones & ruins)
+- Supply route task
+    - Use logistics flags to 
 
 ## Pioneer notes (short on time, dropping these here for now)
 - Worth separating base bootstrapping and remote exploitation into 2 very different tasks, possibly w/ diff body types

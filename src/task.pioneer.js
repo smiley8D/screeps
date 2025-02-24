@@ -43,12 +43,14 @@ class Pioneer extends Task {
         } else {
             // Move to room
             if (creep.room.name != creep.memory.task.room) {
+                delete creep.memory.curTgt;
+                delete creep.memory.curDst;
                 creep.memory.room = creep.memory.task.room;
                 return ERR_NOT_IN_RANGE;
             }
 
             // Check for unfilled spawners
-            let dst = utils.findDst(creep, RESOURCE_ENERGY, {containers: false, haulers: false});
+            let dst = utils.findDst(creep, RESOURCE_ENERGY, {containers: false, haulers: false, room_limit: 0});
             if (dst && !creep.memory.curTgt) {
                 result = utils.doDst(creep, dst, RESOURCE_ENERGY);
             }

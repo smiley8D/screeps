@@ -54,7 +54,7 @@ class Upgrade extends Task {
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, { maxRooms: 1, visualizePathStyle: {}})  }
         } else {
             // Empty inventory, refill
-            let src = utils.findSrc(creep, RESOURCE_ENERGY, {limit: 3});
+            let src = utils.findSrc(creep, RESOURCE_ENERGY);
             if (!src) {
                 result = creep.moveTo(controller, {visualizePathStyle: {}});
             } else {

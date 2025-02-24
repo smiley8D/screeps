@@ -3,10 +3,6 @@ const config = require("config");
 
 class Task {
 
-    static emoji() {
-        return '❔';
-    }
-
     constructor(name, tgt, room, wanted) {
         // Body of assignable workers
         this.body = new Body();

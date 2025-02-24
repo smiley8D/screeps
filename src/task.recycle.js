@@ -5,10 +5,6 @@ const Stock = require("task.stock");
 
 class Recycle extends Task {
 
-    static emoji() {
-        return '⛏️';
-    }
-
     constructor(creep) {
         super("Recycle", null, null, 0);
         delete creep.memory.curSrc;

@@ -11,7 +11,8 @@ utils = {
             containers: true,
             sources: false,
             haulers: true,
-            limit: null
+            limit: null,
+            room_limit: config.MAX_ROOM_SEARCH
         }
         for (let opt in in_opts) {
             opts[opt] = in_opts[opt];
@@ -57,12 +58,13 @@ utils = {
 
         // Check multiroom storages
         if (!src && !opts.limit) {
-            let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
+            let room = utils.searchNearbyRooms([creep.room.name], opts.room_limit, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
             Game.rooms[r].storage.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource) : null), 'first');
             if (room) { src = Game.rooms[room].storage }
         }
 
         // Check range
+        if (opts.limit === null && creep.memory.body === "Drudge") { opts.limit = 3 }
         if (opts.limit != null && creep.pos.getRangeTo(src) > opts.limit) { src = null }
 
         // Update cache
@@ -73,43 +75,6 @@ utils = {
             delete creep.memory.curSrc;
             return;
         }
-    },
-
-    // Find the best src based on room resource distribution
-    bestSrc: function(creep, resource) {
-        // Try unsatisfied flags
-        let src = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
-            !f.pos.lookFor(LOOK_STRUCTURES).length && (!f.pos.lookFor(LOOK_CREEPS).length || f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name)})
-        if (src) { return src }
-
-        // Try closest decayable
-        let srcs = [];
-        // Drops
-        srcs = srcs.concat(creep.room.find(FIND_DROPPED_RESOURCES, {filter: (d) => d.resourceType === resource || !resource}));
-        // Tombstones
-        srcs = srcs.concat(creep.room.find(FIND_TOMBSTONES, {filter: (t) => t.store.getUsedCapacity(resource)}));
-        // Ruin
-        srcs = srcs.concat(creep.room.find(FIND_RUINS, {filter: (r) => r.store.getUsedCapacity(resource)}));
-        let valid_srcs = [];
-        for (let i in srcs) {
-            if (srcs[i]) { valid_srcs.push(srcs[i]) }
-        }
-        src = creep.pos.findClosestByRange(valid_srcs);
-        if (src) { return src }
-
-        // Try closest flagged >= 90%
-        src = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
-            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) > 0.9) ||
-            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) > 0.9)))});
-        if (src) { return src }
-
-        // Try closest flagged that can fill
-        src = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === COLOR_WHITE &&
-            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource)) ||
-            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource))))});
-        if (src) { return src }
-
-        return src;
     },
 
     // Withdraw from a src
@@ -157,7 +122,8 @@ utils = {
             containers: true,
             haulers: true,
             spawners: true,
-            limit: null
+            limit: null,
+            room_limit: config.MAX_ROOM_SEARCH
         }
         for (let opt in in_opts) {
             opts[opt] = in_opts[opt];
@@ -196,12 +162,13 @@ utils = {
 
         // Check multiroom storages
         if (!dst && !opts.limit) {
-            let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
+            let room = utils.searchNearbyRooms([creep.room.name], opts.room_limit, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
             Game.rooms[r].storage.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource) : null), 'first');
             if (room) { dst = Game.rooms[room].storage }
         }
 
         // Check range
+        if (opts.limit === null && creep.memory.body === "Drudge") { opts.limit = 3 }
         if (opts.limit != null && creep.pos.getRangeTo(dst) > opts.limit) { dst = null }
 
         // Update cache
@@ -212,41 +179,6 @@ utils = {
             delete creep.memory.curDst;
             return;
         }
-    },
-
-    // Find the best dst based on room resource distribution
-    bestDst: function(creep, resource=undefined) {
-        // Stay at satisfied flags
-        let dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
-            !f.pos.lookFor(LOOK_STRUCTURES).length && f.pos.lookFor(LOOK_CREEPS).length && f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name})
-        if (dst) { return dst }
-
-        // Try spawn containers
-        dst = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) => s.my && (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) && s.store.getFreeCapacity(resource)});
-        if (dst && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my)) { return dst }
-
-        // Try defenses
-        dst = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: (s) => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(resource)})
-        if (dst && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my)) { return dst }
-
-        // Try unsatisfied flags
-        dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
-            !f.pos.lookFor(LOOK_STRUCTURES).length && (!f.pos.lookFor(LOOK_CREEPS).length || f.pos.lookFor(LOOK_CREEPS)[0].name === creep.name)})
-        if (dst) { return dst }
-
-        // Try closest flagged <= 10%
-        dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
-            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getUsedCapacity(resource) / c.store.getCapacity(resource) <= 0.1) ||
-            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) / s.store.getCapacity(resource) <= 0.1)))});
-        if (dst) { return dst }
-
-        // Try closest flagged that can empty
-        dst = creep.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => (f.color === COLOR_WHITE && f.secondaryColor === utils.resource_flag[resource] &&
-            (f.pos.lookFor(LOOK_CREEPS).some((c) => c.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource)) ||
-            f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource))))});
-        if (dst) { return dst }
-
-        return dst;
     },
 
     // Deposit to a dst

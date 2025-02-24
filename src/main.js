@@ -2,7 +2,7 @@ const utils = require("utils");
 const config = require("config");
 
 const Drudge = require("body.drudge");
-const Worker = require("body");
+const Body = require("body");
 
 const Build = require("task.build");
 const Claim = require("task.claim");
@@ -211,7 +211,7 @@ module.exports.loop = function() {
                 if (!creeps.has(creep.room.name)) { creeps.set(creep.room.name, []) }
                 delete creep.memory.task;
                 creeps.get(creep.room.name).push(creep);
-            } else if (!tasks.has(creep.memory.task.id)) {
+            } else if (creep.memory.task && !tasks.has(creep.memory.task.id)) {
                 // Unset state
                 delete creep.memory.task;
                 delete creep.memory.curSrc;
@@ -245,8 +245,8 @@ module.exports.loop = function() {
                 // Use available spawner
                 let spawner = avail_spawns.get(room).pop();
                 if (avail_spawns.get(room).length === 0) {avail_spawns.delete(room)}
-                if (spawner.room.name != task.room || spawner.room.energyAvailable <= 300) {
-                    [creep, size] = new Worker().spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
+                if (spawner.room.name != task.room && task.body instanceof Drudge) {
+                    [creep, size] = new Body().spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
                 } else {
                     [creep, size] = task.body.spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
                 }
