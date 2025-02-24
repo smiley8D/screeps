@@ -242,11 +242,29 @@ module.exports.loop = function() {
 
             // Try creeps and spawners in range of search rooms
             let creep;
-            let size;
-            let room = utils.searchNearbyRooms(task.search_rooms.slice(0), task.max_search, ((r,d) => avail_spawns.has(r) || (avail_creeps.has(task.body.name) && avail_creeps.get(task.body.name).has(r))), 'first');
+            let size_wanted = Math.min(task.wanted, 1.5*(task.wanted - task.parts));
+
+            weight = function(room, dist) {
+                let spawn_weight = 0;
+                let creep_weight = 0;
+
+                // Room weight based on avail energy and distance
+                if (avail_spawns.has(room) && Game.rooms[room].energyAvailable > task.body.base_cost) {
+                    spawn_weight = Math.min(1, (Game.rooms[room].energyAvailable / task.body.cost(size_wanted)) / (dist + 1))
+                }
+
+                // Creep weight based on size and distance
+                if (avail_creeps.has(task.body.name) && avail_creeps.get(task.body.name).has(room)) {
+                    creep_weight = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / size_wanted) / (dist + 1))
+                }
+
+                return Math.max(spawn_weight, creep_weight);
+            }
+
+            let room = utils.searchNearbyRooms(task.search_rooms.slice(0), task.max_search, weight, 'first');
             if (room && avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(room)) {
                 // Assign available creep
-                creep = avail_creeps.get(task.body.name).get(room).pop();
+                creep = avail_creeps.get(task.body.name).get(room).shift();
                 size = creep.memory.size;
                 creep.memory.task = task.compress();
                 if (avail_creeps.get(task.body.name).get(room).length === 0) {avail_creeps.get(task.body.name).delete(room)}
@@ -256,7 +274,7 @@ module.exports.loop = function() {
                 let spawner = avail_spawns.get(room).pop();
                 if (avail_spawns.get(room).length === 0) {avail_spawns.delete(room)}
                 if (spawner.room.name != task.room && task.body instanceof Drudge) {
-                    [creep, size] = new Body().spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
+                    [creep, size] = new Body().spawn(spawner, task, );
                 } else {
                     [creep, size] = task.body.spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
                 }

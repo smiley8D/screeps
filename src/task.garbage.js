@@ -50,7 +50,7 @@ class Garbage extends Task {
             delete creep.memory.curDst;
             let src = utils.findSrc(creep, undefined, {containers: false, haulers: false, room_limit: 0});
             if (!src) {
-                src = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: ((s) => s.pos.lookFor(LOOK_FLAGS).some((f) => (f.color === COLOR_WHITE || f.color === COLOR_GREY) &&
+                src = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: ((s) => s.store && s.pos.lookFor(LOOK_FLAGS).some((f) => (f.color === COLOR_WHITE || f.color === COLOR_GREY) &&
                     s.store.getCapacity() > s.store.getFreeCapacity(utils.flag_resource[f.secondaryColor]) + s.store.getUsedCapacity(utils.flag_resource[f.secondaryColor])))});
                 if (src) {
                     let resource = utils.flag_resource[src.pos.lookFor(LOOK_FLAGS)[0].secondaryColor];

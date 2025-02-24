@@ -3,9 +3,7 @@ Body = require("body");
 class Claimer extends Body {
 
     constructor() {
-        super();
-        this.base = [CLAIM,MOVE];
-        this.add = [CLAIM,MOVE];
+        super([CLAIM,MOVE], [CLAIM,MOVE]);
     
         this.name = "Claimer";
     }

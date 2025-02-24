@@ -2,46 +2,42 @@ const config = require("config");
 
 class Body {
 
-    constructor() {
-        this.base = [WORK,CARRY,MOVE];
-        this.add = [WORK,CARRY,MOVE];
+    constructor(base = [WORK,CARRY,MOVE], add = [WORK,CARRY,MOVE]) {
+        this.base = base;
+        this.add = add;
+        this.base_cost = 0
+        for (let part of this.base) {
+            this.base_cost += BODYPART_COST[part];
+        }
+        this.add_cost = 0;
+        for (let part of this.add) {
+            this.add_cost += BODYPART_COST[part];
+        }
 
         this.name = "Worker";
     }
 
-    spawn(spawner, task, limit=null) {
+    cost(size) {
         // Compute costs
-        let cost = 0;
-        for (let part of this.base) {
-            cost += BODYPART_COST[part];
-        }
-        let add_cost = 0;
-        for (let part of this.add) {
-            add_cost += BODYPART_COST[part];
-        }
+        if (size === 0) { return 0 }
+        return this.base_cost + this.add_cost * (size - 1);
+    }
 
-        // Get maximum affordable size
-        let i = 1;
+    spawn(spawner, task, limit=100) {
+        let name = this.name + '-' + Game.time;
+        let size = Math.min(Math.ceil(limit), 1 + Math.floor((spawner.room.energyAvailable - this.base_cost) / this.add_cost));
+        let cost = this.cost(size);
         let body = this.base;
-        let name = this.name + "-" + Game.time;
-        if (this.add) {
-            for (; i < limit || limit === null; i++) {
-                let result = spawner.spawnCreep(body.concat(this.add), name, {dryRun: true});
-                if (result === OK) {
-                    body = body.concat(this.add)
-                    cost += add_cost;
-                } else {
-                    break;
-                }
-            }
+        for (let i = 1; i < size; i++) {
+            body = body.concat(this.add);
         }
 
-        let result = spawner.spawnCreep(body, name, {memory: {task: task.compress(), body: this.name, size: i, cost: cost, spawn: spawner.name}});
+        let result = spawner.spawnCreep(body, name, {memory: {task: task.compress(), body: this.name, size: size, cost: cost, spawn: spawner.name}});
         if (result === OK) {
             // Update cost metrics
             if (spawner.room.memory.metrics && spawner.room.memory.metrics.count) { spawner.room.memory.metrics.count.spawn += cost }
-            console.log("Spawning " + name + " size " + i + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name);
-            return [name, i];
+            console.log("Spawning " + name + " size " + size + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name);
+            return [name, size];
         }
         return [null, null];
     }

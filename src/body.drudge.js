@@ -3,9 +3,7 @@ Body = require("body");
 class Drudge extends Body {
 
     constructor() {
-        super();
-        this.base = [WORK,CARRY,CARRY,MOVE];
-        this.add = [WORK];
+        super([WORK,CARRY,CARRY,MOVE], [WORK]);
 
         this.name = "Drudge";
     }
