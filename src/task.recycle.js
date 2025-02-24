@@ -1,7 +1,5 @@
 const Task = require("task");
 const utils = require("utils");
-const Hauler = require("body.hauler");
-const Stock = require("task.stock");
 
 class Recycle extends Task {
 

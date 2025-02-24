@@ -7,6 +7,7 @@ const Body = require("body");
 const Build = require("task.build");
 const Claim = require("task.claim");
 const Dismantle = require("task.dismantle");
+const Garbage = require("task.garbage");
 const Mine = require("task.mine");
 const Pioneer = require("task.pioneer");
 const Recycle = require("task.recycle");
@@ -16,6 +17,7 @@ const Stock = require("task.stock");
 const Upgrade = require("task.upgrade");
 
 const TASKS = {
+    "Garbage": Garbage,
     "Pioneer": Pioneer,
     "Mine": Mine,
     // "Stock": Stock,
