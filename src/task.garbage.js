@@ -27,7 +27,7 @@ class Garbage extends Task {
             }
 
             if (garbage > 0) {
-                tasks.push(new Garbage(room.name, Math.max(1, Math.log(garbage))));
+                tasks.push(new Garbage(room.name, Math.max(1, Math.log(garbage / 100))));
             }
         }
         return tasks;
