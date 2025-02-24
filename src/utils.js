@@ -384,7 +384,7 @@ utils = {
             // Process damage
             if (structure.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE)) {
                 // Structure to be disassembled
-                metrics.dismantle += structure.hits;
+                metrics.dismantle += structure.hitsMax - structure.hits;
                 metrics.dismantle_max += structure.hitsMax;
                 room.memory.visuals.push(["💣"+(Math.round(100*(structure.hitsMax - structure.hits) / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
             } else if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
@@ -501,11 +501,11 @@ utils = {
 
         // Process construction sites
         for (let site of room.find(FIND_CONSTRUCTION_SITES)) {
-            metrics.build += site.progress;
+            metrics.build += site.progressTotal - site.progress;
             metrics.build_max += site.progressTotal;
             room.memory.visuals.push(["🔨"+(Math.round(100*site.progress / site.progressTotal))+"%", site.pos.x, site.pos.y, Game.time]);
         }
-        if (metrics.build_max) { metrics.build_per = metrics.build / metrics.build_max }
+        if (metrics.build_max) { metrics.build_per = ( metrics.build_max - metrics.build) / metrics.build_max }
 
         // Process controller
         let controller = room.controller;
