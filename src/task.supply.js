@@ -67,9 +67,9 @@ class Supply extends Task {
             let path = PathFinder.search(pair[0].pos, pair[2].pos);
             let wanted = (path.path.length * 2 / 5);
             let struct = pair[0].pos.lookFor(LOOK_STRUCTURES);
-            if (struct && struct.store) {
-                if (pair[0].color === COLOR_GREY) { wanted *= struct.store.getUsedCapacity() / struct.store.getCapacity() }
-                else if (pair[0].color === COLOR_WHITE) { wanted *= struct.store.getFreeCapacity() / struct.store.getCapacity() }
+            if (struct.length && struct[0].store) {
+                if (pair[0].color === COLOR_GREY) { wanted *= (struct[0].store.getUsedCapacity(resource) / struct[0].store.getCapacity()) }
+                else if (pair[0].color === COLOR_WHITE) { wanted *= (struct[0].store.getFreeCapacity(resource) / struct[0].store.getCapacity()) }
             }
             if (pair[0].color === COLOR_GREY) {
                 tasks.push(new Supply(pair[0], pair[0].pos, pair[2].pos, resource, wanted))

@@ -57,7 +57,7 @@ utils = {
         src = creep.pos.findClosestByRange(valid_srcs);
 
         // Check multiroom storages
-        if (!src && !opts.limit) {
+        if (!src && !opts.limit && opts.containers) {
             let room = utils.searchNearbyRooms([creep.room.name], opts.room_limit, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
             Game.rooms[r].storage.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource) : null), 'first');
             if (room) { src = Game.rooms[room].storage }
@@ -141,7 +141,8 @@ utils = {
         if (opts.containers && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my)) {
             dsts = dsts.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) =>
             ((s.structureType === STRUCTURE_STORAGE && s.my) || s.structureType === STRUCTURE_CONTAINER) &&
-            (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource)))}));
+            (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource))) &&
+            (!s.pos.lookFor(LOOK_FLAGS).some((f)=>f.secondaryColor != utils.resource_flag[resource]))}));
         }
         // Haulers
         if (opts.haulers) {
@@ -416,6 +417,7 @@ utils = {
                 // Process resources
                 let inv_counter = 0;
                 let resources = new Array();
+                let resource_flag = structure.pos.lookFor(LOOK_FLAGS);
                 for (let resource of RESOURCES_ALL) {
                     if (inv_counter === structure.store.getUsedCapacity()) { break }
                     let amount = structure.store.getUsedCapacity(resource);
@@ -423,6 +425,7 @@ utils = {
                     inv_counter += amount;
                     if (!metrics.resources[resource]) { metrics.resources[resource] = utils.freshResourceMetrics() }
                     metrics.resources[resource].total += amount;
+                    if (resource_flag && resource != utils.flag_resource[resource_flag.secondaryColor]) { metrics.resources[resource].trash += amount }
                     resources.push(resource);
                 }
 

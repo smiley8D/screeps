@@ -35,7 +35,7 @@ class Garbage extends Task {
 
     static doTask(creep) {
         let result = ERR_NOT_FOUND;
-        if (!creep.store.getFreeCapacity()) {
+        if (creep.store.getUsedCapacity() && (!creep.store.getFreeCapacity() || creep.memory.curDst)) {
             // Full inventory, depo
             delete creep.memory.curSrc;
             result = utils.doDst(creep, utils.findDst(creep, undefined, {haulers: false}));
@@ -48,8 +48,24 @@ class Garbage extends Task {
 
             // Pickup trash
             delete creep.memory.curDst;
-            let src = utils.findSrc(creep, undefined, {containers: false, haulers: false});
-            result = utils.doSrc(creep, src);
+            let src = utils.findSrc(creep, undefined, {containers: false, haulers: false, room_limit: 0});
+            if (!src) {
+                src = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter: ((s) => s.pos.lookFor(LOOK_FLAGS).some((f) => (f.color === COLOR_WHITE || f.color === COLOR_GREY) &&
+                    s.store.getCapacity() > s.store.getFreeCapacity(utils.flag_resource[f.secondaryColor]) + s.store.getUsedCapacity(utils.flag_resource[f.secondaryColor])))});
+                if (src) {
+                    let resource = utils.flag_resource[src.pos.lookFor(LOOK_FLAGS)[0].secondaryColor];
+                    for (let r of RESOURCES_ALL) {
+                        if (r != resource && src.store.getUsedCapacity(r)) {
+                            result = utils.doSrc(creep, src, r);
+                            break;
+                        }
+                    }
+                } else {
+                    delete creep.memory.task;
+                }
+            } else {
+                result = utils.doSrc(creep, src);
+            }
         }
 
         return result;
