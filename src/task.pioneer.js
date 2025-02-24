@@ -20,8 +20,9 @@ class Pioneer extends Task {
             if (room.controller && room.controller.owner && !room.controller.my) {continue}
 
             if (!room.memory.metrics) {continue}
-            let total_build = room.memory.metrics.last.build_max - room.memory.metrics.last.build;
-            if ((total_build > 0 || room.energyAvailable < room.energyCapacityAvailable) && room.energyAvailable <= 300) {
+            let metrics = room.memory.metrics;
+            let total_build = metrics.last.build_max - metrics.last.build;
+            if ((total_build > 0 || (metrics.last.resources[RESOURCE_ENERGY] && metrics.last.resources[RESOURCE_ENERGY].refill > 0)) && room.energyAvailable <= 300) {
                 tasks.push(new Pioneer(room.name, Math.max(1,Math.max((room.energyCapacityAvailable - room.energyAvailable)/50, Math.log(total_build)))));
             }
         }
@@ -49,7 +50,7 @@ class Pioneer extends Task {
                 return ERR_NOT_IN_RANGE;
             }
 
-            // Check for unfilled spawners
+            // Check for refills
             let dst = utils.findDst(creep, RESOURCE_ENERGY, {containers: false, haulers: false, room_limit: 0});
             if (dst && !creep.memory.curTgt) {
                 result = utils.doDst(creep, dst, RESOURCE_ENERGY);

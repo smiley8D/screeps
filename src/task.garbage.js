@@ -38,7 +38,7 @@ class Garbage extends Task {
         if (!creep.store.getFreeCapacity()) {
             // Full inventory, depo
             delete creep.memory.curSrc;
-            result = utils.doDst(creep, utils.findDst(creep));
+            result = utils.doDst(creep, utils.findDst(creep, undefined, {haulers: false}));
         } else {
             // Move to room
             if (creep.room.name != creep.memory.task.room) {

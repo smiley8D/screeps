@@ -121,7 +121,7 @@ utils = {
             partial: true,
             containers: true,
             haulers: true,
-            spawners: true,
+            refills: true,
             limit: null,
             room_limit: config.MAX_ROOM_SEARCH
         }
@@ -146,10 +146,10 @@ utils = {
             dsts = dsts.concat(creep.room.find(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getFreeCapacity(resource) &&
                 (opts.partial || c.store.getFreeCapacity(resource) <= creep.store.getUsedCapacity(resource))}));
         }
-        // Spawners
-        if (opts.spawners && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my) && (resource === RESOURCE_ENERGY || (!resource && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
+        // Spawners & towers
+        if (opts.refills && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my) && (resource === RESOURCE_ENERGY || (!resource && creep.store.getUsedCapacity(RESOURCE_ENERGY)))) {
             dsts = dsts.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) => s.my &&
-                (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) &&
+                (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_TOWER) &&
                 (s.store.getFreeCapacity(RESOURCE_ENERGY) && (opts.partial || s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getUsedCapacity(RESOURCE_ENERGY)))}));
         }
 
@@ -451,6 +451,7 @@ utils = {
             metrics.resources[resource].total += drop.amount;
             metrics.resources[resource].trash += drop.amount;
             metrics.resources[resource].free += drop.amount;
+            room.memory.visuals.push(["🗑️", drop.pos.x, drop.pos.y, Game.time]);
         }
         for (let structure of room.find(FIND_TOMBSTONES).concat(room.find(FIND_RUINS))) {
             let inv_counter = 0;
@@ -463,6 +464,7 @@ utils = {
                 metrics.resources[resource].total += amount;
                 metrics.resources[resource].trash += amount;
                 metrics.resources[resource].free += amount;
+                room.memory.visuals.push(["🗑️", structure.pos.x, structure.pos.y, Game.time]);
             }
         }
 

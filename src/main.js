@@ -20,7 +20,7 @@ const TASKS = {
     "Garbage": Garbage,
     "Pioneer": Pioneer,
     "Mine": Mine,
-    // "Stock": Stock,
+    "Stock": Stock,
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,
