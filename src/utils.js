@@ -83,11 +83,7 @@ utils = {
 
         // Handle tgt is creep
         if (src instanceof Creep) {
-            if (creep.pos.isNearTo(src)) {
-                result = utils.doDst(src, creep, resource);
-            } else {
-                result = ERR_NOT_IN_RANGE;
-            }
+            result = utils.doDst(src, creep, resource)
         } else if (resource) {
             // Try targetted withdraw
             result = creep.withdraw(src, resource);
@@ -187,6 +183,7 @@ utils = {
     // Deposit to a dst
     doDst: function(creep, dst, resource=undefined) {
         let result;
+        if (dst instanceof Creep) { dst.moveTo(creep) }
         if (!resource) {
             // Try any present resources
             for (let resource of RESOURCES_ALL) {
