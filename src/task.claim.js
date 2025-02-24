@@ -5,7 +5,9 @@ const Claimer = require("body.claimer");
 
 class Claim extends Task {
 
-    static emoji = '🚩';
+    static emoji() {
+        return '🚩';
+    }
 
     constructor(room, action, wanted, spots) {
         super("Claim", room + ':' + action, room, wanted);
@@ -95,7 +97,7 @@ class Claim extends Task {
         }
 
         // Move if needed
-        if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {stroke: "#991eff"}}) }
+        if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, { maxRooms: 1, visualizePathStyle: {stroke: "#991eff"}}) }
 
         return result;
     }

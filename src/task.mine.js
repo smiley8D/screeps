@@ -6,13 +6,14 @@ const config = require("config");
 
 class Mine extends Task {
 
-    static emoji = '⛏️';
+    static emoji() {
+        return '⛏️';
+    }
 
     constructor(pos, room, wanted, spots) {
         super("Mine", room + ":" + pos.x + ":" + pos.y, room, wanted);
-        if (Game.rooms[room] && Game.rooms[room].controller && Game.rooms[room].controller.my) {
-            this.body = new Drudge();
-        }
+        // TEMP DISABLE WHILE LOGI DOWN
+        // this.body = new Drudge();
         this.max_workers = spots;
         this.x = pos.x,
         this.y = pos.y
@@ -143,7 +144,7 @@ class Mine extends Task {
             // Space in inventory, mine
             delete creep.memory.curDst;
             result = creep.harvest(target)
-            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(target, { visualizePathStyle: {} }) }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(target, { maxRooms: 1, visualizePathStyle: {} }) }
         } else {
             // Full inventory, depo
             let dst;
@@ -153,7 +154,7 @@ class Mine extends Task {
                 dst = utils.findDst(creep, resource);
             }
             if (!dst) {
-                creep.moveTo(target, { visualizePathStyle: {} });
+                creep.moveTo(target, { maxRooms: 1, visualizePathStyle: {} });
                 result = ERR_NOT_FOUND;
             } else {
                 result = utils.doDst(creep, dst, resource);

@@ -9,7 +9,7 @@ class Body {
         this.name = "Worker";
     }
 
-    spawn(spawner, task, limit=null, emergency=false) {
+    spawn(spawner, task, limit=null) {
         // Compute costs
         let cost = 0;
         for (let part of this.base) {
@@ -27,7 +27,7 @@ class Body {
         if (this.add) {
             for (; i < limit || limit === null; i++) {
                 let result = spawner.spawnCreep(body.concat(this.add), name, {dryRun: true});
-                if (result === OK && (emergency || cost + add_cost <= spawner.room.energyAvailable - 200)) {
+                if (result === OK) {
                     body = body.concat(this.add)
                     cost += add_cost;
                 } else {

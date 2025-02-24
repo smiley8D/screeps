@@ -5,11 +5,14 @@ const Drudge = require('body.drudge');
 
 class Upgrade extends Task {
 
-    static emoji = '⬆️';
+    static emoji() {
+        return '⬆️';
+    }
 
     constructor(room, wanted) {
         super("Upgrade", room, room, wanted);
-        this.body = new Drudge();
+        // TEMP DISABLE WHILE LOGI DOWN
+        // this.body = new Drudge();
     }
 
     static getTasks() {
@@ -41,13 +44,14 @@ class Upgrade extends Task {
         } else if (creep.store.getUsedCapacity()) {
             // Move to room
             if (creep.room.name != creep.memory.task.room) {
-                return creep.memory.task.room;
+                creep.memory.room = creep.memory.task.room;
+                return ERR_NOT_IN_RANGE;
             }
     
             // Energy in inventory, upgrade and move closer
             delete creep.memory.curSrc;
             result = creep.upgradeController(controller);
-            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, {visualizePathStyle: {}})  }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(controller, { maxRooms: 1, visualizePathStyle: {}})  }
         } else {
             // Empty inventory, refill
             let src = utils.findSrc(creep, RESOURCE_ENERGY, {limit: 3});

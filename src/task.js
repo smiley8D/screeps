@@ -1,9 +1,11 @@
 const Body = require("body");
+const config = require("config");
 
 class Task {
 
-    // Speech bubble for assigned creeps
-    static emoji = '❔';
+    static emoji() {
+        return '❔';
+    }
 
     constructor(name, tgt, room, wanted) {
         // Body of assignable workers
@@ -36,13 +38,10 @@ class Task {
         // Total parts wanted
         this.wanted = wanted;
 
-        this.max_search = 1;
+        this.max_search = config.MAX_ROOM_SEARCH;
 
         // Optional additional details for result bubble
         this.detail = '';
-
-        // Task can use spawn reserves
-        this.emergency = false;
     }
 
     // Generate list of tasks

@@ -6,7 +6,7 @@ module.exports = {
     DMG_THRESHOLD: 0.9,
     DEFENSE_PER: 0.01,
     UPGRADE_PER: 0.8,
-    MAX_ROOM_SEARCH: 1,
+    MAX_ROOM_SEARCH: 3,
     SCOUT_TICK: 86400,
     SCOUT_COOLDOWN: 3600
 }

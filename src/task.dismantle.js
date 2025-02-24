@@ -3,7 +3,9 @@ utils = require("utils");
 
 class Dismantle extends Task {
 
-    static emoji = '💣';
+    static emoji() {
+        return '💣';
+    }
 
     constructor(flag, wanted) {
         super("Dismantle", flag.name, flag.pos.roomName, wanted);
@@ -63,7 +65,7 @@ class Dismantle extends Task {
 
             // Attempt dismantle
             result = creep.dismantle(structure);
-            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, { maxRooms: 1, visualizePathStyle: {}}) }
         } else {
             // Full inventory, depo
             result = utils.doDst(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);

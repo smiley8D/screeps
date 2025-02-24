@@ -67,7 +67,7 @@ utils = {
 
         // Update cache
         if (src) {
-            delete creep.memory.curSrc;
+            creep.memory.curSrc = src.id;
             return src;
         } else {
             delete creep.memory.curSrc;
@@ -109,11 +109,6 @@ utils = {
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource))))});
         if (src) { return src }
 
-        // Try most full storage in MAX_ROOM_SEARCH
-        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
-        Game.rooms[r].storage.store.getUsedCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource) : null), 'best');
-        if (room) { return Game.rooms[room].storage }
-
         return src;
     },
 
@@ -123,10 +118,14 @@ utils = {
 
         // Handle tgt is creep
         if (src instanceof Creep) {
-            result = utils.doDst(src, creep, resource)
+            if (creep.pos.getRangeTo(src) > 2) {
+                result = ERR_NOT_IN_RANGE;
+            } else {
+                result = utils.doDst(src, creep, resource);
+            }
         } else if (resource) {
             // Try targetted withdraw
-            result = creep.withdraw(src, resource)
+            result = creep.withdraw(src, resource);
         } else if (src.store) {
             // Try any present resources
             for (let resource of RESOURCES_ALL) {
@@ -247,11 +246,6 @@ utils = {
             f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource))))});
         if (dst) { return dst }
 
-        // Try most empty storage in MAX_ROOM_SEARCH
-        let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
-        Game.rooms[r].storage.store.getFreeCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource) : null), 'best');
-        if (room) { return Game.rooms[room].storage }
-
         return dst;
     },
 
@@ -284,7 +278,7 @@ utils = {
             total: 0,
             over: 0,
             under: 0,
-            imbalance: 0,
+            trash: 0,
             free: 0
         }
 
@@ -515,34 +509,28 @@ utils = {
             }
         }
 
-        // Process logistics flags
-        for (let flag of room.find(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE })) {
-            let store;
-            if (flag.pos.lookFor(LOOK_STRUCTURES).length) { store = flag.pos.lookFor(LOOK_STRUCTURES)[0].store }
-            else if (flag.pos.lookFor(LOOK_CREEPS).length) { store = flag.pos.lookFor(LOOK_CREEPS)[0].store }
-            // TEMP ADD ENERGY IMBALANCE
-            if (!metrics.resources[RESOURCE_ENERGY]) { metrics.resources[RESOURCE_ENERGY] = utils.freshResourceMetrics() }
-            if (utils.flag_resource[flag.secondaryColor] && !metrics.resources[utils.flag_resource[flag.secondaryColor]]) { metrics.resources[utils.flag_resource[flag.secondaryColor]] = utils.freshResourceMetrics() }
-            if (flag.secondaryColor === COLOR_WHITE && !store) { metrics.resources[RESOURCE_ENERGY].over += 500 }
-            else if (utils.flag_resource[flag.secondaryColor] && !store) { metrics.resources[utils.flag_resource[flag.secondaryColor]].under += 500}
-            else if (flag.secondaryColor === COLOR_WHITE) { metrics.resources[RESOURCE_ENERGY].over += store.getUsedCapacity(RESOURCE_ENERGY) }
-        }
+        // // Process logistics flags
+        // for (let flag of room.find(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE })) {
+        //     let store;
+        //     if (flag.pos.lookFor(LOOK_STRUCTURES).length) { store = flag.pos.lookFor(LOOK_STRUCTURES)[0].store }
+        //     // TEMP ADD ENERGY IMBALANCE
+        //     if (!metrics.resources[RESOURCE_ENERGY]) { metrics.resources[RESOURCE_ENERGY] = utils.freshResourceMetrics() }
+        //     if (utils.flag_resource[flag.secondaryColor] && !metrics.resources[utils.flag_resource[flag.secondaryColor]]) { metrics.resources[utils.flag_resource[flag.secondaryColor]] = utils.freshResourceMetrics() }
+        //     if (flag.secondaryColor === COLOR_WHITE && !store) { metrics.resources[RESOURCE_ENERGY].over += 2000 }
+        //     else if (utils.flag_resource[flag.secondaryColor] && !store) { metrics.resources[utils.flag_resource[flag.secondaryColor]].under += 2000}
+        //     else if (flag.secondaryColor === COLOR_WHITE) { metrics.resources[RESOURCE_ENERGY].over += store.getUsedCapacity(RESOURCE_ENERGY) }
+        // }
 
         // Process averages
         if (metrics.hits_max) { metrics.hits_per = metrics.hits / metrics.hits_max }
         if (metrics.dismantle_max) { metrics.dismantle_per = (metrics.dismantle_max - metrics.dismantle) / metrics.dismantle_max }
-
-        // Compute imbalances
-        for (let resource in metrics.resources) {
-            metrics.resources[resource].imbalance = Math.max(metrics.resources[resource].over, metrics.resources[resource].under);
-        }
 
         // Process decayables
         for (let drop of room.find(FIND_DROPPED_RESOURCES)) {
             let resource = drop.resourceType;
             if (!metrics.resources[resource]) {metrics.resources[resource] = utils.freshResourceMetrics()}
             metrics.resources[resource].total += drop.amount;
-            metrics.resources[resource].over += drop.amount;
+            metrics.resources[resource].trash += drop.amount;
             metrics.resources[resource].free += drop.amount;
         }
         for (let structure of room.find(FIND_TOMBSTONES).concat(room.find(FIND_RUINS))) {
@@ -554,7 +542,7 @@ utils = {
                 inv_counter += amount;
                 if (!metrics.resources[resource]) {metrics.resources[resource] = utils.freshResourceMetrics()}
                 metrics.resources[resource].total += amount;
-                metrics.resources[resource].over += amount;
+                metrics.resources[resource].trash += amount;
                 metrics.resources[resource].free += amount;
             }
         }
@@ -579,7 +567,7 @@ utils = {
                 let amount = creep.store.getUsedCapacity(resource);
                 if (!amount) { continue }
                 inv_counter += amount;
-                if (!metrics.resources[resource]) {metrics.resources[resource] = utils.freshResourceMetrics()}
+                if (!metrics.resources[resource]) {metrics.resources[resource] = 0}
                 metrics.resources[resource].total += amount;
                 metrics.resources[resource].free += amount;
             }
@@ -804,8 +792,7 @@ utils = {
                         header = true;
                     }
                     text.push(resource.charAt(0).toUpperCase() + resource.slice(1) + ": " + metrics.last.resources[resource].free + ((metrics.change_mov && metrics.change_mov.resources[resource]) ? " @ " + (Math.round(100*metrics.change_mov.resources[resource].free)/100) +
-                    "/t" + ((metrics.change_mov.resources[resource].free < 0) ? " (" + Math.floor(-1*metrics.last.resources[resource].free/metrics.change_mov.resources[resource].free) + " t)" : "") 
-                    : "") + ((metrics.last.resources[resource].imbalance >= 100) ? " (" + Math.round(metrics.last.resources[resource].imbalance) + " i)" : ""))
+                    "/t" + ((metrics.change_mov.resources[resource].free < 0) ? " (" + Math.floor(-1*metrics.last.resources[resource].free/metrics.change_mov.resources[resource].free) + " t)" : "") : ""))
                 }
 
                 // Energy flows
@@ -938,6 +925,7 @@ utils = {
 
     // Reset memory
     reset: function(room_name=null, metrics=false, sightings=false) {
+        if (!Memory.rooms) { Memory.rooms = {} }
         if (room_name) {
             if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
             let memory = Memory.rooms[room_name];

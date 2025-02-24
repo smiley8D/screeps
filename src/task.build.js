@@ -3,7 +3,9 @@ utils = require("utils");
 
 class Build extends Task {
 
-    static emoji = '🔨';
+    static emoji() {
+        return '🔨';
+    }
 
     constructor(room, wanted) {
         super("Build", room, room, wanted);
@@ -55,7 +57,7 @@ class Build extends Task {
 
             // Attempt build
             result = creep.build(structure);
-            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, { maxRooms: 1, visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
             delete creep.memory.curTgt;

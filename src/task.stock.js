@@ -5,7 +5,9 @@ Hauler = require("body.hauler");
 
 class Stock extends Task {
 
-    static emoji = '📦';
+    static emoji() {
+        return '📦';
+    }
 
     constructor(room, wanted, resource) {
         super("Stock", room + ":" + resource, room, wanted);
@@ -54,22 +56,15 @@ class Stock extends Task {
             result = utils.doDst(creep, utils.findDst(creep));
         } else {
             // Determine next step
+            // NOTE: possibly bugs in here w/ flags
             let src = Game.getObjectById(creep.memory.curSrc);
             if (!src) { src = Game.flags[creep.memory.curSrc] }
             if (src && src.store && !src.store.getUsedCapacity(resource)) { src = null }
             let dst = Game.getObjectById(creep.memory.curDst);
             if (!dst) { src = Game.flags[creep.memory.curDrc] }
             if (dst && dst.store && !dst.store.getFreeCapacity(resource)) { dst = null }
-            if (!src && !creep.store.getUsedCapacity()) {
-                // Inventory empty, get src
-                src = utils.bestSrc(creep, resource);
-                dst = null;
-            } else if (!dst && !creep.store.getFreeCapacity()) {
-                // Inventory full, get dst
-                dst = utils.bestDst(creep, resource);
-                src = null;
-            } else if (!src && !dst && creep.room.name != creep.memory.task.room) {
-                // Move to correct room
+            if (!src && !dst && creep.room.name != creep.memory.task.room) {
+                // Return to correct room
                 creep.memory.room = creep.memory.task.room;
                 return ERR_NOT_IN_RANGE;
             } else if (!src && !dst) {
@@ -83,27 +78,43 @@ class Stock extends Task {
                 }
             }
 
+            // Check if storage containers needed
+            if (src && !dst && !creep.store.getFreeCapacity(resource)) {
+                let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
+                Game.rooms[r].storage.store.getUsedCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource) : null), 'best');
+                if (room) { dst = Game.rooms[room].storage }
+            } else if (dst && !src && !creep.store.getUsedCapacity(resource)) {
+                let room = utils.searchNearbyRooms([creep.room.name], config.MAX_ROOM_SEARCH, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ?
+                Game.rooms[r].storage.store.getFreeCapacity(resource) / Game.rooms[r].storage.store.getCapacity(resource) : null), 'best');
+                if (room) { src = Game.rooms[room].storage }
+            }
+
             // Execute
-            if (src) {
+            if (src && creep.store.getFreeCapacity(resource)) {
                 if (src instanceof Flag) {
                     if (src.pos.isEqualTo(creep.pos)) { result = OK }
                     else if (src.pos.lookFor(LOOK_CREEPS).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_CREEPS)[0], resource) }
                     else if (src.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doSrc(creep, src.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
-                    else { result = creep.moveTo(src, {visualizePathStyle: {stroke: "#ffa500"}}) }
+                    else { result = creep.moveTo(src, { maxRooms: 1, visualizePathStyle: {stroke: "#ffa500"}}) }
                 } else {
                     result = utils.doSrc(creep, src, resource);
                 }
                 if (result === ERR_NOT_ENOUGH_RESOURCES || result === ERR_FULL) { src = null }
-            } else if (dst) {
+            } else if (dst && creep.store.getUsedCapacity(resource)) {
                 if (dst instanceof Flag) {
                     if (dst.pos.isEqualTo(creep.pos)) { result = OK }
                     else if (dst.pos.lookFor(LOOK_CREEPS).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_CREEPS)[0], resource) }
                     else if (dst.pos.lookFor(LOOK_STRUCTURES).length) { result = utils.doDst(creep, dst.pos.lookFor(LOOK_STRUCTURES)[0], resource) }
-                    else { result = creep.moveTo(dst, {visualizePathStyle: {stroke: "#1e90ff"}}) }
+                    else { result = creep.moveTo(dst, { maxRooms: 1, visualizePathStyle: {stroke: "#1e90ff"}}) }
                 } else {
                     result = utils.doDst(creep, dst, resource);
                 }
                 if (result === ERR_NOT_ENOUGH_RESOURCES || result === ERR_FULL) { dst = null }
+            } else {
+                // Move to middle of room if nothing to do
+                src = null;
+                dst = null;
+                result = creep.moveTo(new RoomPosition(25, 25, creep.memory.task.room), {visualizePathStyle: {}})
             }
 
             // Update cache

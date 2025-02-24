@@ -5,7 +5,9 @@ Task = require("task");
 
 class Repair extends Task {
 
-    static emoji = '🔧';
+    static emoji() {
+        return '🔧';
+    }
 
     constructor(room, wanted) {
         super("Repair", room, room, wanted);
@@ -37,7 +39,8 @@ class Repair extends Task {
         } else if (creep.store.getUsedCapacity()) {
             // Move to room
             if (creep.room.name != creep.memory.task.room) {
-                return creep.memory.task.room;
+                creep.memory.room = creep.memory.task.room;
+                return ERR_NOT_IN_RANGE;
             }
     
             // Energy in inventory, repair
@@ -63,7 +66,7 @@ class Repair extends Task {
 
             // Attempt repair
             result = creep.repair(structure);
-            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, {visualizePathStyle: {}}) }
+            if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, { maxRooms: 1, visualizePathStyle: {}}) }
         } else {
             // Empty inventory, refill
             delete creep.memory.curTgt;

@@ -43,6 +43,8 @@
 - Set defense % to % of free room energy?
 - Do combat first, devote CPU to it
 - Military commands done via flags, flag name references an "army" or force composition which is designed elsewhere
+- Some issue w/ task visuals not displaying for rooms w/o metrics
+- Look into changing body types from Dredge to Worker based on spawner distance
 
 ## Scouting notes
 - CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%
@@ -72,7 +74,7 @@
     - Since I'll have tasks dedicated to flags, I shouldn't need to give them special treatment in bestSrc/Dst
         - This means tash should have a higher priority which would be good
 - Hauler pull tasks ("Trailer?") for Drudge units not in position
-- Pioneers mix of haulers and miners, should look into having them use bestDst
+- Look into a "supply-route" or "trade-route" based approach for tasking
 
 ## Pioneer notes (short on time, dropping these here for now)
 - Worth separating base bootstrapping and remote exploitation into 2 very different tasks, possibly w/ diff body types

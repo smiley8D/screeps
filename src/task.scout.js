@@ -5,7 +5,9 @@ const ScoutBody = require("body.scout");
 
 class Scout extends Task {
 
-    static emoji = '📡';
+    static emoji() {
+        return '📡';
+    }
 
     constructor(room, spawn_room) {
         super("Scout", room, room, 1);

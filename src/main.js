@@ -1,10 +1,14 @@
 const utils = require("utils");
 const config = require("config");
 
+const Drudge = require("body.drudge");
+const Worker = require("body");
+
 const Build = require("task.build");
 const Claim = require("task.claim");
 const Dismantle = require("task.dismantle");
 const Mine = require("task.mine");
+const Pioneer = require("task.pioneer");
 const Recycle = require("task.recycle");
 const Repair = require("task.repair");
 const Scout = require("task.scout");
@@ -12,8 +16,9 @@ const Stock = require("task.stock");
 const Upgrade = require("task.upgrade");
 
 const TASKS = {
+    "Pioneer": Pioneer,
     "Mine": Mine,
-    "Stock": Stock,
+    // "Stock": Stock,
     "Repair": Repair,
     "Build": Build,
     "Upgrade": Upgrade,
@@ -240,7 +245,11 @@ module.exports.loop = function() {
                 // Use available spawner
                 let spawner = avail_spawns.get(room).pop();
                 if (avail_spawns.get(room).length === 0) {avail_spawns.delete(room)}
-                [creep, size] = task.body.spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)), task.emergency);
+                if (spawner.room.name != task.room || spawner.room.energyAvailable <= 300) {
+                    [creep, size] = new Worker().spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
+                } else {
+                    [creep, size] = task.body.spawn(spawner, task, Math.min(task.wanted, 1.5*(task.wanted - task.parts)));
+                }
             }
 
             // Update task fullfillment
@@ -335,9 +344,9 @@ module.exports.loop = function() {
         // Show result
         if (creep.memory.task && TASKS[creep.memory.task.name] && TASKS[creep.memory.task.name].emoji) {
             if (creep.memory.room) {
-                creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + creep.memory.room + (result != OK ? result : ''))
+                creep.say(TASKS[creep.memory.task.name].emoji() + creep.memory.task.detail + creep.memory.room + (result != OK ? result : ''))
             } else {
-                creep.say(TASKS[creep.memory.task.name].emoji + creep.memory.task.detail + (result != OK ? result : ''));
+                creep.say(TASKS[creep.memory.task.name].emoji() + creep.memory.task.detail + (result != OK ? result : ''));
             }
         }
     }
