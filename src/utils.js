@@ -490,7 +490,7 @@ utils = {
                 let amount = creep.store.getUsedCapacity(resource);
                 if (!amount) { continue }
                 inv_counter += amount;
-                if (!metrics.resources[resource]) {metrics.resources[resource] = 0}
+                if (!metrics.resources[resource]) {metrics.resources[resource] = utils.freshResourceMetrics() }
                 metrics.resources[resource].total += amount;
                 metrics.resources[resource].free += amount;
             }
