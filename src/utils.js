@@ -805,7 +805,7 @@ utils = {
                     }
                     text.push(resource.charAt(0).toUpperCase() + resource.slice(1) + ": " + metrics.last.resources[resource].free + ((metrics.change_mov && metrics.change_mov.resources[resource]) ? " @ " + (Math.round(100*metrics.change_mov.resources[resource].free)/100) +
                     "/t" + ((metrics.change_mov.resources[resource].free < 0) ? " (" + Math.floor(-1*metrics.last.resources[resource].free/metrics.change_mov.resources[resource].free) + " t)" : "") 
-                    : "") + ((metrics.last.resources[resource].imbalance > 500) ? " (" + Math.round(metrics.last.resources[resource].imbalance) + " i)" : ""))
+                    : "") + ((metrics.last.resources[resource].imbalance >= 100) ? " (" + Math.round(metrics.last.resources[resource].imbalance) + " i)" : ""))
                 }
 
                 // Energy flows
