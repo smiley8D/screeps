@@ -19,7 +19,7 @@ const Upgrade = require("task.upgrade");
 
 const TASKS = {
     "Garbage": Garbage,
-    // "Pioneer": Pioneer,
+    "Pioneer": Pioneer,
     "Mine": Mine,
     "Stock": Stock,
     "Supply": Supply,
@@ -249,7 +249,8 @@ module.exports.loop = function() {
                 let creep_weight = 0;
 
                 // Room weight based on avail energy and distance
-                if (avail_spawns.has(room) && Game.rooms[room].energyAvailable > task.body.base_cost) {
+                if (avail_spawns.has(room) && Game.rooms[room].energyAvailable > task.body.base_cost &&
+                    (Game.rooms[room].energyAvailable === Game.rooms[room].energyCapacityAvailable || task.name === 'Pioneer')) {
                     spawn_weight = Math.min(1, (Game.rooms[room].energyAvailable / task.body.cost(size_wanted)) / (dist + 1))
                 }
 
@@ -258,7 +259,10 @@ module.exports.loop = function() {
                     creep_weight = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / size_wanted) / (dist + 1))
                 }
 
-                return Math.max(spawn_weight, creep_weight);
+                if (spawn_weight && creep_weight) { return Math.max(spawn_weight, creep_weight) }
+                else if (spawn_weight) { return spawn_weight }
+                else if (creep_weight) { return creep_weight }
+                return null;
             }
 
             let room = utils.searchNearbyRooms(task.search_rooms.slice(0), task.max_search, weight, 'first');

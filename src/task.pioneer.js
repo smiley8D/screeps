@@ -21,9 +21,8 @@ class Pioneer extends Task {
 
             if (!room.memory.metrics) {continue}
             let metrics = room.memory.metrics;
-            let total_build = metrics.last.build_max - metrics.last.build;
-            if ((total_build > 0 || (metrics.last.resources[RESOURCE_ENERGY] && metrics.last.resources[RESOURCE_ENERGY].refill > 0)) && room.energyAvailable <= 300) {
-                tasks.push(new Pioneer(room.name, Math.max(1,Math.max((room.energyCapacityAvailable - room.energyAvailable)/50, Math.log(total_build)))));
+            if ((metrics.last.build > 0 || metrics.last.damage > 0 || (metrics.last.resources[RESOURCE_ENERGY] && metrics.last.resources[RESOURCE_ENERGY].refill > 0)) && room.energyAvailable <= 300) {
+                tasks.push(new Pioneer(room.name, Math.max(1,Math.max((room.energyCapacityAvailable - room.energyAvailable)/50, Math.log(metrics.last.build), Math.log(metrics.last.damage)))));
             }
         }
         return tasks;
