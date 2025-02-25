@@ -22,7 +22,7 @@ class Supply extends Task {
         let assignments = new Map();
 
         // Assign all empty flags
-        let flag_queue = Object.values(Game.flags).filter((f) => f.color === COLOR_GREY);
+        let flag_queue = Object.values(Game.flags).filter((f) => f.room && f.color === COLOR_GREY);
         while (flag_queue.length) {
             let flag = flag_queue.shift();
 
@@ -31,7 +31,7 @@ class Supply extends Task {
             if (struct.length && struct[0].store && !struct[0].store.getUsedCapacity()) { continue }
 
             // Find fill flags
-            let closest = flag.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === flag.secondaryColor &&
+            let closest = flag.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.room && f.color === COLOR_WHITE && f.secondaryColor === flag.secondaryColor &&
                 (!assignments.has(f.name) || assignments.get(f.name)[1] > flag.pos.getRangeTo(f)) &&
                 !(f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store && !s.store.getFreeCapacity()))});
             if (closest) {

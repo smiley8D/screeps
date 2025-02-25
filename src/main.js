@@ -193,7 +193,6 @@ module.exports.loop = function() {
             if (creep.memory.size) { replace_ticks = creep.memory.size * 3}
             let spawn = Game.spawns[creep.memory.spawn];
             if (spawn) { replace_ticks += 50 * Game.map.getRoomLinearDistance(creep.room.name, spawn.room.name) }
-            console.log(creep.name,creep.memory.size,creep.memory.body,creep.pos,replace_ticks)
 
             if (creep.ticksToLive > replace_ticks && creep.memory.task && tasks.has(creep.memory.task.id) &&
             tasks.get(creep.memory.task.id).parts < tasks.get(creep.memory.task.id).wanted &&
@@ -222,12 +221,6 @@ module.exports.loop = function() {
                 if (!creeps.has(creep.room.name)) { creeps.set(creep.room.name, []) }
                 delete creep.memory.task;
                 creeps.get(creep.room.name).push(creep);
-            } else if (creep.memory.task && !tasks.has(creep.memory.task.id)) {
-                // Unset state
-                delete creep.memory.task;
-                delete creep.memory.curSrc;
-                delete creep.memory.curDst;
-                delete creep.memory.curTgt;
             }
         }
 
@@ -239,44 +232,46 @@ module.exports.loop = function() {
             let creep;
             let cost_wanted = task.body.cost(task.wanted);
 
-            weight = function(room, dist) {
-                let spawn_weight = 0;
-                let creep_weight = 0;
-
-                // Room weight based on avail energy and distance
-                if (avail_spawns.has(room) && Game.rooms[room].energyAvailable > task.body.base_cost &&
-                    (Game.rooms[room].energyAvailable >= cost_wanted || Game.rooms[room].energyAvailable === Game.rooms[room].energyCapacityAvailable || task.name === 'Pioneer')) {
-                    spawn_weight = Math.min(1, (Game.rooms[room].energyAvailable / cost_wanted) / (dist + 1))
-                }
-
+            creep_weight = function(room, dist) {
                 // Creep weight based on size and distance, limiting by ticks left
+                let result = null;
                 if (avail_creeps.has(task.body.name) && avail_creeps.get(task.body.name).has(room) &&
-                    avail_creeps.get(task.body.name).get(room)[0].ticksToLive > (100 + 50 * dist) / (task.body.weight * avail_creeps.get(task.body.name).get(room)[0].memory.size)) {
-                    creep_weight = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / task.wanted) / (dist + 1))
+                    avail_creeps.get(task.body.name).get(room)[0].ticksToLive > ((100 + 50 * dist))) {
+                    result = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / task.wanted) / (dist + 1))
                 }
-
-                if (spawn_weight && creep_weight) { return Math.max(spawn_weight, creep_weight) }
-                else if (spawn_weight) { return spawn_weight }
-                else if (creep_weight) { return creep_weight }
-                return null;
+                return result;
             }
 
-            let room = utils.searchNearbyRooms(task.search_rooms.slice(0), task.max_search, weight, 'best');
-            if (room && avail_creeps.get(task.body.name) && avail_creeps.get(task.body.name).get(room)) {
+            spawn_weight = function(room, dist) {
+                // Room weight based on avail energy and distance
+                let result = null;
+                if (avail_spawns.has(room) && Game.rooms[room].energyAvailable > task.body.base_cost &&
+                    (Game.rooms[room].energyAvailable >= cost_wanted || Game.rooms[room].energyAvailable === Game.rooms[room].energyCapacityAvailable || task.name === 'Pioneer')) {
+                    result = Math.min(1, (Game.rooms[room].energyAvailable / cost_wanted) / (dist + 1))
+                }
+                return result;
+            }
+
+            let creep_room = utils.searchNearbyRooms(task.search_rooms.slice(0), task.max_search, creep_weight, 'best');
+            if (creep_room) {
                 // Assign available creep
-                creep = avail_creeps.get(task.body.name).get(room).shift();
+                creep = avail_creeps.get(task.body.name).get(creep_room).shift();
                 size = creep.memory.size;
                 creep.memory.task = task.compress();
-                if (avail_creeps.get(task.body.name).get(room).length === 0) {avail_creeps.get(task.body.name).delete(room)}
+                if (avail_creeps.get(task.body.name).get(creep_room).length === 0) {avail_creeps.get(task.body.name).delete(creep_room)}
                 if (avail_creeps.get(task.body.name).size === 0) {avail_creeps.delete(task.body.name)}
-            } else if (avail_spawns.get(room)) {
-                // Use available spawner
-                let spawner = avail_spawns.get(room).pop();
-                if (avail_spawns.get(room).length === 0) {avail_spawns.delete(room)}
-                if (spawner.room.name != task.room && task.body instanceof Drudge) {
-                    [creep, size] = new Body().spawn(spawner, task, task.wanted);
-                } else {
-                    [creep, size] = task.body.spawn(spawner, task, task.wanted);
+            }
+            if (!creep) {
+                let spawn_room = utils.searchNearbyRooms(task.search_rooms.slice(0), task.max_search, spawn_weight, 'best');
+                if (spawn_room) {
+                    // Use available spawner
+                    let spawner = avail_spawns.get(spawn_room).pop();
+                    if (avail_spawns.get(spawn_room).length === 0) {avail_spawns.delete(spawn_room)}
+                    if (spawner.room.name != task.room && task.body instanceof Drudge) {
+                        [creep, size] = new Body().spawn(spawner, task, task.wanted);
+                    } else {
+                        [creep, size] = task.body.spawn(spawner, task, task.wanted);
+                    }
                 }
             }
 

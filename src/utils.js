@@ -829,7 +829,7 @@ utils = {
         if (func) {
             let result = func(room, dist);
             if (method === 'first' && result) { return room }
-            if (method === 'best' && (cur_best === null || (result != null && result > cur_best))) { cur = room; cur_best = result }
+            if (method === 'best' && (result != null && (result > cur_best || cur_best === null))) { cur = room; cur_best = result }
             if (method === 'check' && result) { cur.push(room) }
         } else {
             cur.push(room)

@@ -6,7 +6,6 @@ class Drudge extends Body {
         super([WORK,CARRY,CARRY,MOVE], [WORK]);
 
         this.name = "Drudge";
-        this.weight = 2;
     }
 
 }

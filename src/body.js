@@ -14,8 +14,6 @@ class Body {
             this.add_cost += BODYPART_COST[part];
         }
 
-        this.weight = 0;
-
         this.name = "Worker";
     }
 
