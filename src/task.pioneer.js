@@ -1,6 +1,11 @@
 Task = require("task");
 utils = require("utils");
 
+const Build = require("task.build");
+const Repair = require("task.repair");
+const Stock = require("task.stock");
+const Garbage = require("task.garbage");
+
 class Pioneer extends Task {
 
     static emoji() {
@@ -21,7 +26,7 @@ class Pioneer extends Task {
 
             if (!room.memory.metrics) {continue}
             let metrics = room.memory.metrics;
-            if ((metrics.last.build > 0 || metrics.last.damage > 0 || (metrics.last.resources[RESOURCE_ENERGY] && metrics.last.resources[RESOURCE_ENERGY].refill > 0)) && room.energyAvailable <= 300) {
+            if ((metrics.last.build > 0 || (metrics.last.resources[RESOURCE_ENERGY] && metrics.last.resources[RESOURCE_ENERGY].refill > 0)) && room.energyAvailable <= 300) {
                 tasks.push(new Pioneer(room.name, Math.max(1,Math.max((room.energyCapacityAvailable - room.energyAvailable)/50, Math.log(metrics.last.build), Math.log(metrics.last.damage)))));
             }
         }
@@ -49,26 +54,12 @@ class Pioneer extends Task {
                 return ERR_NOT_IN_RANGE;
             }
 
-            // Check for refills
-            let dst = utils.findDst(creep, RESOURCE_ENERGY, {containers: false, haulers: false, room_limit: 0});
-            if (dst && !creep.memory.curTgt) {
-                result = utils.doDst(creep, dst, RESOURCE_ENERGY);
-            }
-            if (!dst || result === ERR_NO_PATH) {
-                // Check for builds
-                let structure = Game.getObjectById(creep.memory.curTgt);
-                if (!structure) {
-                    structure = creep.pos.findClosestByRange(FIND_MY_CONSTRUCTION_SITES);
-                    if (structure) {
-                        creep.memory.curTgt = structure.id;
-                    } else {
-                        delete creep.memory.curTgt;
-                    }
-                }
-
-                // Attempt build
-                result = creep.build(structure);
-                if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, { maxRooms: 1, visualizePathStyle: {}}) }
+            if (creep.room.memory.metrics.last.resources[RESOURCE_ENERGY] && creep.room.memory.metrics.last.resources[RESOURCE_ENERGY].refill) {
+                // Do refill
+                result = Stock.doTask(creep);
+            } else if (creep.room.memory.metrics.last.build) {
+                // Do build
+                result = Build.doTask(creep);
             }
         }
 
