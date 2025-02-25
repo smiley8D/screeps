@@ -133,7 +133,6 @@ class Supply extends Task {
 
         // Work
         if (creep.pos.isNearTo(target)) {
-            if (!creep.pos.isEqualTo(target)) { creep.moveTo(target, {reusePath: 20, visualizePathStyle: {stroke: (target.isEqualTo(start) ? "#ffa500" : "#1e90ff")}}) }
             let struct = target.lookFor(LOOK_STRUCTURES);
             if (struct.length && struct[0].store) {
                 if (target.isEqualTo(start)) {
@@ -142,6 +141,7 @@ class Supply extends Task {
                     result = creep.transfer(struct[0], resource);
                 }
             } else {
+                if (!creep.pos.isEqualTo(target)) { creep.moveTo(target, {reusePath: 20, visualizePathStyle: {stroke: (target.isEqualTo(start) ? "#ffa500" : "#1e90ff")}}) }
                 result = OK;
             }
         } else {
