@@ -105,7 +105,7 @@ utils = {
 
         // Move in range
         if (result === ERR_NOT_IN_RANGE) {
-            result = creep.moveTo(src, {visualizePathStyle: {stroke: "#ffa500"}});
+            result = creep.moveTo(src, {reusePath: 20, visualizePathStyle: {stroke: "#ffa500"}});
             if (src.pos.roomName != creep.room.name) { creep.memory.room = src.pos.roomName }
         }
 
@@ -197,7 +197,7 @@ utils = {
 
         // Move in range
         if (result === ERR_NOT_IN_RANGE) {
-            result = creep.moveTo(dst, {visualizePathStyle: {stroke: "#1e90ff"}});
+            result = creep.moveTo(dst, {reusePath: 20, visualizePathStyle: {stroke: "#1e90ff"}});
             if (dst.pos.roomName != creep.room.name) { creep.memory.room = dst.pos.roomName }
         }
 
