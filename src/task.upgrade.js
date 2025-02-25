@@ -27,7 +27,7 @@ class Upgrade extends Task {
             if (!room.memory.metrics.last_mov.resources[RESOURCE_ENERGY]) {continue}
 
             // Create tasks
-            tasks.push(new Upgrade(room.name, 10*(room.memory.metrics.last_mov.resources[RESOURCE_ENERGY].free/100000)));
+            tasks.push(new Upgrade(room.name, 10*(Math.max((room.memory.metrics.count_mov.harvest[RESOURCE_ENERGY]/20),room.memory.metrics.last_mov.resources[RESOURCE_ENERGY].free/100000))));
         }
         return tasks;
     }
