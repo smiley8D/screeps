@@ -385,21 +385,25 @@ utils = {
                 metrics.dismantle_max += structure.hitsMax;
                 room.memory.visuals.push(["💣"+(Math.round(100*(structure.hitsMax - structure.hits) / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
             } else if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
-                metrics.damage += structure.hitsMax - structure.hits
-                metrics.hits += structure.hits;
-                metrics.hits_max += structure.hitsMax;
+                if (structure.hits < structure.hitsMax * 0.8) {
+                    metrics.damage += structure.hitsMax - structure.hits
+                    metrics.hits += structure.hits;
+                    metrics.hits_max += structure.hitsMax;
+                }
                 if (structure.hits < structure.hitsMax * 0.1) {
                     room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
                 } else if (structure.hits < structure.hitsMax * 0.5) {
                     room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
-                } else if (structure.hits < structure.hitsMax) {
+                } else if (structure.hits < structure.hitsMax * 0.8) {
                     room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, Game.time]);
                 }
             } else if (structure.hitsMax && (structure.structureType === STRUCTURE_WALL || structure.structureType === STRUCTURE_RAMPART)) {
                 // Configurable wall upgrade threshold
-                metrics.damage += Math.max(0, (structure.hitsMax * config.DEFENSE_PER) - structure.hits);
-                metrics.hits += Math.min(structure.hits, structure.hitsMax * config.DEFENSE_PER);
-                metrics.hits_max += structure.hitsMax * config.DEFENSE_PER;
+                if (structure.hits < (structure.hitsMax * config.DEFENSE_PER)) {
+                    metrics.damage += Math.max(0, (structure.hitsMax * config.DEFENSE_PER) - structure.hits);
+                    metrics.hits += Math.min(structure.hits, structure.hitsMax * config.DEFENSE_PER);
+                    metrics.hits_max += structure.hitsMax * config.DEFENSE_PER;
+                }
                 if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.1) {
                     room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, Game.time]);
                 } else if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.5) {
