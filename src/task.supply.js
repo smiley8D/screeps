@@ -8,13 +8,13 @@ class Supply extends Task {
         return '🚚';
     }
 
-    constructor(flag, start_pos, end_pos, resource, wanted) {
-        super("Supply",flag.name, start_pos.roomName, wanted);
+    constructor(id, start_pos, end_pos, resource, wanted) {
+        super("Supply", id, start_pos.roomName, wanted);
         this.body = new Hauler();
         this.resource = resource;
         this.start = start_pos;
         this.end = end_pos;
-        this.detail = flag.name;
+        this.detail = id;
         this.max_workers = 3;
     }
 
@@ -81,11 +81,13 @@ class Supply extends Task {
                 if (pair[0].color === COLOR_GREY) { wanted *= (struct[0].store.getUsedCapacity(resource) / struct[0].store.getCapacity()) }
                 else if (pair[0].color === COLOR_WHITE) { wanted *= (struct[0].store.getFreeCapacity(resource) / struct[0].store.getCapacity()) }
             }
+            let id = name;
+            if (pair[2] instanceof Flag) { id += ":" + pair[2].name}
             if (pair[0].color === COLOR_GREY) {
-                tasks.push(new Supply(pair[0], pair[0].pos, pair[2].pos, resource, wanted))
+                tasks.push(new Supply(id, pair[0].pos, pair[2].pos, resource, wanted))
             } else if (pair[0].color === COLOR_WHITE && pair[2] instanceof Flag) { continue }
             else {
-                tasks.push(new Supply(pair[0], pair[2].pos, pair[0].pos, resource, wanted))
+                tasks.push(new Supply(id, pair[2].pos, pair[0].pos, resource, wanted))
             }
         }
 
@@ -136,10 +138,8 @@ class Supply extends Task {
             if (struct.length && struct[0].store) {
                 if (target.isEqualTo(start)) {
                     result = creep.withdraw(struct[0], resource);
-                    if (result === ERR_NOT_ENOUGH_RESOURCES) { delete creep.memory.task }
                 } else {
                     result = creep.transfer(struct[0], resource);
-                    if (result === ERR_FULL) { delete creep.memory.task }
                 }
             } else {
                 result = OK;
