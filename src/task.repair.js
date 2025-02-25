@@ -11,7 +11,6 @@ class Repair extends Task {
 
     constructor(room, wanted) {
         super("Repair", room, room, wanted);
-        this.max_workers = 2;
     }
 
     static getTasks() {

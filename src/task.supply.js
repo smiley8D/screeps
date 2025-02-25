@@ -15,7 +15,6 @@ class Supply extends Task {
         this.start = start_pos;
         this.end = end_pos;
         this.detail = flag.name;
-        this.max_workers = 3;
     }
 
     static getTasks() {

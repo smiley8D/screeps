@@ -12,7 +12,6 @@ class Stock extends Task {
     constructor(room, wanted) {
         super("Stock", room, room, wanted);
         this.body = new Hauler();
-        this.max_workers = 3;
     }
 
     static getTasks() {

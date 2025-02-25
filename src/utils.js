@@ -888,7 +888,6 @@ utils = {
                 cpu_visual: 0,
                 cpu_total: 0,
                 cpu_tasks: {},
-                task_count: {},
                 task_cost: {}
             }
         }

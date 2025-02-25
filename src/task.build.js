@@ -9,7 +9,6 @@ class Build extends Task {
 
     constructor(room, wanted) {
         super("Build", room, room, wanted);
-        this.max_workers = 2;
     }
 
     static getTasks() {

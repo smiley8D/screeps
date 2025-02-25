@@ -238,7 +238,7 @@ module.exports.loop = function() {
                 if (avail_creeps.has(task.body.name) && avail_creeps.get(task.body.name).has(room) &&
                     avail_creeps.get(task.body.name).get(room)[0].ticksToLive > ((100 + 50 * dist)) &&
                     (dist === 0 || task.body.name != "Drudge")) {
-                    result = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / task.wanted) / Math.max(1, ((dist+1)**2) * task.body.weight * avail_creeps.get(task.body.name).get(room)[0].memory.size))
+                    result = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / task.wanted)) / Math.max(1, ((dist+1)**2) * task.body.weight * avail_creeps.get(task.body.name).get(room)[0].memory.size)
                 }
                 return result;
             }
@@ -248,7 +248,7 @@ module.exports.loop = function() {
                 let result = null;
                 if (avail_spawns.has(room) && Game.rooms[room].energyAvailable > task.body.base_cost &&
                     (Game.rooms[room].energyAvailable >= cost_wanted || Game.rooms[room].energyAvailable === Game.rooms[room].energyCapacityAvailable || task.name === 'Pioneer')) {
-                    result = Math.min(1, (Game.rooms[room].energyAvailable / cost_wanted) / Math.max(1, ((dist+1)**2) * task.body.weight * task.wanted))
+                    result = Math.min(1, (Game.rooms[room].energyAvailable / cost_wanted)) / Math.max(1, ((dist+1)**2) * task.body.weight * task.wanted)
                 }
                 return result;
             }
@@ -314,7 +314,7 @@ module.exports.loop = function() {
             for (; i < room_tasks[room].length; i++) {
                 let task = room_tasks[room][i];
                 visuals = Memory.rooms[room].visuals;
-                visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted)+"   ( "+task.workers+" / "+task.max_workers+" )", 0, 48.5-i, Game.time, {align: "left"}]);
+                visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted), 0, 48.5-i, Game.time, {align: "left"}]);
             }
             visuals.push(["[ Tasks: " + room_tasks[room].length + " ]", 0, 48.5-i, Game.time, {align: "left"}]);
         }
@@ -390,8 +390,7 @@ module.exports.loop = function() {
     for (let task in task_cpu) {
         if (!Memory.metrics.cpu_tasks[task]) { Memory.metrics.cpu_tasks[task] = task_cpu[task] }
         else { Memory.metrics.cpu_tasks[task] = (Memory.metrics.cpu_tasks[task] * (1 - config.MOV_N)) + (task_cpu[task] * config.MOV_N) }
-        if (!Memory.metrics.task_count[task]) { Memory.metrics.task_count[task] = task_count[task] }
-        else { Memory.metrics.task_count[task] = (Memory.metrics.task_count[task] * (1 - config.MOV_N)) + (task_count[task] * config.MOV_N) }
+        Memory.metrics.task_count[task] = task_count[task]
         if (!Memory.metrics.task_cost[task]) { Memory.metrics.task_cost[task] = task_cost[task] }
         else { Memory.metrics.task_cost[task] = (Memory.metrics.task_cost[task] * (1 - config.MOV_N)) + (task_cost[task] * config.MOV_N) }
     }

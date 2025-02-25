@@ -11,7 +11,6 @@ class Garbage extends Task {
     constructor(room, wanted) {
         super("Garbage", room, room, wanted);
         this.body = new Hauler();
-        this.max_workers = 2;
     }
 
     static getTasks() {
