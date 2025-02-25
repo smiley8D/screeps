@@ -252,7 +252,8 @@ module.exports.loop = function() {
                 return result;
             }
 
-            let creep_room = utils.searchNearbyRooms(task.search_rooms.slice(0), task.max_search, creep_weight, 'best');
+            let creep_room;
+            if (task.workers < task.max_workers) { creep_room = utils.searchNearbyRooms(task.search_rooms.slice(0), task.max_search, creep_weight, 'best') }
             if (creep_room) {
                 // Assign available creep
                 creep = avail_creeps.get(task.body.name).get(creep_room).shift();
