@@ -193,6 +193,7 @@ module.exports.loop = function() {
             if (creep.memory.size) { replace_ticks = creep.memory.size * 3}
             let spawn = Game.spawns[creep.memory.spawn];
             if (spawn) { replace_ticks += 50 * Game.map.getRoomLinearDistance(creep.room.name, spawn.room.name) }
+            console.log(creep.name,creep.memory.size,creep.memory.body,creep.pos,replace_ticks)
 
             if (creep.ticksToLive > replace_ticks && creep.memory.task && tasks.has(creep.memory.task.id) &&
             tasks.get(creep.memory.task.id).parts < tasks.get(creep.memory.task.id).wanted &&
@@ -403,7 +404,7 @@ module.exports.loop = function() {
     for (let spawn of Object.values(Game.spawns)) {
         if (!spawn.spawning) { continue }
         let creep = Game.creeps[spawn.spawning.name];
-        if (!creep || !creep.memory || !creep.memory.task || !TASKS[creep.memory.task.name]) { continue }
+        if (!creep || !creep.memory || !creep.memory.task || !TASKS[creep.memory.task.name] || !TASKS[creep.memory.task.name].emoji) { continue }
         spawn.room.visual.text(creep.memory.size + TASKS[creep.memory.task.name].emoji() + creep.memory.task.detail, spawn.pos.x, spawn.pos.y - 0.75);
     }
 

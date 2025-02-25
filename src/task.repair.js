@@ -23,9 +23,8 @@ class Repair extends Task {
             if (room.controller && room.controller.owner && !room.controller.my) {continue}
 
             if (!room.memory.metrics) {continue}
-            let total_dmg = room.memory.metrics.last.hits_max - room.memory.metrics.last.hits;
-            if (total_dmg > 0) {
-                tasks.push(new Repair(room.name, Math.max(1,Math.log(total_dmg / 100))));
+            if (room.memory.metrics.last.damage > 0) {
+                tasks.push(new Repair(room.name, Math.max(1,Math.log(room.memory.metrics.last.damage / 100))));
             }
         }
         return tasks;

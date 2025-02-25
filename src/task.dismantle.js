@@ -7,52 +7,33 @@ class Dismantle extends Task {
         return '💣';
     }
 
-    constructor(flag, wanted) {
-        super("Dismantle", flag.name, flag.pos.roomName, wanted);
-        this.details = flag.name;
+    constructor(room, wanted) {
+        super("Dismantle", room, room, wanted);
     }
 
     static getTasks() {
         let tasks = []
+        for (let room in Game.rooms) {
+            room = Game.rooms[room];
 
-        // Iterate through dismantle flags
-        for (let flag in Game.flags) {
-            flag = Game.flags[flag];
-            if (flag.color != COLOR_ORANGE || flag.secondaryColor != COLOR_ORANGE) {continue}
-            if (flag.room) {
-                // Can get detailed information
-                let structures = flag.pos.lookFor(LOOK_STRUCTURES);
-                if (structures.length === 0) {
-                    // Site no longer exists, remove flag
-                    flag.remove();
-                } else {
-                    // Create task
-                    tasks.push(new Dismantle(flag, Math.max(1,Math.log(structures[0].hits))))
-                }
-            } else {
-                // Send a basic worker
-                tasks.push(new Dismantle(flag, 1))
+            // Check room not other-owned
+            if (room.controller && room.controller.owner && !room.controller.my) {continue}
+
+            if (!room.memory.metrics) {continue}
+            let dismantle = room.memory.metrics.last.dismantle;
+            if (dismantle > 0) {
+                tasks.push(new Dismantle(room.name, Math.max(1,Math.log(dismantle / 100))));
             }
         }
-
         return tasks;
     }
 
     static doTask(creep) {
-        let flag = Game.flags[creep.memory.task.tgt];
-        if (!flag) { return ERR_NOT_FOUND }
-        let structures = flag.pos.lookFor(LOOK_STRUCTURES);
-        if (structures.length === 0) {
-            flag.remove();
-            return OK;
-        }
-        let structure = structures[0];
-
-        let result = ERR_NOT_FOUND;
+        let result;
         if (creep.store.getCapacity() > creep.store.getFreeCapacity() + creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
             // Inventory contains wrong resource, depo
-            delete creep.memory.curSrc;
-            result = utils.doDst(creep, utils.findDst(creep, cur_resource), cur_resource);
+            delete creep.memory.curTgt;
+            result = utils.doDst(creep, utils.findDst(creep));
         } else if (creep.store.getFreeCapacity()) {
             // Move to room
             if (creep.room.name != creep.memory.task.room) {
@@ -63,11 +44,23 @@ class Dismantle extends Task {
             // Space in inventory, dismantle
             delete creep.memory.curDst;
 
+            // Get structure
+            let structure = Game.getObjectById(creep.memory.curTgt);
+            if (!structure || !structure.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE)) {
+                structure = creep.pos.findClosestByRange(FIND_STRUCTURES, {filter:(o) => o.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE)});
+                if (structure) {
+                    creep.memory.curTgt = structure.id;
+                } else {
+                    delete creep.memory.curTgt;
+                }
+            }
+
             // Attempt dismantle
             result = creep.dismantle(structure);
             if (result === ERR_NOT_IN_RANGE) { result = creep.moveTo(structure, { maxRooms: 1, visualizePathStyle: {}}) }
         } else {
             // Full inventory, depo
+            delete creep.memory.curTgt;
             result = utils.doDst(creep, utils.findSrc(creep, RESOURCE_ENERGY), RESOURCE_ENERGY);
         }
 

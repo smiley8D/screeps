@@ -381,7 +381,7 @@ utils = {
             // Process damage
             if (structure.pos.lookFor(LOOK_FLAGS).some((f)=>f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE)) {
                 // Structure to be disassembled
-                metrics.dismantle += structure.hitsMax - structure.hits;
+                metrics.dismantle += structure.hits;
                 metrics.dismantle_max += structure.hitsMax;
                 room.memory.visuals.push(["💣"+(Math.round(100*(structure.hitsMax - structure.hits) / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
             } else if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
@@ -685,6 +685,20 @@ utils = {
                     " (" + (Math.round(10000*metrics.last.upgrade/progress_total)/100) + ((metrics.change_mov) ? "%) @ " + Math.round(metrics.change_mov.upgrade_total) +
                     "/t (" + Math.ceil((progress_total- metrics.last.upgrade) / metrics.change_mov.upgrade_total) + " t)" : "%)"));
 
+                // Repair & build info
+                if (metrics.last.damage >= 0.01) {text.push(
+                    "Repairing: " + metrics.last.damage + " (" + (Math.round(10000*metrics.last.hits/metrics.last.hits_max)/100) + ((metrics.change_mov) ? "%) @ " +
+                    Math.round(-1 * metrics.change_mov.damage) + ((metrics.change_mov.damage < 0) ? "/t (" + Math.ceil(metrics.last.damage / (-1 * metrics.change_mov.damage)) + " t)" : "/t") : "%)")
+                )}
+                if (metrics.last.build_max >= 0.01) {text.push(
+                    "Building: " + metrics.last.build + " (" + (Math.round(10000*metrics.last.build_per)/100) + ((metrics.change_mov) ? "%) @ " +
+                    Math.round(-1 * metrics.change_mov.build) + "/t (" + Math.ceil(-1 * metrics.last.build_max / metrics.change_mov.build) + " t)" : "%)")
+                )}
+                if (metrics.last.dismantle_max >= 0.01) {text.push(
+                    "Dismantling: " + metrics.last.dismantle + " (" + (Math.round(10000*metrics.last.dismantle_per)/100) + ((metrics.change_mov) ? "%) @ " +
+                    Math.round(-1 * metrics.change_mov.dismantle) + "/t (" + Math.ceil(-1 * metrics.last.dismantle_max / metrics.change_mov.dismantle) + " t)" : "%)")
+                )}
+
                 // Survey info
                 text.push("[ Survey ]");
                 if (metrics.survey.sources.length) { text.push("Sources: " + metrics.survey.sources.length) }
@@ -697,20 +711,6 @@ utils = {
                 for (let i in metrics.survey.power_banks) {
                     text.push("Power: " + metrics.survey.power_banks[i].power + " (" + metrics.survey.power_banks[i].decay + " t)")
                 }
-
-                // Repair & build info
-                if (metrics.last.damage >= 0.01) {text.push(
-                    "Repairing: " + metrics.last.damage + " (" + (Math.round(10000*metrics.last.hits/metrics.last.hits_max)/100) + ((metrics.change_mov) ? "%) @ " +
-                    Math.round(-1 * metrics.change_mov.damage) + ((metrics.change_mov.damage < 0) ? "/t (" + Math.ceil(metrics.last.damage / (-1 * metrics.change_mov.damage)) + " t)" : "/t") : "%)")
-                )}
-                if (metrics.last.build_max >= 0.01) {text.push(
-                    "Building: " + metrics.last.build + " (" + (Math.round(10000*metrics.last.build_per)/100) + ((metrics.change_mov) ? "%) @ " +
-                    Math.round(metrics.change_mov.build) + "/t (" + Math.ceil(metrics.last.build_max / metrics.change_mov.build) + " t)" : "%)")
-                )}
-                if (metrics.last.dismantle_max >= 0.01) {text.push(
-                    "Dismantling: " + metrics.last.dismantle + " (" + (Math.round(10000*metrics.last.dismantle_per)/100) + ((metrics.change_mov) ? "%) @ " +
-                    Math.round(metrics.change_mov.dismantle) + "/t (" + Math.ceil(metrics.last.dismantle_max / metrics.change_mov.dismantle) + " t)" : "%)")
-                )}
 
                 // Balances
                 let header = false;
