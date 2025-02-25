@@ -26,8 +26,14 @@ class Supply extends Task {
         while (flag_queue.length) {
             let flag = flag_queue.shift();
 
+            // Skip if empty
+            let struct = flag.pos.lookFor(LOOK_STRUCTURES);
+            if (struct.length && struct[0].store && !struct[0].store.getUsedCapacity()) { continue }
+
             // Find fill flags
-            let closest = flag.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === flag.secondaryColor && (!assignments.has(f.name) || assignments.get(f.name)[1] > flag.pos.getRangeTo(f))});
+            let closest = flag.pos.findClosestByRange(FIND_FLAGS, {filter: (f) => f.color === COLOR_WHITE && f.secondaryColor === flag.secondaryColor &&
+                (!assignments.has(f.name) || assignments.get(f.name)[1] > flag.pos.getRangeTo(f)) &&
+                !(f.pos.lookFor(LOOK_STRUCTURES).some((s) => s.store && !s.store.getFreeCapacity()))});
             if (closest) {
                 let range = flag.pos.getRangeTo(closest);
                 assignments.set(flag.name, [flag, range, closest]);
@@ -53,6 +59,10 @@ class Supply extends Task {
 
             // Skip if already assigned
             if (assignments.has(flag.name)) { continue }
+
+            // Skip if inventory full
+            let struct = flag.pos.lookFor(LOOK_STRUCTURES);
+            if (struct.length && struct[0].store && !struct[0].store.getFreeCapacity()) { continue }
 
             // Find storage
             let room = utils.searchNearbyRooms([flag.pos.roomName], config.MAX_SEARCH_ROOMS, ((r,d) => Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my), 'first');
