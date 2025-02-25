@@ -27,7 +27,7 @@ class Stock extends Task {
             if (!room.memory.metrics) {continue}
             let metrics = room.memory.metrics;
             if (metrics.last.resources[RESOURCE_ENERGY] && metrics.last.resources[RESOURCE_ENERGY].refill > 0) {
-                tasks.push(new Stock(room.name, Math.max(1, Math.log(metrics.last.resources[RESOURCE_ENERGY].refill))));
+                tasks.push(new Stock(room.name, Math.max(1, (Math.log(room.energyCapacityAvailable) / 2), Math.log(2 * metrics.last.resources[RESOURCE_ENERGY].refill))));
             }
         }
         return tasks;

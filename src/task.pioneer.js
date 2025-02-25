@@ -29,7 +29,7 @@ class Pioneer extends Task {
             let metrics = room.memory.metrics;
             if (((metrics.last.build > 0 || (metrics.last.resources[RESOURCE_ENERGY] && metrics.last.resources[RESOURCE_ENERGY].refill > 0)) && room.energyAvailable <= 300) &&
                 (!metrics.last.resources[RESOURCE_ENERGY] || metrics.last.resources[RESOURCE_ENERGY].free <= 100 || !room.find(FIND_MY_CREEPS).some((c) => c.memory.task && c.memory.task.name === "Stock"))) {
-                tasks.push(new Pioneer(room.name, Math.max(1,Math.max((room.energyCapacityAvailable - room.energyAvailable)/50, Math.log(metrics.last.build), Math.log(metrics.last.damage)))));
+                tasks.push(new Pioneer(room.name, Math.max(1,Math.max((300 - room.energyAvailable)/50, Math.log(metrics.last.build), Math.log(metrics.last.damage)))));
             }
         }
         return tasks;

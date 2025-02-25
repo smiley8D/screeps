@@ -236,8 +236,9 @@ module.exports.loop = function() {
                 // Creep weight based on size and distance, limiting by ticks left
                 let result = null;
                 if (avail_creeps.has(task.body.name) && avail_creeps.get(task.body.name).has(room) &&
-                    avail_creeps.get(task.body.name).get(room)[0].ticksToLive > ((100 + 50 * dist))) {
-                    result = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / task.wanted) / Math.max(1, dist * task.body.weight * avail_creeps.get(task.body.name).get(room)[0].memory.size))
+                    avail_creeps.get(task.body.name).get(room)[0].ticksToLive > ((100 + 50 * dist)) &&
+                    (dist === 0 || task.body.name != "Drudge")) {
+                    result = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / task.wanted) / Math.max(1, ((dist+1)**2) * task.body.weight * avail_creeps.get(task.body.name).get(room)[0].memory.size))
                 }
                 return result;
             }
@@ -247,7 +248,7 @@ module.exports.loop = function() {
                 let result = null;
                 if (avail_spawns.has(room) && Game.rooms[room].energyAvailable > task.body.base_cost &&
                     (Game.rooms[room].energyAvailable >= cost_wanted || Game.rooms[room].energyAvailable === Game.rooms[room].energyCapacityAvailable || task.name === 'Pioneer')) {
-                    result = Math.min(1, (Game.rooms[room].energyAvailable / cost_wanted) / (dist + 1))
+                    result = Math.min(1, (Game.rooms[room].energyAvailable / cost_wanted) / Math.max(1, ((dist+1)**2) * task.body.weight * task.wanted))
                 }
                 return result;
             }
@@ -408,7 +409,7 @@ module.exports.loop = function() {
         if (!spawn.spawning) { continue }
         let creep = Game.creeps[spawn.spawning.name];
         if (!creep || !creep.memory || !creep.memory.task || !TASKS[creep.memory.task.name] || !TASKS[creep.memory.task.name].emoji) { continue }
-        spawn.room.visual.text(creep.memory.size + TASKS[creep.memory.task.name].emoji() + creep.memory.task.detail, spawn.pos.x, spawn.pos.y - 0.75);
+        spawn.room.visual.text(creep.memory.size + TASKS[creep.memory.task.name].emoji() + creep.memory.task.room, spawn.pos.x, spawn.pos.y - 0.75);
     }
 
     // Include flagged rooms
