@@ -20,6 +20,7 @@ utils = {
 
         // Check current src
         let src = Game.getObjectById(creep.memory.curSrc);
+        if (src instanceof Creep && src.pos.roomName != creep.roomName) { src = null }
         if (src && ((src.resourceType === resource || (src.resourceType && !resource)) || (src.store && src.store.getUsedCapacity(resource)))) { return src; }
 
         // Find new src
@@ -129,6 +130,7 @@ utils = {
 
         // Check current dst
         let dst = Game.getObjectById(creep.memory.curDst);
+        if (dst instanceof Creep && dst.pos.roomName != creep.roomName) { dst = null }
         if (dst && dst.store && dst.store.getFreeCapacity(resource)) { return dst; }
 
         // Find new dst

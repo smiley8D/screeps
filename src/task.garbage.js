@@ -61,12 +61,12 @@ class Garbage extends Task {
                             break;
                         }
                     }
-                } else {
-                    delete creep.memory.task;
                 }
             } else {
                 result = utils.doSrc(creep, src);
             }
+
+            if (!src) { creep.memory.curDst = true }
         }
 
         return result;

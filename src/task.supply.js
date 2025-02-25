@@ -145,7 +145,7 @@ class Supply extends Task {
                 result = OK;
             }
         } else {
-            result = creep.moveTo(target, {reusePath: 20, visualizePathStyle: {stroke: (target.isEqualTo(start) ? "#ffa500" : "#1e90ff")}});
+            result = creep.moveTo(target, {reusePath: 50, visualizePathStyle: {stroke: (target.isEqualTo(start) ? "#ffa500" : "#1e90ff")}});
         }
 
         return result;

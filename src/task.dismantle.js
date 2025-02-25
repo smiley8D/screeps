@@ -19,6 +19,11 @@ class Dismantle extends Task {
             // Check room not other-owned
             if (room.controller && room.controller.owner && !room.controller.my) {continue}
 
+            // Cleanup hanging dismantles
+            for (let flag of room.find(FIND_FLAGS, {filter: (f) => f.color === COLOR_ORANGE && f.secondaryColor === COLOR_ORANGE && f.room && f.pos.lookFor(LOOK_STRUCTURES).length === 0})) {
+                flag.remove()
+            }
+
             if (!room.memory.metrics) {continue}
             let dismantle = room.memory.metrics.last.dismantle;
             if (dismantle > 0) {
