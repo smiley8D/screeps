@@ -14,6 +14,8 @@ class Body {
             this.add_cost += BODYPART_COST[part];
         }
 
+        this.weight = 0;
+
         this.name = "Worker";
     }
 
@@ -36,7 +38,7 @@ class Body {
         if (result === OK) {
             // Update cost metrics
             if (spawner.room.memory.metrics && spawner.room.memory.metrics.count) { spawner.room.memory.metrics.count.spawn += cost }
-            console.log("Spawning " + name + " size " + size + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name);
+            // console.log("Spawning " + name + " size " + size + " for " + task.id + " at " + spawner.room.name + ":" + spawner.name);
             return [name, size];
         }
         return [null, null];

@@ -214,7 +214,7 @@ module.exports.loop = function() {
                     task.i++;
                     next_task.i--;
                 }
-            } else if (creep.ticksToLive > 100) {
+            } else if (creep.ticksToLive > replace_ticks) {
                 // Mark available
                 if (!avail_creeps.has(creep.memory.body)) {avail_creeps.set(creep.memory.body,new Map())}
                 let creeps = avail_creeps.get(creep.memory.body);
@@ -248,8 +248,9 @@ module.exports.loop = function() {
                     spawn_weight = Math.min(1, (Game.rooms[room].energyAvailable / cost_wanted) / (dist + 1))
                 }
 
-                // Creep weight based on size and distance
-                if (avail_creeps.has(task.body.name) && avail_creeps.get(task.body.name).has(room)) {
+                // Creep weight based on size and distance, limiting by ticks left
+                if (avail_creeps.has(task.body.name) && avail_creeps.get(task.body.name).has(room) &&
+                    avail_creeps.get(task.body.name).get(room)[0].ticksToLive > (100 + 50 * dist) / (task.body.weight * avail_creeps.get(task.body.name).get(room)[0].memory.size)) {
                     creep_weight = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / task.wanted) / (dist + 1))
                 }
 
