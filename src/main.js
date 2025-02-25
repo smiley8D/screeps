@@ -398,8 +398,17 @@ module.exports.loop = function() {
 
     // Paint visuals
     utils.showMetrics();
-    let rooms = Object.assign({}, Game.rooms);
+
+    // Spawning information
+    for (let spawn of Object.values(Game.spawns)) {
+        if (!spawn.spawning) { continue }
+        let creep = Game.creeps[spawn.spawning.name];
+        if (!creep || !creep.memory || !creep.memory.task || !TASKS[creep.memory.task.name]) { continue }
+        spawn.room.visual.text(creep.memory.size + TASKS[creep.memory.task.name].emoji() + creep.memory.task.detail, spawn.pos.x, spawn.pos.y - 0.75);
+    }
+
     // Include flagged rooms
+    let rooms = Object.assign({}, Game.rooms);
     for (let flag of Object.values(Game.flags)) {
         if (!rooms[flag.pos.roomName]) {rooms[flag.pos.roomName] = flag}
     }
