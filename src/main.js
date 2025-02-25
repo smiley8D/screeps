@@ -237,7 +237,7 @@ module.exports.loop = function() {
                 let result = null;
                 if (avail_creeps.has(task.body.name) && avail_creeps.get(task.body.name).has(room) &&
                     avail_creeps.get(task.body.name).get(room)[0].ticksToLive > ((100 + 50 * dist))) {
-                    result = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / task.wanted) / (dist + 1))
+                    result = Math.min(1, (avail_creeps.get(task.body.name).get(room)[0].memory.size / task.wanted) / Math.max(1, dist * task.body.weight * avail_creeps.get(task.body.name).get(room)[0].memory.size))
                 }
                 return result;
             }

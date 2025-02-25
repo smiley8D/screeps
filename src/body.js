@@ -15,6 +15,7 @@ class Body {
         }
 
         this.name = "Worker";
+        this.weight = 0;
     }
 
     cost(size) {
