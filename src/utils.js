@@ -660,8 +660,9 @@ utils = {
                 }
 
                 text.push("[ Order: " + (Math.round(100*metrics.cpu_order)/100) + " ]");
-                for (let task in metrics.cpu_tasks) {
-                    text.push(task + ": " + (Math.round(100*metrics.cpu_tasks[task])/100))
+                for (let task of Object.keys(metrics.cpu_tasks).sort((a,b)=>(metrics.cpu_tasks[b])-(metrics.cpu_tasks[a]))) {
+                    text.push(task + ": " + (Math.round(100*metrics.cpu_tasks[task])/100) + " | " + Math.round(metrics.task_count[task]) +
+                    " | " + (Math.round(100 * metrics.cpu_tasks[task] / metrics.task_count[task])/100) + " pc");
                 }
 
                 // Apply visuals
@@ -883,7 +884,8 @@ utils = {
                 cpu_order: 0,
                 cpu_visual: 0,
                 cpu_total: 0,
-                cpu_tasks: {}
+                cpu_tasks: {},
+                task_count: {}
             }
         }
     },

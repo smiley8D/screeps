@@ -336,9 +336,17 @@ module.exports.loop = function() {
     }
 
     // Order creeps
+    let task_cpu = {}
+    let task_count = {}
     for (let creepname in Game.creeps) {
         let creep = Game.creeps[creepname];
         let result = ERR_NOT_FOUND;
+        let start = Game.cpu.getUsed();
+        let task_name = 'Unassigned';
+
+        if (creep.memory.task) {
+            task_name = creep.memory.task.name;
+        }
 
         // Contact handling
 
@@ -348,35 +356,38 @@ module.exports.loop = function() {
         } else if (creep.memory.room) { delete creep.memory.room }
  
         if (!creep.memory.room) {
-            let task_cpu = {}
 
             // Do task
-            if (creep.memory.task && TASKS[creep.memory.task.name]) {
-                let start = Game.cpu.getUsed();
-                let task_name = creep.memory.task.name;
-                result = TASKS[creep.memory.task.name].doTask(creep);
-                if (creep.memory.task)
-                if (!task_cpu[task_name]) { task_cpu[task_name] = 0 }
-                task_cpu[task_name] += Game.cpu.getUsed() - start;
-            } else if (creep.memory.body) {
+            if (TASKS[task_name]) {
+                result = TASKS[task_name].doTask(creep);
+            } else if (task_name != "Recycle" && creep.memory.body) {
                 creep.memory.task = new Recycle(creep).compress();
-            }
-    
-            // Update task usage
-            for (let task in task_cpu) {
-                if (!Memory.metrics.cpu_tasks[task]) { Memory.metrics.cpu_tasks[task] = task_cpu[task] }
-                else { Memory.metrics.cpu_tasks[task] = Memory.metrics.cpu_tasks[task] * (1 - config.MOV_N) + task_cpu[task] }
             }
         }
 
         // Show result
-        if (creep.memory.task && TASKS[creep.memory.task.name] && TASKS[creep.memory.task.name].emoji) {
+        if (creep.memory.task && TASKS[task_name] && TASKS[task_name].emoji) {
             if (creep.memory.room) {
-                creep.say(TASKS[creep.memory.task.name].emoji() + creep.memory.task.detail + creep.memory.room + (result != OK ? result : ''))
+                creep.say(TASKS[task_name].emoji() + creep.memory.task.detail + creep.memory.room + (result != OK ? result : ''))
             } else {
-                creep.say(TASKS[creep.memory.task.name].emoji() + creep.memory.task.detail + (result != OK ? result : ''));
+                creep.say(TASKS[task_name].emoji() + creep.memory.task.detail + (result != OK ? result : ''));
             }
         }
+
+        // Track CPU usage
+        if (!task_cpu[task_name]) { task_cpu[task_name] = 0 }
+        if (!task_count[task_name]) { task_count[task_name] = 0 }
+        let used = Game.cpu.getUsed() - start;
+        task_cpu[task_name] += (used);
+        task_count[task_name]++;
+    }
+
+    // Update task CPU usage
+    for (let task in task_cpu) {
+        if (!Memory.metrics.cpu_tasks[task]) { Memory.metrics.cpu_tasks[task] = task_cpu[task] }
+        else { Memory.metrics.cpu_tasks[task] = (Memory.metrics.cpu_tasks[task] * (1 - config.MOV_N)) + (task_cpu[task] * config.MOV_N) }
+        if (!Memory.metrics.task_count[task]) { Memory.metrics.task_count[task] = task_count[task] }
+        else { Memory.metrics.task_count[task] = (Memory.metrics.task_count[task] * (1 - config.MOV_N)) + (task_count[task] * config.MOV_N) }
     }
 
     // CPU check
