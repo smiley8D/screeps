@@ -9,6 +9,7 @@ class Build extends Task {
 
     constructor(room, wanted) {
         super("Build", room, room, wanted);
+        this.max_workers = 2;
     }
 
     static getTasks() {
@@ -20,9 +21,8 @@ class Build extends Task {
             if (room.controller && room.controller.owner && !room.controller.my) {continue}
 
             if (!room.memory.metrics) {continue}
-            let total_build = room.memory.metrics.last.build_max - room.memory.metrics.last.build;
-            if (total_build > 0) {
-                tasks.push(new Build(room.name, Math.max(1,Math.log(total_build))));
+            if (room.memory.metrics.last.build > 0) {
+                tasks.push(new Build(room.name, Math.max(1,Math.log(room.memory.metrics.last.build))));
             }
         }
         return tasks;

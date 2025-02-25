@@ -242,7 +242,7 @@ module.exports.loop = function() {
 
             // Try creeps and spawners in range of search rooms
             let creep;
-            let size_wanted = Math.min(task.wanted, 1.5*(task.wanted - task.parts));
+            let size_wanted = Math.min(task.wanted, 2*(task.wanted - task.parts));
 
             weight = function(room, dist) {
                 let spawn_weight = 0;
