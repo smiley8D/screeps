@@ -234,12 +234,6 @@ module.exports.loop = function() {
         while (sorted_tasks.length > 0 && sorted_tasks[0].parts < sorted_tasks[0].wanted && (avail_spawns.size || avail_creeps.size)) {
             let task = sorted_tasks[0];
 
-            // Skip if already at max_workers
-            if (task.workers >= task.max_workers) {
-                sorted_tasks.shift();
-                continue;
-            }
-
             // Try creeps and spawners in range of search rooms
             let creep;
             let cost_wanted = task.body.cost(task.wanted);
