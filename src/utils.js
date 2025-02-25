@@ -20,8 +20,8 @@ utils = {
 
         // Check current src
         let src = Game.getObjectById(creep.memory.curSrc);
-        if (src instanceof Creep && src.pos.roomName != creep.roomName) { src = null }
-        if (src && ((src.resourceType === resource || (src.resourceType && !resource)) || (src.store && src.store.getUsedCapacity(resource)))) { return src; }
+        if (src && src instanceof Creep && src.pos.roomName != creep.roomName) { src = null }
+        if (src && (((resource && src.resourceType === resource) || (src.resourceType && !resource)) || (src.store && src.store.getUsedCapacity(resource)))) { return src; }
 
         // Find new src
         let srcs = [];
@@ -428,7 +428,7 @@ utils = {
                     inv_counter += amount;
                     if (!metrics.resources[resource]) { metrics.resources[resource] = utils.freshResourceMetrics() }
                     metrics.resources[resource].total += amount;
-                    if (resource_flag && resource != utils.flag_resource[resource_flag.secondaryColor]) { metrics.resources[resource].trash += amount }
+                    if (resource_flag.length && resource != utils.flag_resource[resource_flag[0].secondaryColor]) { metrics.resources[resource].trash += amount }
                     resources.push(resource);
                 }
 

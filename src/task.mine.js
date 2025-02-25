@@ -100,25 +100,27 @@ class Mine extends Task {
         // Get target
         let target = Game.getObjectById(creep.memory.curTgt);
         let pos;
-        if (!target && creep.store.getUsedCapacity()) {
-            // First round, empty inventory
-            return utils.doDst(creep, utils.findDst(creep));
-        } else if (!target) {
-            pos = creep.room.getPositionAt(creep.memory.task.x, creep.memory.task.y);
-            target = creep.room.lookForAt(LOOK_SOURCES, pos);
-            let look_result = creep.room.lookForAt(LOOK_SOURCES, pos);
-            if (look_result.length) { target = look_result[0] }
-        }
         if (!target) {
-            let look_result = creep.room.lookForAt(LOOK_MINERALS, pos);
-            if (look_result.length) { target = look_result[0] }
+            if (!target && creep.store.getUsedCapacity()) {
+                // First round, empty inventory
+                return utils.doDst(creep, utils.findDst(creep));
+            } else if (!target) {
+                pos = creep.room.getPositionAt(creep.memory.task.x, creep.memory.task.y);
+                target = creep.room.lookForAt(LOOK_SOURCES, pos);
+                let look_result = creep.room.lookForAt(LOOK_SOURCES, pos);
+                if (look_result.length) { target = look_result[0] }
+            }
+            if (!target) {
+                let look_result = creep.room.lookForAt(LOOK_MINERALS, pos);
+                if (look_result.length) { target = look_result[0] }
+            }
+            if (!target) {
+                let look_result = creep.room.lookForAt(LOOK_DEPOSITS, pos);
+                if (look_result.length) { target = look_result[0] }
+            }
+            if (!target) { return ERR_NOT_FOUND }
+            creep.memory.curTgt = target.id;
         }
-        if (!target) {
-            let look_result = creep.room.lookForAt(LOOK_DEPOSITS, pos);
-            if (look_result.length) { target = look_result[0] }
-        }
-        if (!target) { return ERR_NOT_FOUND }
-        creep.memory.curTgt = target.id;
 
         // Get resource
         let resource = RESOURCE_ENERGY;
