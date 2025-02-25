@@ -336,6 +336,7 @@ module.exports.loop = function() {
     // Order creeps
     let task_cpu = {}
     let task_count = {}
+    let task_cost = {}
     for (let creepname in Game.creeps) {
         let creep = Game.creeps[creepname];
         let result = ERR_NOT_FOUND;
@@ -372,20 +373,26 @@ module.exports.loop = function() {
             }
         }
 
-        // Track CPU usage
+        // Track cost & CPU usage
         if (!task_cpu[task_name]) { task_cpu[task_name] = 0 }
         if (!task_count[task_name]) { task_count[task_name] = 0 }
+        if (!task_cost[task_name]) { task_cost[task_name] = 0 }
         let used = Game.cpu.getUsed() - start;
         task_cpu[task_name] += (used);
         task_count[task_name]++;
+        if (creep.memory.cost) {
+            task_cost[task_name] += (creep.memory.cost / 1500);
+        }
     }
 
-    // Update task CPU usage
+    // Update task cost CPU usage
     for (let task in task_cpu) {
         if (!Memory.metrics.cpu_tasks[task]) { Memory.metrics.cpu_tasks[task] = task_cpu[task] }
         else { Memory.metrics.cpu_tasks[task] = (Memory.metrics.cpu_tasks[task] * (1 - config.MOV_N)) + (task_cpu[task] * config.MOV_N) }
         if (!Memory.metrics.task_count[task]) { Memory.metrics.task_count[task] = task_count[task] }
         else { Memory.metrics.task_count[task] = (Memory.metrics.task_count[task] * (1 - config.MOV_N)) + (task_count[task] * config.MOV_N) }
+        if (!Memory.metrics.task_cost[task]) { Memory.metrics.task_cost[task] = task_cost[task] }
+        else { Memory.metrics.task_cost[task] = (Memory.metrics.task_cost[task] * (1 - config.MOV_N)) + (task_cost[task] * config.MOV_N) }
     }
 
     // CPU check
