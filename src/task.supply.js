@@ -98,9 +98,10 @@ class Supply extends Task {
             if (!resource) { continue }
 
             // Skip if flag reasonably fulfilled
-            let struct = flag.pos.lookFor(LOOK_STRUCTURES).filter((s) => s.store);
+            let struct;
             let fill;
-            if (struct.length && struct[0].store) {
+            if (flag.room) { struct = flag.pos.lookFor(LOOK_STRUCTURES).filter((s) => s.store) }
+            if (struct && struct.length && struct[0].store) {
                 fill = struct[0].store.getUsedCapacity() / struct[0].store.getCapacity()
                 if ((flag.color === COLOR_WHITE && fill > 0.9) || (flag.color === COLOR_GREY && fill < 0.1)) { continue }
             } else if (flag.color === COLOR_WHITE) {
