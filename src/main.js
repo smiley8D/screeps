@@ -340,6 +340,46 @@ module.exports.loop = function() {
         cpu_count = cpu_used;
     }
 
+    // Balance links
+    link_loop:
+    for (let room of Object.values(Game.rooms)) {
+        // Skip unowned
+        if (!room.controller || !room.controller.my) { continue }
+
+        // Build queues
+        let fill = [];
+        let empty = [];
+        let other = [];
+        for (let link of room.find(FIND_MY_STRUCTURES, {filter: {structureType: STRUCTURE_LINK}})) {
+            if (link.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_WHITE && link.store.getFreeCapacity(RESOURCE_ENERGY))) {fill.push(link)}
+            else if (link.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_GREY && link.store.getUsedCapacity(RESOURCE_ENERGY))) {empty.push(link)}
+            else if (!link.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_WHITE || f.color === COLOR_GREY)) {other.push(link)}
+        }
+
+        // Sort
+        fill.sort((a,b) => a.store.getUsedCapacity(RESOURCE_ENERGY) - b.store.getUsedCapacity(RESOURCE_ENERGY));
+        empty.sort((a,b) => a.store.getFreeCapacity(RESOURCE_ENERGY) - b.store.getFreeCapacity(RESOURCE_ENERGY));
+        other.sort((a,b) => a.store.getUsedCapacity(RESOURCE_ENERGY) - b.store.getUsedCapacity(RESOURCE_ENERGY));
+
+        // Satisfy empty flags
+        while (empty.length && !empty[0].store.getFreeCapacity(RESOURCE_ENERGY)) {
+            let empty_link = empty.shift();
+            let dst = fill.shift();
+            if (!dst) { dst = other.shift() }
+            if (!dst) { break }
+            empty_link.transferEnergy(dst);
+        }
+
+        // Satify fill flags
+        while (fill.length && !fill[0].store.getUsedCapacity(RESOURCE_ENERGY)) {
+            let fill_link = fill.shift();
+            let src = empty.pop();
+            if (!src) { src = other.pop() }
+            if (!src) { break }
+            src.transferEnergy(fill_link);
+        }
+    }
+
     // Order creeps
     let task_cpu = {};
     for (let creepname in Game.creeps) {

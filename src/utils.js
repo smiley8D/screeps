@@ -11,7 +11,6 @@ utils = {
             containers: true,
             sources: false,
             haulers: true,
-            links: true,
             limit: null,
             room_limit: config.MAX_ROOM_SEARCH
         }
@@ -37,7 +36,7 @@ utils = {
         // Containers
         if (opts.containers && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my)) {
             srcs = srcs.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) =>
-                (s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER) &&
+                (s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_LINK) &&
                 (s.store.getUsedCapacity(resource) && (opts.partial || s.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource)))
             }));
         }
@@ -87,18 +86,8 @@ utils = {
     },
 
     // Withdraw from a src
-    doSrc: function(creep, src, resource=undefined, link_transfer=false) {
+    doSrc: function(creep, src, resource=undefined) {
         let result = ERR_NOT_FOUND;
-
-        // Handle tgt is link
-        if (link_transfer && src instanceof StructureLink && creep.pos.isNearTo(src.pos)) {
-            if (src.store.getUsedCapacity(RESOURCE_ENERGY) < creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
-                for (let link of creep.room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType === STRUCTURE_LINK})) {
-                    if (link.id === src.id || link.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_WHITE)) { continue }
-                    link.transferEnergy(src);
-                }
-            }
-        }
 
         // Handle tgt is creep
         if (src instanceof Creep) {
@@ -139,7 +128,6 @@ utils = {
             containers: true,
             haulers: true,
             refills: true,
-            links: true,
             limit: null,
             room_limit: config.MAX_ROOM_SEARCH
         }
@@ -157,7 +145,7 @@ utils = {
         // Containers
         if (opts.containers && (!creep.room.controller || !creep.room.controller.owner || creep.room.controller.my)) {
             dsts = dsts.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) =>
-            ((s.structureType === STRUCTURE_STORAGE && s.my) || s.structureType === STRUCTURE_CONTAINER) &&
+            ((s.structureType === STRUCTURE_STORAGE && s.my) || s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_LINK) &&
             (s.store.getFreeCapacity(resource) && (opts.partial || s.store.getFreeCapacity(resource) >= creep.store.getUsedCapacity(resource))) &&
             (!s.pos.lookFor(LOOK_FLAGS).some((f)=>f.secondaryColor != utils.resource_flag[resource]))}));
         }
@@ -171,13 +159,6 @@ utils = {
             dsts = dsts.concat(creep.room.find(FIND_STRUCTURES, {filter: (s) => s.my &&
                 (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_TOWER) &&
                 (s.store.getFreeCapacity(RESOURCE_ENERGY) && (opts.partial || s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getUsedCapacity(RESOURCE_ENERGY)))}));
-        }
-        // Link networks
-        if (opts.links && (!resource || resource === RESOURCE_ENERGY)) {
-            let links = creep.room.find(FIND_MY_STRUCTURES, {filter: {structureType: STRUCTURE_LINK}});
-            if (links.some((l) => l.store.getFreeCapacity(RESOURCE_ENERGY))) {
-                dsts = dsts.concat(links);
-            }
         }
 
         // Find valid dst
@@ -209,17 +190,7 @@ utils = {
     },
 
     // Deposit to a dst
-    doDst: function(creep, dst, resource=undefined, link_transfer=false) {
-        // Handle tgt is link
-        if (link_transfer && dst instanceof StructureLink && creep.pos.isNearTo(dst.pos)) {
-            if (dst.store.getFreeCapacity(RESOURCE_ENERGY) < creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
-                for (let link of creep.room.find(FIND_MY_STRUCTURES, {filter: {structureType: STRUCTURE_LINK}})) {
-                    if (link.id === dst.id || link.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_GREY)) { continue }
-                    dst.transferEnergy(link);
-                }
-            }
-        }
-
+    doDst: function(creep, dst, resource=undefined) {
         let result;
         if (dst instanceof Creep) { dst.moveTo(creep) }
         if (!resource) {

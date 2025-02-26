@@ -57,7 +57,7 @@ class Upgrade extends Task {
             if (!src) {
                 result = creep.moveTo(controller, {visualizePathStyle: {}});
             } else {
-                result = utils.doSrc(creep, src, RESOURCE_ENERGY, true);
+                result = utils.doSrc(creep, src, RESOURCE_ENERGY);
             }
         }
 

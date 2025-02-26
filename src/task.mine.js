@@ -149,7 +149,7 @@ class Mine extends Task {
                 creep.moveTo(target, { maxRooms: 1, visualizePathStyle: {} });
                 result = ERR_NOT_FOUND;
             } else {
-                result = utils.doDst(creep, dst, resource, true);
+                result = utils.doDst(creep, dst, resource);
             }
         }
 

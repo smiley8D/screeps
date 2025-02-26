@@ -1,15 +1,28 @@
 ## TODO
 
-- Performance
-    - Pathing, caching, etc.
+- Pathing
+    - Old notes
         - Especially for multirooms, I don't think I ever want it to recompute that during a run
         - Need to research and test more
         - Consider using findClosestByRange more often. Within a room it probably works quite well
             - currently testing, not much noticable impact
+    - Experience so far
+        - pathing is v difficult and rigid (unless complexity is added)
+        - Doesn't seem like performance is taking much of a hit anyways
+    - Congestion + pathing that ignores creeps
+        - Consider/test GTFOTR again
+            - Alternatively, look ahead and see if creep is in way? Trade places if so?
+        - something like https://sy-harabi.github.io/Journey-to-Solving-the-Traffic-Management-Problem/
+- Memory
+    - Switch to raw memory
+        - More avail
+        - Selective loading instead of 100%
+        - Faster parsing
+    - Track task information
+    - Cleanup timestamps/survey tracking/scouting tracking/etc.
+    - Reconsider tracked info (esp for other owners' rooms)
 - Often dramatic difference in energy change & transfers, probably to do with counters being slightly off, look in to
 - Creep behaviors
-    - Consider/test GTFOTR again
-        - Alternatively, look ahead and see if creep is in way? Trade places if so?
     - Combat stance (aggressive, neutral, avoid?)
         - PathFinder has a flee option, could be very useful for avoidance
         - Room cost function
@@ -26,23 +39,15 @@
     - 300 tick reset for all, reserving/owning bumps up to 3000, unowned is 1500, center is 4000
     - Figure out how to make decisions based on this, is it worth it to get extra energy?
     - When does the downgrade happen? If a source is partially exploited, will it downgrade before reset?
-- Track metrics/tasks info in memory
-    - solve double-printing issue for visuals
-    - can be used to determine task assignments, constants, etc.
 - Set defense % to % of free room energy?
 - Do combat first, devote CPU to it
 - Military commands done via flags, flag name references an "army" or force composition which is designed elsewhere
-- Some issue w/ task visuals not displaying for rooms w/o metrics
-
-## Scouting notes
-- CPU when searching ~30 range from 1 spawn: ~1, total usage ~10%
-- Modify current method to just cache results
-- Track last attempt time (reset when creep actually reaches) to avoid spamming unreachable places
-- See above on room cost function to try better routing
-- Research path caching, possibly integrate w/ efforts like GTFOTR to reduce path finding attempts
-
-## Logistics notes
+- Tweak spawning/assignment mechanics, not a fan of the decisions being made (ie, constantly bringing in creeps from outside when in the room would work)
+- Broker task + my own market interface
+- Link tweaks
+    - Resolve every tick, don't have creeps consider whole network? (fix issues and possible performance improvement)
 - Hauler pull tasks ("Trailer?") for Drudge units not in position
+- Use fewer creeps (look into combining paths? having 1 miner harvest several closeby sources?)
 
 ## Flags
 
