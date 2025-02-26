@@ -11,6 +11,7 @@ utils = {
             containers: true,
             sources: false,
             haulers: true,
+            links: true,
             limit: null,
             room_limit: config.MAX_ROOM_SEARCH
         }
@@ -49,6 +50,13 @@ utils = {
             srcs = srcs.concat(creep.room.find(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getUsedCapacity(resource) &&
                 (opts.partial || c.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource))}));
         }
+        // Link networks
+        if (opts.links && (!resource || resource === RESOURCE_ENERGY)) {
+            let links = creep.room.find(FIND_MY_STRUCTURES, {filter: {structureType: STRUCTURE_LINK}});
+            if (links.some((l) => l.store.getUsedCapacity(RESOURCE_ENERGY))) {
+                srcs = srcs.concat(links);
+            }
+        }
 
         // Find valid src
         let valid_srcs = [];
@@ -79,8 +87,18 @@ utils = {
     },
 
     // Withdraw from a src
-    doSrc: function(creep, src, resource=undefined) {
+    doSrc: function(creep, src, resource=undefined, link_transfer=false) {
         let result = ERR_NOT_FOUND;
+
+        // Handle tgt is link
+        if (link_transfer && src instanceof StructureLink && creep.pos.isNearTo(src.pos)) {
+            if (src.store.getUsedCapacity(RESOURCE_ENERGY) < creep.store.getFreeCapacity(RESOURCE_ENERGY)) {
+                for (let link of creep.room.find(FIND_MY_STRUCTURES, {filter: (s) => s.structureType === STRUCTURE_LINK})) {
+                    if (link.id === src.id || link.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_WHITE)) { continue }
+                    link.transferEnergy(src);
+                }
+            }
+        }
 
         // Handle tgt is creep
         if (src instanceof Creep) {
@@ -121,6 +139,7 @@ utils = {
             containers: true,
             haulers: true,
             refills: true,
+            links: true,
             limit: null,
             room_limit: config.MAX_ROOM_SEARCH
         }
@@ -153,6 +172,13 @@ utils = {
                 (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_TOWER) &&
                 (s.store.getFreeCapacity(RESOURCE_ENERGY) && (opts.partial || s.store.getFreeCapacity(RESOURCE_ENERGY) >= creep.store.getUsedCapacity(RESOURCE_ENERGY)))}));
         }
+        // Link networks
+        if (opts.links && (!resource || resource === RESOURCE_ENERGY)) {
+            let links = creep.room.find(FIND_MY_STRUCTURES, {filter: {structureType: STRUCTURE_LINK}});
+            if (links.some((l) => l.store.getFreeCapacity(RESOURCE_ENERGY))) {
+                dsts = dsts.concat(links);
+            }
+        }
 
         // Find valid dst
         let valid_dsts = [];
@@ -183,7 +209,17 @@ utils = {
     },
 
     // Deposit to a dst
-    doDst: function(creep, dst, resource=undefined) {
+    doDst: function(creep, dst, resource=undefined, link_transfer=false) {
+        // Handle tgt is link
+        if (link_transfer && dst instanceof StructureLink && creep.pos.isNearTo(dst.pos)) {
+            if (dst.store.getFreeCapacity(RESOURCE_ENERGY) < creep.store.getUsedCapacity(RESOURCE_ENERGY)) {
+                for (let link of creep.room.find(FIND_MY_STRUCTURES, {filter: {structureType: STRUCTURE_LINK}})) {
+                    if (link.id === dst.id || link.pos.lookFor(LOOK_FLAGS).some((f) => f.color === COLOR_GREY)) { continue }
+                    dst.transferEnergy(link);
+                }
+            }
+        }
+
         let result;
         if (dst instanceof Creep) { dst.moveTo(creep) }
         if (!resource) {
@@ -385,7 +421,7 @@ utils = {
                 // Structure to be disassembled
                 metrics.dismantle += structure.hits;
                 metrics.dismantle_max += structure.hitsMax;
-                room.memory.visuals.push(["💣"+(Math.round(100*(structure.hitsMax - structure.hits) / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
+                room.memory.visuals.push(["💣"+(Math.round(100*(structure.hitsMax - structure.hits) / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
             } else if (structure.hitsMax && structure.structureType != STRUCTURE_WALL && structure.structureType != STRUCTURE_RAMPART) {
                 if (structure.hits < structure.hitsMax * 0.8) {
                     metrics.damage += structure.hitsMax - structure.hits
@@ -393,11 +429,11 @@ utils = {
                     metrics.hits_max += structure.hitsMax;
                 }
                 if (structure.hits < structure.hitsMax * 0.1) {
-                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
+                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 } else if (structure.hits < structure.hitsMax * 0.5) {
-                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, Game.time]);
+                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / structure.hitsMax))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 } else if (structure.hits < structure.hitsMax * 0.8) {
-                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, Game.time]);
+                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 }
             } else if (structure.hitsMax && (structure.structureType === STRUCTURE_WALL || structure.structureType === STRUCTURE_RAMPART)) {
                 // Configurable wall upgrade threshold
@@ -407,11 +443,11 @@ utils = {
                     metrics.hits_max += structure.hitsMax * config.DEFENSE_PER;
                 }
                 if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.1) {
-                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, Game.time]);
+                    room.memory.visuals.push(["🔥"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 } else if (structure.hits < (structure.hitsMax * config.DEFENSE_PER) * 0.5) {
-                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, Game.time]);
+                    room.memory.visuals.push(["🔧"+(Math.round(100*structure.hits / (structure.hitsMax * config.DEFENSE_PER)))+"%", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 } else if (structure.hits < (structure.hitsMax * config.DEFENSE_PER)) {
-                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, Game.time]);
+                    room.memory.visuals.push(["🔧", structure.pos.x, structure.pos.y, config.TASK_TICK]);
                 }
             }
 
@@ -438,7 +474,7 @@ utils = {
                     // Always fill
                     if (!metrics.resources[RESOURCE_ENERGY]) { metrics.resources[RESOURCE_ENERGY] = utils.freshResourceMetrics() }
                     metrics.resources[RESOURCE_ENERGY].refill += structure.store.getFreeCapacity(RESOURCE_ENERGY);
-                    if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, Game.time]) }
+                    if (structure.store.getFreeCapacity(RESOURCE_ENERGY)) { room.memory.visuals.push(["⬆︎", structure.pos.x, structure.pos.y, config.TASK_TICK]) }
                 } else if (structure.structureType === STRUCTURE_CONTAINER || structure.structureType === STRUCTURE_STORAGE || structure.structureType === STRUCTURE_LINK) {
                     // Mark available
                     for (let resource of resources) {
@@ -459,7 +495,7 @@ utils = {
             metrics.resources[resource].total += drop.amount;
             metrics.resources[resource].trash += drop.amount;
             metrics.resources[resource].free += drop.amount;
-            room.memory.visuals.push(["🗑️", drop.pos.x, drop.pos.y, Game.time]);
+            room.memory.visuals.push(["🗑️", drop.pos.x, drop.pos.y, config.TASK_TICK]);
         }
         for (let structure of room.find(FIND_TOMBSTONES).concat(room.find(FIND_RUINS))) {
             let inv_counter = 0;
@@ -472,7 +508,7 @@ utils = {
                 metrics.resources[resource].total += amount;
                 metrics.resources[resource].trash += amount;
                 metrics.resources[resource].free += amount;
-                room.memory.visuals.push(["🗑️", structure.pos.x, structure.pos.y, Game.time]);
+                room.memory.visuals.push(["🗑️", structure.pos.x, structure.pos.y, config.TASK_TICK]);
             }
         }
 
@@ -506,7 +542,7 @@ utils = {
         for (let site of room.find(FIND_CONSTRUCTION_SITES)) {
             metrics.build += site.progressTotal - site.progress;
             metrics.build_max += site.progressTotal;
-            room.memory.visuals.push(["🔨"+(Math.round(100*site.progress / site.progressTotal))+"%", site.pos.x, site.pos.y, Game.time]);
+            room.memory.visuals.push(["🔨"+(Math.round(100*site.progress / site.progressTotal))+"%", site.pos.x, site.pos.y, config.TASK_TICK]);
         }
         if (metrics.build_max) { metrics.build_per = ( metrics.build_max - metrics.build) / metrics.build_max }
 
@@ -603,7 +639,6 @@ utils = {
             change_mov: change_mov,
             count: count,
             count_mov: count_mov,
-            survey: utils.doSurvey(room),
             tick: Game.time,
         }
     },
@@ -663,9 +698,7 @@ utils = {
 
                 text.push("[ Order: " + (Math.round(100*metrics.cpu_order)/100) + " ]");
                 for (let task of Object.keys(metrics.cpu_tasks).sort((a,b)=>(metrics.cpu_tasks[b])-(metrics.cpu_tasks[a]))) {
-                    text.push(task + ": " + (Math.round(100*metrics.cpu_tasks[task])/100) + " | " + Math.round(metrics.task_count[task]) +
-                    " | " + (Math.round(100 * metrics.cpu_tasks[task] / metrics.task_count[task])/100) + " pc | " +
-                    (Math.round(100 * metrics.task_cost[task])/100) + " e");
+                    text.push(task + ": " + (Math.round(100*metrics.cpu_tasks[task])/100));
                 }
 
                 // Apply visuals
@@ -676,6 +709,7 @@ utils = {
 
             // Show room metrics
             metrics = Memory.rooms[room_name].metrics;
+            let survey = Memory.rooms[room_name].survey;
             let sightings = Memory.rooms[room_name].sightings;
             if (metrics) {
 
@@ -704,15 +738,15 @@ utils = {
 
                 // Survey info
                 text.push("[ Survey ]");
-                if (metrics.survey.sources.length) { text.push("Sources: " + metrics.survey.sources.length) }
-                for (let i in metrics.survey.minerals) {
-                    text.push("Mineral: " + metrics.survey.minerals[i].type + " (" + utils.density_string[metrics.survey.minerals[i].density] + ")")
+                if (survey.sources.length) { text.push("Sources: " + survey.sources.length) }
+                for (let i in survey.minerals) {
+                    text.push("Mineral: " + survey.minerals[i].type + " (" + utils.density_string[survey.minerals[i].density] + ")")
                 }
-                for (let i in metrics.survey.deposits) {
-                    text.push("Deposit: " + metrics.survey.deposits[i].type + " (" + metrics.survey.deposits[i].decay + " t)")
+                for (let i in survey.deposits) {
+                    text.push("Deposit: " + survey.deposits[i].type + " (" + survey.deposits[i].decay + " t)")
                 }
-                for (let i in metrics.survey.power_banks) {
-                    text.push("Power: " + metrics.survey.power_banks[i].power + " (" + metrics.survey.power_banks[i].decay + " t)")
+                for (let i in survey.power_banks) {
+                    text.push("Power: " + survey.power_banks[i].power + " (" + survey.power_banks[i].decay + " t)")
                 }
 
                 // Balances
@@ -738,7 +772,7 @@ utils = {
                     // In
                     if (inflow_total >= 0.01) {text.push("[ Energy Inflows ]")}
                     if (metrics.count_mov.harvest[RESOURCE_ENERGY] >= 0.01) {text.push("Harvested: " + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY])/100) + " (" + (Math.round(1000*metrics.count_mov.harvest[RESOURCE_ENERGY]/inflow_total)/10)
-                    + "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(metrics.survey.sources.length))/10) + "% eff)")}
+                    + "%) (" + (Math.round(100*metrics.count_mov.harvest[RESOURCE_ENERGY]/(survey.sources.length))/10) + "% eff)")}
                     if (transfer <= -0.01) {text.push("Transfer: " + (Math.round(-100*transfer)/100) + " (" + (Math.round(-1000*transfer/inflow_total)/10) + "%)")}
     
                     // Out
@@ -856,7 +890,7 @@ utils = {
     },
 
     // Reset memory
-    reset: function(room_name=null, metrics=false, sightings=false) {
+    reset: function(room_name=null, metrics=false, sightings=false, survey=false) {
         if (!Memory.rooms) { Memory.rooms = {} }
         if (room_name) {
             if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
@@ -868,6 +902,9 @@ utils = {
             }
             if (sightings || !memory.sightings) {
                 memory.sightings = {};
+            }
+            if (survey || !memory.survey) {
+                memory.survey = {};
             }
         } else {
             for (let room_name in Game.rooms) {

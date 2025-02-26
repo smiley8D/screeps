@@ -8,5 +8,7 @@ module.exports = {
     UPGRADE_PER: 0.8,
     MAX_ROOM_SEARCH: 3,
     SCOUT_TICK: 86400,
-    SCOUT_COOLDOWN: 3600
+    SCOUT_COOLDOWN: 3600,
+    SCOUT_SPAWN: "Spawn1",
+    CLEANUP_METRICS_TICK: 120
 }

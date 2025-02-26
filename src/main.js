@@ -29,7 +29,7 @@ const TASKS = {
     "Claim": Claim,
     "Recycle": Recycle,
     "Dismantle": Dismantle,
-    // "Scout": Scout
+    "Scout": Scout
 }
 
 module.exports.loop = function() {
@@ -40,7 +40,7 @@ module.exports.loop = function() {
     let cpu_used = Game.cpu.getUsed();
     Memory.metrics.cpu_start = Memory.metrics.cpu_start * (1 - config.MOV_N) + cpu_used * config.MOV_N;
     let cpu_count = cpu_used;
-
+    
     // Cleanup memory
     if (Game.time % config.CLEANUP_TICK === 0) {
         // Cleanup dead creeps
@@ -49,11 +49,17 @@ module.exports.loop = function() {
                 delete Memory.creeps[creep];
             }
         }
-        // Cleanup unvisited rooms metrics
+        // Cleanup unvisited/unflagged room metrics
         for (let room in Memory.rooms) {
-            if (Memory.rooms[room].metrics && Memory.rooms[room].metrics.tick < (Game.time - (config.SCOUT_TICK * 2))) {
+            if (Memory.rooms[room].metrics && Memory.rooms[room].metrics.tick < (Game.time - (config.CLEANUP_METRICS_TICK)) && !Object.values(Game.flags).some((f)=>f.pos.roomName === room)) {
                 delete Memory.rooms[room].metrics;
             }
+            // Check if room data empty
+            if (Memory.rooms[room].metrics && Object.keys(Memory.rooms[room].metrics).length) { continue }
+            if (Memory.rooms[room].sightings && Object.keys(Memory.rooms[room].sightings).length) { continue }
+            if (Memory.rooms[room].survey && Object.keys(Memory.rooms[room].survey).length) { continue }
+            if (Memory.rooms[room].visuals && Object.keys(Memory.rooms[room].visuals).length) { continue }
+            delete Memory.rooms[room];
         }
 
         // CPU check
@@ -314,9 +320,9 @@ module.exports.loop = function() {
             for (; i < room_tasks[room].length; i++) {
                 let task = room_tasks[room][i];
                 visuals = Memory.rooms[room].visuals;
-                visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted), 0, 48.5-i, Game.time, {align: "left"}]);
+                visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted), 0, 48.5-i, config.TASK_TICK, {align: "left"}]);
             }
-            visuals.push(["[ Tasks: " + room_tasks[room].length + " ]", 0, 48.5-i, Game.time, {align: "left"}]);
+            visuals.push(["[ Tasks: " + room_tasks[room].length + " ]", 0, 48.5-i, config.TASK_TICK, {align: "left"}]);
         }
 
         // Recycle idle
@@ -335,9 +341,7 @@ module.exports.loop = function() {
     }
 
     // Order creeps
-    let task_cpu = {}
-    let task_count = {}
-    let task_cost = {}
+    let task_cpu = {};
     for (let creepname in Game.creeps) {
         let creep = Game.creeps[creepname];
         let result = ERR_NOT_FOUND;
@@ -376,23 +380,14 @@ module.exports.loop = function() {
 
         // Track cost & CPU usage
         if (!task_cpu[task_name]) { task_cpu[task_name] = 0 }
-        if (!task_count[task_name]) { task_count[task_name] = 0 }
-        if (!task_cost[task_name]) { task_cost[task_name] = 0 }
         let used = Game.cpu.getUsed() - start;
         task_cpu[task_name] += (used);
-        task_count[task_name]++;
-        if (creep.memory.cost) {
-            task_cost[task_name] += (creep.memory.cost / 1500);
-        }
     }
 
     // Update task cost CPU usage
     for (let task in task_cpu) {
         if (!Memory.metrics.cpu_tasks[task]) { Memory.metrics.cpu_tasks[task] = task_cpu[task] }
         else { Memory.metrics.cpu_tasks[task] = (Memory.metrics.cpu_tasks[task] * (1 - config.MOV_N)) + (task_cpu[task] * config.MOV_N) }
-        Memory.metrics.task_count[task] = task_count[task]
-        if (!Memory.metrics.task_cost[task]) { Memory.metrics.task_cost[task] = task_cost[task] }
-        else { Memory.metrics.task_cost[task] = (Memory.metrics.task_cost[task] * (1 - config.MOV_N)) + (task_cost[task] * config.MOV_N) }
     }
 
     // CPU check
@@ -425,7 +420,7 @@ module.exports.loop = function() {
         let new_visuals = []
         for (let i in visuals) {
             let [text, x, y, ticks, opts] = visuals[i];
-            if (Memory.rooms[room_name].metrics && ticks >= Memory.rooms[room_name].metrics.tick) {
+            if (Memory.rooms[room_name].metrics && ticks > 0) {
                 if (typeof text === "object") {
                     for (let i = 0; i < text.length; i++) {
                         visual.text(text[i], x, y + parseInt(i), opts);
@@ -433,7 +428,7 @@ module.exports.loop = function() {
                 } else {
                     visual.text(text, x, y, opts);
                 }
-                new_visuals.push([text, x, y, ticks, opts]);
+                new_visuals.push([text, x, y, ticks-1, opts]);
             }
         }
         Memory.rooms[room_name].visuals = new_visuals;

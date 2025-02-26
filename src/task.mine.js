@@ -52,7 +52,7 @@ class Mine extends Task {
 
             // Get survey data
             if (!Memory.rooms[flag.pos.roomName] || !Memory.rooms[flag.pos.roomName].metrics) { continue }
-            let survey = Memory.rooms[flag.pos.roomName].metrics.survey;
+            let survey = Memory.rooms[flag.pos.roomName].survey;
 
             // Flag types
             if (flag.secondaryColor === COLOR_BROWN) {
@@ -149,7 +149,7 @@ class Mine extends Task {
                 creep.moveTo(target, { maxRooms: 1, visualizePathStyle: {} });
                 result = ERR_NOT_FOUND;
             } else {
-                result = utils.doDst(creep, dst, resource);
+                result = utils.doDst(creep, dst, resource, true);
             }
         }
 

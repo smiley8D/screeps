@@ -20,7 +20,7 @@ class Recycle extends Task {
         if (creep.store.getUsedCapacity()) {
             // Inventory not empty, depo
             result = utils.doDst(creep, utils.findDst(creep, undefined, {haulers: creep.memory.body != 'Hauler'}));
-        } else if ((creep.ticksToLive < 500 || (creep.ticksToLive < 1400 && creep.room.energyAvailable / creep.room.energyCapacityAvailable < 0.5)) && creep.room.find(FIND_MY_SPAWNS).length) {
+        } else if ((creep.ticksToLive / 1500 > (creep.ticksToLive < 1400 && creep.room.energyAvailable / creep.room.energyCapacityAvailable < 0.5)) && creep.room.find(FIND_MY_SPAWNS).length) {
             // Recycle creep
             let spawner = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
             if (spawner) { result = spawner.recycleCreep(creep) }

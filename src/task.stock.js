@@ -48,7 +48,7 @@ class Stock extends Task {
             }
 
             // Refill
-            let dst = utils.findDst(creep, RESOURCE_ENERGY, {containers: false, haulers: false, room_limit: 0});
+            let dst = utils.findDst(creep, RESOURCE_ENERGY, {containers: false, haulers: false, room_limit: 0, links: false});
             result = utils.doDst(creep, dst, RESOURCE_ENERGY);
         } else {
             // Empty inventory, refill

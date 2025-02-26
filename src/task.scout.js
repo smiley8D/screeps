@@ -9,40 +9,37 @@ class Scout extends Task {
         return '📡';
     }
 
-    constructor(room, spawn_room) {
+    constructor(room) {
         super("Scout", room, room, 1);
         this.body = new ScoutBody();
-        this.search_rooms = [room, spawn_room];
+        this.search_rooms = [room, config.SCOUT_SPAWN];
     }
 
     static getTasks() {
         let tasks = [];
-        let flagged_rooms = new Map();
-        // Add scout flags
+        let spawn = Game.spawns[config.SCOUT_SPAWN];
+        if (!spawn) { return [] }
+
+        // Check scout flags
         for (let flag in Game.flags) {
             flag = Game.flags[flag];
+            if (flag.color != COLOR_PURPLE || flag.secondaryColor != COLOR_PURPLE) { continue }
 
-            // Only match scout flags
-            if (flag.color === COLOR_PURPLE && flag.secondaryColor === COLOR_PURPLE) { flagged_rooms.set(flag.pos.roomName,flag) }
+            tasks.push(new Scout(flag.pos.roomName));
         }
 
-        // Assemble spawner rooms
-        let spawn_rooms = []
-        for (let spawner in Game.spawns) {
-            spawn_rooms.push(Game.spawns[spawner].room.name);
+        // Get closest room in range that needs scanning every 5 task ticks
+        if (Game.time % (5 * config.TASK_TICK) === 0) {
+            let found_room = utils.searchNearbyRooms([spawn.room.name], 50, ((r,d) => !Memory.rooms[r] || !Memory.rooms[r].metrics ||
+                (Memory.rooms[r].metrics.tick < (Game.time - config.SCOUT_TICK))), 'first');
+
+            if (found_room) {
+                Memory.scout_room = found_room;
+            }
         }
 
-        // Get rooms in range that need scanning
-        let dists = {}
-        let found_rooms = utils.searchNearbyRooms(spawn_rooms, 50, (r,d) => flagged_rooms.has(r) && (!Memory.rooms[r] || !Memory.rooms[r].metrics ||
-            (Memory.rooms[r].metrics.tick < (Game.time - config.SCOUT_TICK) ||
-            (Memory.rooms[r].sightings && Object.keys(Memory.rooms[r].sightings).some((k) =>
-                k != 'Power Bank' && k != 'Invader' && k != 'Source Keeper' && Memory.rooms[r].sightings[k] >= Memory.rooms[r].metrics.tick / 5)))),
-            'check', dists);
-
-        // Create tasks
-        for (let i in found_rooms) {
-            tasks.push(new Scout(found_rooms[i], dists[found_rooms[i]][1]));
+        if (Memory.scout_room) {
+            tasks.push(new Scout(Memory.scout_room));
         }
 
         return tasks;

@@ -8,13 +8,13 @@ class Supply extends Task {
         return '🚚';
     }
 
-    constructor(flag, start_pos, end_pos, resource, wanted) {
-        super("Supply", flag.name, flag.pos.roomName, wanted);
+    constructor(start_name, end_name, start_pos, end_pos, resource, wanted) {
+        super("Supply", start_name + ":" + end_name, start_pos.roomName, wanted);
         this.body = new Hauler();
         this.resource = resource;
         this.start = start_pos;
         this.end = end_pos;
-        this.detail = flag.name;
+        this.detail = start_name + ":" + end_name;
     }
 
     static getTasks() {
@@ -102,7 +102,7 @@ class Supply extends Task {
             let fill;
             if (flag.room) { struct = flag.pos.lookFor(LOOK_STRUCTURES).filter((s) => s.store) }
             if (struct && struct.length && struct[0].store) {
-                fill = struct[0].store.getUsedCapacity() / struct[0].store.getCapacity()
+                fill = struct[0].store.getUsedCapacity(resource) / struct[0].store.getCapacity(resource)
                 if ((flag.color === COLOR_WHITE && fill > 0.9) || (flag.color === COLOR_GREY && fill < 0.1)) { continue }
             } else if (flag.color === COLOR_WHITE) {
                 fill = 0;
@@ -113,7 +113,7 @@ class Supply extends Task {
             // Find storage
             let room = utils.searchNearbyRooms([flag.pos.roomName], undefined, ((r,d) => (Game.rooms[r] && Game.rooms[r].storage && Game.rooms[r].storage.my) ? ((
                 (flag.color === COLOR_WHITE) ? Game.rooms[r].storage.store.getUsedCapacity(resource) : Game.rooms[r].storage.store.getFreeCapacity(resource)
-            ) / (d+1)**2) : null), 'best');
+            ) / ((d+1)**2)) : null), 'best');
             if (room) {
                 // Compute wanted
                 let storage = Game.rooms[room].storage;
@@ -123,10 +123,10 @@ class Supply extends Task {
                 // Create tasks
                 if (flag.color === COLOR_GREY) {
                     wanted *= fill
-                    tasks.push(new Supply(flag, flag.pos, storage.pos, resource, wanted));
+                    tasks.push(new Supply(flag.name, storage.room.name, flag.pos, storage.pos, resource, wanted));
                 } else if (flag.color === COLOR_WHITE) {
                     wanted *= (1 - fill)
-                    tasks.push(new Supply(flag, storage.pos, flag.pos, resource, wanted));
+                    tasks.push(new Supply(storage.room.name, flag.name, storage.pos, flag.pos, resource, wanted));
                 }
             }
         }
