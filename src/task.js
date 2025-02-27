@@ -24,12 +24,14 @@ class Task {
 
         // Number of workers assigned
         this.workers = 0;
+        this.active_workers = 0;
 
         // Maximum number of allowed workers
         this.max_workers = 1;
 
         // Total size of parts assigned
         this.parts = 0;
+        this.active_parts = 0;
 
         // Total parts wanted
         this.wanted = wanted;

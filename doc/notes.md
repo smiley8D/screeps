@@ -48,6 +48,9 @@
     - Resolve every tick, don't have creeps consider whole network? (fix issues and possible performance improvement)
 - Hauler pull tasks ("Trailer?") for Drudge units not in position
 - Use fewer creeps (look into combining paths? having 1 miner harvest several closeby sources?)
+- Spawning/assignment, creeps on the job keep getting replaced by bigger ones that are far away/spawning
+    - use some system to track when creeps are "travelling" to position? possibly useful for other things too
+- Renewal probably won't work well w/o changes to depoing, stockers kept refilling ~20 energy at a time in a single extension, very slow
 
 ## Flags
 

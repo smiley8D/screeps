@@ -208,6 +208,12 @@ module.exports.loop = function() {
                 task.parts += creep.memory.size;
                 task.workers++;
 
+                // Only boot other creeps if actually in position
+                if (creep.room.name === task.room) {
+                    task.active_parts += creep.memory.size;
+                    task.active_workers++;
+                }
+
                 // Update task fulfillment
                 while (task.i < sorted_tasks.length - 1) {
                     // Compare to next task
@@ -220,7 +226,9 @@ module.exports.loop = function() {
                     task.i++;
                     next_task.i--;
                 }
-            } else if (creep.ticksToLive > replace_ticks) {
+            } else if ((creep.ticksToLive > replace_ticks) && (!creep.memory.task || !tasks.has(creep.memory.task.id) ||
+                tasks.get(creep.memory.task.id).active_parts >= tasks.get(creep.memory.task.id).wanted ||
+                tasks.get(creep.memory.task.id).active_workers >= tasks.get(creep.memory.task.id).max_workers)) {
                 // Mark available
                 if (!avail_creeps.has(creep.memory.body)) {avail_creeps.set(creep.memory.body,new Map())}
                 let creeps = avail_creeps.get(creep.memory.body);
@@ -393,6 +401,26 @@ module.exports.loop = function() {
         }
 
         // Contact handling
+
+        // // Renewal if nearby
+        // if (task_name != "Unassigned" && task_name != "Recycle" && creep.ticksToLive < 1400 && creep.room.energyAvailable / creep.room.energyCapacityAvailable > 0.5 && (creep.ticksToLive < 1000 || creep.memory.renewing) && !creep.getActiveBodyparts(CLAIM) && creep.memory.body != "Drudge") {
+        //     let spawns = creep.pos.findInRange(FIND_MY_SPAWNS, 5, {filter: (s) => !s.spawning});
+        //     if (spawns.length) {
+        //         creep.memory.renewing = true;
+        //         creep.moveTo(spawns[0]);
+        //         spawns[0].renewCreep(creep);
+        //         if (TASKS[task_name] && TASKS[task_name].emoji) {
+        //             creep.say("❤️" + TASKS[task_name].emoji() + creep.memory.task.detail)
+        //         } else {
+        //             creep.say("❤️")
+        //         }
+        //         continue
+        //     } else if (creep.ticksToLive > 500) {
+        //         delete creep.memory.renewing;
+        //     }
+        // } else if (creep.memory.renewing) {
+        //     delete creep.memory.renewing;
+        // }
 
         // Room navigation
         if (creep.memory.room && (creep.memory.room != creep.room.name || creep.pos.x % 49 === 0 || creep.pos.y % 49 === 0)) {

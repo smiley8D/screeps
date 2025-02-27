@@ -46,7 +46,7 @@ utils = {
         }
         // Haulers
         if (opts.haulers) {
-            srcs = srcs.concat(creep.room.find(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && c.store.getUsedCapacity(resource) &&
+            srcs = srcs.concat(creep.room.find(FIND_MY_CREEPS, {filter: (c) => c.memory.body === 'Hauler' && (!c.memory.task || c.memory.task.name != "Stock") && c.store.getUsedCapacity(resource) &&
                 (opts.partial || c.store.getUsedCapacity(resource) >= creep.store.getFreeCapacity(resource))}));
         }
         // Link networks
