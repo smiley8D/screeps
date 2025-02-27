@@ -12,7 +12,7 @@ class Scout extends Task {
     constructor(room) {
         super("Scout", room, room, 1);
         this.body = new ScoutBody();
-        this.search_rooms = [room, config.SCOUT_SPAWN];
+        this.search_rooms = [room, Game.spawns[config.SCOUT_SPAWN].room.name];
     }
 
     static getTasks() {

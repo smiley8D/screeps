@@ -51,14 +51,14 @@ module.exports.loop = function() {
         }
         // Cleanup unvisited/unflagged room metrics
         for (let room in Memory.rooms) {
-            if (Memory.rooms[room].metrics && Memory.rooms[room].metrics.tick < (Game.time - (config.CLEANUP_METRICS_TICK)) && !Object.values(Game.flags).some((f)=>f.pos.roomName === room)) {
+            if (Memory.rooms[room].metrics && Memory.rooms[room].metrics.tick < (Game.time - (config.SCOUT_TICK * 2)) && !Object.values(Game.flags).some((f)=>f.pos.roomName === room)) {
                 delete Memory.rooms[room].metrics;
             }
             // Check if room data empty
             if (Memory.rooms[room].metrics && Object.keys(Memory.rooms[room].metrics).length) { continue }
             if (Memory.rooms[room].sightings && Object.keys(Memory.rooms[room].sightings).length) { continue }
             if (Memory.rooms[room].survey && Object.keys(Memory.rooms[room].survey).length) { continue }
-            if (Memory.rooms[room].visuals && Object.keys(Memory.rooms[room].visuals).length) { continue }
+            if (Memory.rooms[room].visuals && Memory.rooms[room].visuals.length) { continue }
             delete Memory.rooms[room];
         }
 
@@ -324,10 +324,10 @@ module.exports.loop = function() {
             room_tasks[task.room].push(task);
         }
         for (let room in room_tasks) {
+            visuals = Memory.rooms[room].visuals;
             let i = 0;
             for (; i < room_tasks[room].length; i++) {
                 let task = room_tasks[room][i];
-                visuals = Memory.rooms[room].visuals;
                 visuals.push([task.id+": "+task.parts+" / "+Math.round(task.wanted), 0, 48.5-i, config.TASK_TICK, {align: "left"}]);
             }
             visuals.push(["[ Tasks: " + room_tasks[room].length + " ]", 0, 48.5-i, config.TASK_TICK, {align: "left"}]);
@@ -488,7 +488,7 @@ module.exports.loop = function() {
         let new_visuals = []
         for (let i in visuals) {
             let [text, x, y, ticks, opts] = visuals[i];
-            if (Memory.rooms[room_name].metrics && ticks > 0) {
+            if (ticks > 0) {
                 if (typeof text === "object") {
                     for (let i = 0; i < text.length; i++) {
                         visual.text(text[i], x, y + parseInt(i), opts);

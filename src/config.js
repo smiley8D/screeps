@@ -9,6 +9,5 @@ module.exports = {
     MAX_ROOM_SEARCH: 3,
     SCOUT_TICK: 86400,
     SCOUT_COOLDOWN: 3600,
-    SCOUT_SPAWN: "Spawn1",
-    CLEANUP_METRICS_TICK: 120
+    SCOUT_SPAWN: "Spawn1"
 }

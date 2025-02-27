@@ -861,12 +861,11 @@ utils = {
     },
 
     // Reset memory
-    reset: function(room_name=null, metrics=false, sightings=false, survey=false) {
+    reset: function(room_name=null, metrics=false, sightings=false, survey=false, visuals=false) {
         if (!Memory.rooms) { Memory.rooms = {} }
         if (room_name) {
             if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
             let memory = Memory.rooms[room_name];
-            memory.visuals = [];
             if (metrics || !memory.metrics) {
                 delete memory.metrics;
                 if (Game.rooms[room_name]) { memory.metrics = utils.roomMetrics(Game.rooms[room_name]) }
@@ -877,13 +876,16 @@ utils = {
             if (survey || !memory.survey) {
                 memory.survey = {};
             }
+            if (visuals || !memory.visuals) {
+                memory.visuals = [];
+            }
         } else {
             for (let room_name in Game.rooms) {
-                utils.reset(room_name, metrics, sightings);
+                utils.reset(room_name, metrics, sightings, survey, visuals);
             }
             for (let room_name in Memory.rooms) {
                 if (Game.rooms[room_name]) {continue}
-                utils.reset(room_name, metrics, sightings);
+                utils.reset(room_name, metrics, sightings, survey, visuals);
             }
             Memory.metrics = {
                 cpu_start: 0,
