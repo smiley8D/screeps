@@ -18,6 +18,8 @@ class Garbage extends Task {
         for (let room in Game.rooms) {
             room = Game.rooms[room];
 
+            if (room.controller && room.controller.owner && !room.controller.my) { continue }
+
             let garbage = 0;
 
             // Count up trash

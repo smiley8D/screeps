@@ -103,7 +103,7 @@ class Supply extends Task {
             if (flag.room) { struct = flag.pos.lookFor(LOOK_STRUCTURES).filter((s) => s.store) }
             if (struct && struct.length && struct[0].store) {
                 fill = struct[0].store.getUsedCapacity(resource) / struct[0].store.getCapacity(resource)
-                if ((flag.color === COLOR_WHITE && fill > 0.9) || (flag.color === COLOR_GREY && fill < 0.1)) { continue }
+                if ((flag.color === COLOR_WHITE && fill === 0) || (flag.color === COLOR_GREY && fill === 1)) { continue }
             } else if (flag.color === COLOR_WHITE) {
                 fill = 0;
             } else if (flag.color === COLOR_GREY) {
@@ -122,10 +122,10 @@ class Supply extends Task {
 
                 // Create tasks
                 if (flag.color === COLOR_GREY) {
-                    wanted *= fill
+                    // wanted *= fill
                     tasks.push(new Supply(flag.name, storage.room.name, flag.pos, storage.pos, resource, wanted));
                 } else if (flag.color === COLOR_WHITE) {
-                    wanted *= (1 - fill)
+                    // wanted *= (1 - fill)
                     tasks.push(new Supply(storage.room.name, flag.name, storage.pos, flag.pos, resource, wanted));
                 }
             }

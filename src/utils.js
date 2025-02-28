@@ -72,7 +72,7 @@ utils = {
         }
 
         // Check range
-        if (opts.limit === null && creep.memory.body === "Drudge") { opts.limit = 3 }
+        if (opts.limit === null && creep.memory.body === "Drudge") { opts.limit = 5 }
         if (opts.limit != null && creep.pos.getRangeTo(src) > opts.limit) { src = null }
 
         // Update cache
@@ -91,7 +91,8 @@ utils = {
 
         // Handle tgt is creep
         if (src instanceof Creep) {
-            result = utils.doDst(src, creep, resource)
+            if (creep.pos.isNearTo(src.pos)) { result = utils.doDst(src, creep, resource) }
+            else { result = creep.moveTo(src, {reusePath: 20, visualizePathStyle: {stroke: "#ffa500"}}) }
         } else if (resource) {
             // Try targetted withdraw
             result = creep.withdraw(src, resource);
@@ -176,7 +177,7 @@ utils = {
         }
 
         // Check range
-        if (opts.limit === null && creep.memory.body === "Drudge") { opts.limit = 3 }
+        if (opts.limit === null && creep.memory.body === "Drudge") { opts.limit = 5 }
         if (opts.limit != null && creep.pos.getRangeTo(dst) > opts.limit) { dst = null }
 
         // Update cache
@@ -192,7 +193,6 @@ utils = {
     // Deposit to a dst
     doDst: function(creep, dst, resource=undefined) {
         let result;
-        if (dst instanceof Creep) { dst.moveTo(creep) }
         if (!resource) {
             // Try any present resources
             for (let resource of RESOURCES_ALL) {
@@ -435,7 +435,7 @@ utils = {
                     inv_counter += amount;
                     if (!metrics.resources[resource]) { metrics.resources[resource] = utils.freshResourceMetrics() }
                     metrics.resources[resource].total += amount;
-                    if (resource_flag.length && resource != utils.flag_resource[resource_flag[0].secondaryColor]) { metrics.resources[resource].trash += amount }
+                    if (!resource_flag.some((f)=>f.secondaryColor === utils.resource_flag[resource])) { metrics.resources[resource].trash += amount }
                     resources.push(resource);
                 }
 
@@ -651,7 +651,7 @@ utils = {
                 // Build visuals
                 let text = ["[ Shard: " + Game.shard.name+ " ]"];
 
-                text.push("CPU: " + (Math.round(100*metrics.cpu_total)/100) + " (" + (Math.round(1000*metrics.cpu_total/Game.cpu.limit)/10) + "%)");
+                text.push("[ CPU: " + (Math.round(100*metrics.cpu_total)/100) + " (" + (Math.round(1000*metrics.cpu_total/Game.cpu.limit)/10) + "%) ]");
                 text.push("Bucket: " + Game.cpu.bucket + " (" + (Math.round(1000*Game.cpu.bucket/10000)/10) + "%)");
                 text.push("Start: " + (Math.round(100*metrics.cpu_start)/100));
                 text.push("Cleanup: " + (Math.round(100*metrics.cpu_cleanup)/100));
@@ -708,16 +708,18 @@ utils = {
                 )}
 
                 // Survey info
-                text.push("[ Survey ]");
-                if (survey.sources.length) { text.push("Sources: " + survey.sources.length) }
-                for (let i in survey.minerals) {
-                    text.push("Mineral: " + survey.minerals[i].type + " (" + utils.density_string[survey.minerals[i].density] + ")")
-                }
-                for (let i in survey.deposits) {
-                    text.push("Deposit: " + survey.deposits[i].type + " (" + survey.deposits[i].decay + " t)")
-                }
-                for (let i in survey.power_banks) {
-                    text.push("Power: " + survey.power_banks[i].power + " (" + survey.power_banks[i].decay + " t)")
+                if (survey) {
+                    text.push("[ Survey ]");
+                    if (survey.sources.length) { text.push("Sources: " + survey.sources.length) }
+                    for (let i in survey.minerals) {
+                        text.push("Mineral: " + survey.minerals[i].type + " (" + utils.density_string[survey.minerals[i].density] + ")")
+                    }
+                    for (let i in survey.deposits) {
+                        text.push("Deposit: " + survey.deposits[i].type + " (" + survey.deposits[i].decay + " t)")
+                    }
+                    for (let i in survey.power_banks) {
+                        text.push("Power: " + survey.power_banks[i].power + " (" + survey.power_banks[i].decay + " t)")
+                    }
                 }
 
                 // Balances
@@ -733,7 +735,7 @@ utils = {
                 }
 
                 // Energy flows
-                if (metrics.last.resources[RESOURCE_ENERGY] && metrics.count_mov && metrics.change_mov && metrics.change_mov.resources[RESOURCE_ENERGY]) {
+                if (metrics.last.resources[RESOURCE_ENERGY] && metrics.count_mov && metrics.change_mov && metrics.change_mov.resources[RESOURCE_ENERGY] && survey) {
                     let inflow_total = metrics.count_mov.harvest[RESOURCE_ENERGY];
                     let outflow_total = metrics.count_mov.upgrade_spend + metrics.count_mov.repair_spend + metrics.count_mov.build_spend + metrics.count_mov.spawn;
                     let transfer = metrics.change_mov.resources[RESOURCE_ENERGY].total;
@@ -874,7 +876,8 @@ utils = {
                 memory.sightings = {};
             }
             if (survey || !memory.survey) {
-                memory.survey = {};
+                delete memory.survey;
+                if (Game.rooms[room_name]) { memory.survey = utils.doSurvey(Game.rooms[room_name]) }
             }
             if (visuals || !memory.visuals) {
                 memory.visuals = [];
