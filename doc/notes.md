@@ -47,11 +47,17 @@
 - Link tweaks
     - Resolve every tick, don't have creeps consider whole network? (fix issues and possible performance improvement)
 - Hauler pull tasks ("Trailer?") for Drudge units not in position
+    - Similar to room movement, "hitch"? creep to another? then always have it move towards that creep? pulling creep does all the pathfinding and whatnot?
+    - Possibly create chains of movement?
 - Use fewer creeps (look into combining paths? having 1 miner harvest several closeby sources?)
 - Spawning/assignment, creeps on the job keep getting replaced by bigger ones that are far away/spawning
     - use some system to track when creeps are "travelling" to position? possibly useful for other things too
 - Renewal probably won't work well w/o changes to depoing, stockers kept refilling ~20 energy at a time in a single extension, very slow
 - "Operations", collections of tasks, more organized assignment/logistics/bottleneck identification
+- New math for logi creeps
+    - Because adding carries only increases travel time for full inv legs, that math is very favorable to add invs w/o moves
+    - Lower CPU cost (more flow per creep)
+    - Lower cost
 
 ## Flags
 
