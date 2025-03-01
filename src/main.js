@@ -18,8 +18,8 @@ const Supply = require("task.supply");
 const Upgrade = require("task.upgrade");
 
 const TASKS = {
-    "Garbage": Garbage,
     "Pioneer": Pioneer,
+    "Garbage": Garbage,
     "Mine": Mine,
     "Stock": Stock,
     "Supply": Supply,
