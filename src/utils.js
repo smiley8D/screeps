@@ -868,10 +868,6 @@ utils = {
         if (room_name) {
             if (!Memory.rooms[room_name]) {Memory.rooms[room_name] = {}}
             let memory = Memory.rooms[room_name];
-            if (metrics || !memory.metrics) {
-                delete memory.metrics;
-                if (Game.rooms[room_name]) { memory.metrics = utils.roomMetrics(Game.rooms[room_name]) }
-            }
             if (sightings || !memory.sightings) {
                 memory.sightings = {};
             }
@@ -881,6 +877,10 @@ utils = {
             }
             if (visuals || !memory.visuals) {
                 memory.visuals = [];
+            }
+            if (metrics || !memory.metrics) {
+                delete memory.metrics;
+                if (Game.rooms[room_name]) { memory.metrics = utils.roomMetrics(Game.rooms[room_name]) }
             }
         } else {
             for (let room_name in Game.rooms) {

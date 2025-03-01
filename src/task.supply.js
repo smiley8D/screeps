@@ -15,6 +15,7 @@ class Supply extends Task {
         this.start = start_pos;
         this.end = end_pos;
         this.detail = start_name + ":" + end_name;
+        this.max_workers = 2;
     }
 
     static getTasks() {
@@ -103,7 +104,7 @@ class Supply extends Task {
             if (flag.room) { struct = flag.pos.lookFor(LOOK_STRUCTURES).filter((s) => s.store) }
             if (struct && struct.length && struct[0].store) {
                 fill = struct[0].store.getUsedCapacity(resource) / struct[0].store.getCapacity(resource)
-                if ((flag.color === COLOR_WHITE && fill === 0) || (flag.color === COLOR_GREY && fill === 1)) { continue }
+                if ((flag.color === COLOR_WHITE && fill > 0.9) || (flag.color === COLOR_GREY && fill < 0.1)) { continue }
             } else if (flag.color === COLOR_WHITE) {
                 fill = 0;
             } else if (flag.color === COLOR_GREY) {
