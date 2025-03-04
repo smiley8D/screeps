@@ -9,9 +9,10 @@ class Upgrade extends Task {
         return '⬆️';
     }
 
-    constructor(room, wanted) {
+    constructor(room, wanted, max_workers=1) {
         super("Upgrade", room, room, wanted);
         this.body = new Drudge();
+        this.max_workers = max_workers;
     }
 
     static getTasks() {
@@ -27,7 +28,13 @@ class Upgrade extends Task {
             if (!room.memory.metrics.last_mov.resources[RESOURCE_ENERGY]) {continue}
 
             // Create tasks
-            tasks.push(new Upgrade(room.name, Math.min(20,10*(Math.max((room.memory.metrics.count_mov.harvest[RESOURCE_ENERGY]/20),room.memory.metrics.last_mov.resources[RESOURCE_ENERGY].free/100000)))));
+            let wanted = Math.min(20,10*(Math.max((room.memory.metrics.count_mov.harvest[RESOURCE_ENERGY]/20),room.memory.metrics.last_mov.resources[RESOURCE_ENERGY].free/100000)));
+            let max_workers = 1;
+            if (room.name === "W6N2") {
+                wanted = 40;
+                max_workers = 4;
+            }
+            tasks.push(new Upgrade(room.name, wanted, max_workers));
         }
         return tasks;
     }
