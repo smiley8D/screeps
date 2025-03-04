@@ -9,7 +9,6 @@ const Claim = require("task.claim");
 const Dismantle = require("task.dismantle");
 const Garbage = require("task.garbage");
 const Mine = require("task.mine");
-const Pioneer = require("task.pioneer");
 const Recycle = require("task.recycle");
 const Repair = require("task.repair");
 const Scout = require("task.scout");
@@ -18,7 +17,6 @@ const Supply = require("task.supply");
 const Upgrade = require("task.upgrade");
 
 const TASKS = {
-    "Pioneer": Pioneer,
     "Garbage": Garbage,
     "Mine": Mine,
     "Stock": Stock,
