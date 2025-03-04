@@ -63,6 +63,8 @@ class Mine extends Task {
                     tasks.push(new Mine(new RoomPosition(mineral.x, mineral.y, flag.pos.roomName), flag.pos.roomName, 1, mineral.spots));
                 }
                 for (let i in survey.deposits) {
+                    let deposit = survey.deposits[i];
+
                     tasks.push(new Mine(new RoomPosition(deposit.x, deposit.y, flag.pos.roomName), flag.pos.roomName, 1, 1));
                 }
             } else if (flag.secondaryColor === COLOR_YELLOW) {
@@ -99,25 +101,12 @@ class Mine extends Task {
     static doTask(creep) {
         // Get target
         let target = Game.getObjectById(creep.memory.curTgt);
-        let pos;
         if (!target) {
-            if (!target && creep.store.getUsedCapacity()) {
-                // First round, empty inventory
-                return utils.doDst(creep, utils.findDst(creep));
-            } else if (!target) {
-                pos = creep.room.getPositionAt(creep.memory.task.x, creep.memory.task.y);
-                target = creep.room.lookForAt(LOOK_SOURCES, pos);
-                let look_result = creep.room.lookForAt(LOOK_SOURCES, pos);
-                if (look_result.length) { target = look_result[0] }
-            }
-            if (!target) {
-                let look_result = creep.room.lookForAt(LOOK_MINERALS, pos);
-                if (look_result.length) { target = look_result[0] }
-            }
-            if (!target) {
-                let look_result = creep.room.lookForAt(LOOK_DEPOSITS, pos);
-                if (look_result.length) { target = look_result[0] }
-            }
+            let pos = new RoomPosition(creep.memory.task.x, creep.memory.task.y, creep.memory.task.room);
+            let look_result = pos.lookFor(LOOK_SOURCES);
+            if (!look_result.length) { look_result = pos.lookFor(LOOK_MINERALS) }
+            if (!look_result.length) { look_result = pos.lookFor(LOOK_DEPOSITS) }
+            if (look_result.length) { target = look_result[0] }
             if (!target) { return ERR_NOT_FOUND }
             creep.memory.curTgt = target.id;
         }
