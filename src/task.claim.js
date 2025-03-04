@@ -27,8 +27,7 @@ class Claim extends Task {
             if (flag.color != COLOR_YELLOW) { continue }
 
             // Check controller exists and is not owned by me (unless flag allows otherwise for either)
-            if (flag.room && ((flag.secondaryColor != COLOR_BROWN && !flag.room.controller) || 
-            ((flag.secondaryColor != COLOR_RED && flag.secondaryColor != COLOR_YELLOW) && flag.room.controller && flag.room.controller.my))) {
+            if (flag.room && flag.room.controller && flag.room.controller.my && (flag.secondaryColor === COLOR_PURPLE || flag.secondaryColor === COLOR_BLUE)) {
                 flag.remove();
                 continue;
             }
