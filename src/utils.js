@@ -435,7 +435,7 @@ utils = {
                     inv_counter += amount;
                     if (!metrics.resources[resource]) { metrics.resources[resource] = utils.freshResourceMetrics() }
                     metrics.resources[resource].total += amount;
-                    if (!resource_flag.some((f)=>f.secondaryColor === utils.resource_flag[resource])) { metrics.resources[resource].trash += amount }
+                    if (resource_flag.length && !resource_flag.some((f)=>f.secondaryColor === utils.resource_flag[resource])) { metrics.resources[resource].trash += amount }
                     resources.push(resource);
                 }
 
