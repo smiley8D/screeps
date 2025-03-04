@@ -54,10 +54,21 @@
     - use some system to track when creeps are "travelling" to position? possibly useful for other things too
 - Renewal probably won't work well w/o changes to depoing, stockers kept refilling ~20 energy at a time in a single extension, very slow
 - "Operations", collections of tasks, more organized assignment/logistics/bottleneck identification
-- New math for logi creeps
-    - Because adding carries only increases travel time for full inv legs, that math is very favorable to add invs w/o moves
-    - Lower CPU cost (more flow per creep)
-    - Lower cost
+- Use towers for repairs to save on CPU
+
+## Maths
+
+- Logistic creeps design
+    - Adding carry parts
+        - only increases fatigue gain for 1 direction
+        - increase in trip time is less than (proportionally) increase in trip inventory
+        - can likely save on energy AND cpu for same flow rate
+        - need to consider trip length, creep expiration
+- Spawning vs renewing
+    - Cost is identical renewing is 1.2x faster on it's face (travel time, renewing time, etc. can impact)
+    - Smaller spawns can still renew larger creeps, reducing congestion on large spawns
+    - Renewing can lead to less travel time than respawning/reassigning in some situations
+    - Respawning probably better if renewing introduces travel time
 
 ## Flags
 
@@ -66,6 +77,7 @@
 - White-###/Grey-###: Logistics (Fill/Drain)
     - Yellow: Energy
     - Grey: Hydrogen
+    - Orange: Zynthium
 - Purple-###: Intelligence (will generate visuals)
     - Purple: Scout
 - Yellow-###: Expansion/exploitation

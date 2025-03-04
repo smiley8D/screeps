@@ -918,13 +918,15 @@ utils = {
     // Mapping of resources to flags
     resource_flag: {
         "energy": COLOR_YELLOW,
-        "H": COLOR_GREY
+        "H": COLOR_GREY,
+        "Z": COLOR_ORANGE
     },
 
     // Mapping of flags to resources
     flag_resource: {
         6: RESOURCE_ENERGY,
-        9: RESOURCE_HYDROGEN
+        9: RESOURCE_HYDROGEN,
+        7: RESOURCE_ZYNTHIUM
     },
 
     // Mapping of density levels to strings
