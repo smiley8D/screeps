@@ -60,7 +60,7 @@ class Mine extends Task {
                 for (let i in survey.minerals) {
                     let mineral = survey.minerals[i];
 
-                    tasks.push(new Mine(new RoomPosition(mineral.x, mineral.y, flag.pos.roomName), flag.pos.roomName, 1, mineral.spots));
+                    tasks.push(new Mine(new RoomPosition(mineral.x, mineral.y, flag.pos.roomName), flag.pos.roomName, 10, 1));
                 }
                 for (let i in survey.deposits) {
                     let deposit = survey.deposits[i];
