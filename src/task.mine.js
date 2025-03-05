@@ -101,7 +101,7 @@ class Mine extends Task {
     static doTask(creep) {
         // Get target
         let target = Game.getObjectById(creep.memory.curTgt);
-        if (!target) {
+        if (!target && Game.rooms[creep.memory.task.room]) {
             let pos = new RoomPosition(creep.memory.task.x, creep.memory.task.y, creep.memory.task.room);
             let look_result = pos.lookFor(LOOK_SOURCES);
             if (!look_result.length) { look_result = pos.lookFor(LOOK_MINERALS) }
