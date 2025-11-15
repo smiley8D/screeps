@@ -30,10 +30,6 @@ class Upgrade extends Task {
             // Create tasks
             let wanted = Math.min(20,10*(Math.max((room.memory.metrics.count_mov.harvest[RESOURCE_ENERGY]/20),room.memory.metrics.last_mov.resources[RESOURCE_ENERGY].free/100000)));
             let max_workers = 1;
-            if (room.name === "W6N2") {
-                wanted = 40;
-                max_workers = 4;
-            }
             tasks.push(new Upgrade(room.name, wanted, max_workers));
         }
         return tasks;

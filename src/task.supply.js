@@ -119,7 +119,7 @@ class Supply extends Task {
                 // Compute wanted
                 let storage = Game.rooms[room].storage;
                 let path = PathFinder.search(flag.pos, storage.pos);
-                let wanted = (path.path.length * 2 / 5);
+                let wanted = (path.path.length / 5);
 
                 // Create tasks
                 if (flag.color === COLOR_GREY) {
